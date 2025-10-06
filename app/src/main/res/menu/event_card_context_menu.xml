@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_pin"
+        android:title="置顶/取消置顶"
+        android:icon="@drawable/ic_pin"/>
+    <item
+        android:id="@+id/action_mark_important"
+        android:title="设为重点/取消重点" />
+    <!--  ↓↓↓  添加新的菜单项  ↓↓↓ -->
+    <item android:id="@+id/action_add_widget" android:title="添加微件到桌面" />
+    <item
+        android:id="@+id/action_card_settings"
+        android:title="卡片个性化设置" />
+    <!--  ↑↑↑  添加新的菜单项  ↑↑↑ -->
+    <item
+        android:id="@+id/action_delete"
+        android:title="删除"
+        android:icon="@drawable/ic_delete"/>
+    <!-- 后续的“添加到日历”等功能将在这里添加 -->
+</menu>

@@ -1,0 +1,5 @@
+<!-- file: res/values/attrs.xml -->
+<resources>
+    <attr name="customColorPrimary" format="color"/>
+    <attr name="customColorOnPrimary" format="color"/>
+</resources>

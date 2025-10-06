@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <!-- 全局 Action -->
+    <action android:id="@+id/action_global_developerSettingsFragment"
+        app:destination="@id/developerSettingsFragment"/>
+    <action android:id="@+id/action_global_deepDeveloperFragment"
+        app:destination="@id/deepDeveloperFragment"/>
+
+    <!-- Home -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.home.HomeFragment"
+        android:label="ZakoCountdown"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_addEditEventFragment"
+            app:destination="@id/addEditEventFragment" />
+        <action
+            android:id="@+id/action_homeFragment_to_cardSettingsFragment"
+            app:destination="@id/cardSettingsFragment" />
+    </fragment>
+
+    <!-- Add/Edit -->
+    <fragment
+        android:id="@+id/addEditEventFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.addedit.AddEditEventFragment"
+        android:label="{title}"
+        tools:layout="@layout/fragment_add_edit_event">
+        <argument android:name="eventId" app:argType="long" android:defaultValue="-1L" />
+        <argument android:name="title" app:argType="string" android:defaultValue="添加日程" />
+    </fragment>
+
+    <!-- Settings -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.SettingsFragment"
+        android:label="设置">
+        <action
+            android:id="@+id/action_settingsFragment_to_developerSettingsFragment"
+            app:destination="@id/developerSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_appSelectorFragment"
+            app:destination="@id/appSelectorFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_aboutFragment"
+            app:destination="@id/aboutFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_notificationSettingsFragment"
+            app:destination="@id/notificationSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_permissionsFragment"
+            app:destination="@id/permissionsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_advancedSettingsFragment"
+            app:destination="@id/advancedSettingsFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_personalizationFragment"
+            app:destination="@id/personalizationFragment" />
+    </fragment>
+
+    <!-- About -->
+    <fragment
+        android:id="@+id/aboutFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.AboutFragment"
+        android:label="关于"
+        tools:layout="@layout/fragment_about">
+        <action
+            android:id="@+id/action_aboutFragment_to_buildDetailsFragment"
+            app:destination="@id/buildDetailsFragment" />
+        <!-- 【核心修复】添加这个 action -->
+        <action
+            android:id="@+id/action_aboutFragment_to_licenseFragment"
+            app:destination="@id/licenseFragment" />
+    </fragment>
+
+    <!-- Build Details -->
+    <fragment
+        android:id="@+id/buildDetailsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.BuildDetailsFragment"
+        android:label="详细信息" />
+
+    <!-- 【核心修复】添加这个 fragment 声明 -->
+    <fragment
+        android:id="@+id/licenseFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.LicenseFragment"
+        android:label="许可证"
+        tools:layout="@layout/fragment_license" />
+
+    <!-- Card Settings -->
+    <fragment
+        android:id="@+id/cardSettingsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.CardSettingsFragment"
+        android:label="卡片个性化" >
+        <argument android:name="eventId" app:argType="long" />
+    </fragment>
+
+    <!-- App Selector -->
+    <fragment
+        android:id="@+id/appSelectorFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.AppSelectorFragment"
+        android:label="选择应用" />
+
+    <!-- Developer -->
+    <fragment
+        android:id="@+id/developerSettingsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeveloperSettingsFragment"
+        android:label="开发者选项" />
+
+    <fragment
+        android:id="@+id/deepDeveloperFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeepDeveloperFragment"
+        android:label="深层开发者选项" />
+    <!-- file: res/navigation/nav_graph.xml -->
+    <fragment
+        android:id="@+id/notificationSettingsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.NotificationSettingsFragment"
+        android:label="通知设置">
+
+        <!--  ↓↓↓  修改这里的 uri  ↓↓↓ -->
+        <deepLink
+            app:uri="errorsiayusulif://zakocountdown/notifications"
+            android:autoVerify="true"/>
+        <!--  ↑↑↑  修改这里的 uri  ↑↑↑ -->
+    </fragment>
+    <fragment
+        android:id="@+id/permissionsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.PermissionsFragment"
+        android:label="权限中心" />
+    <fragment
+        android:id="@+id/advancedSettingsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.AdvancedSettingsFragment"
+        android:label="高级功能">
+        <action
+            android:id="@+id/action_advancedSettingsFragment_to_appSelectorFragment"
+            app:destination="@id/appSelectorFragment" />
+    </fragment>
+
+    <action
+        android:id="@+id/action_global_permissionsFragment"
+        app:destination="@id/permissionsFragment" />
+    <!-- 创建一个新的 PersonalizationFragment -->
+    <fragment
+        android:id="@+id/personalizationFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.PersonalizationFragment"
+        android:label="个性化" />
+</navigation>

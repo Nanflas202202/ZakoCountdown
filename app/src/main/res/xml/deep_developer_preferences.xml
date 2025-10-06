@@ -1,0 +1,19 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+    <PreferenceCategory app:title="深层调试">
+        <SwitchPreferenceCompat
+            app:key="log_level_info"
+            app:title="日志级别：INFO"
+            app:summary="输入*#*#20220238#*#*触发"/>
+        <SwitchPreferenceCompat
+            app:key="log_level_off"
+            app:title="日志级别：关闭"
+            app:summary="输入*#*#20250528#*#*触发"/>
+    </PreferenceCategory>
+    <PreferenceCategory app:title="彩蛋设置">
+        <SwitchPreferenceCompat
+            app:key="key_enable_about_easter_egg"
+            app:title="开启“关于”页面的开发者模式入口"
+            app:summary="开启后，连续点击“关于”可进入开发者选项"
+            app:defaultValue="false" />
+    </PreferenceCategory>
+</PreferenceScreen>

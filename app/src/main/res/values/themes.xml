@@ -1,0 +1,103 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ============================================= -->
+    <!-- =====   1. 基础主题 (纯净骨架)         ====== -->
+    <!-- ============================================= -->
+    <style name="Theme_ZakoCountdown_Base_MD1" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="Theme_ZakoCountdown_Base_MD2" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <style name="Theme_ZakoCountdown_Base_M3" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <!-- ============================================= -->
+    <!-- =====   2. 最终成品主题 (骨架 + 皮肤)  ====== -->
+    <!-- ============================================= -->
+
+    <!-- - MD1 - -->
+    <style name="Theme_ZakoCountdown_MD1" parent="Theme_ZakoCountdown_Base_MD1">
+        <item name="colorPrimary">@color/m2_purple_500</item>
+        <item name="colorAccent">@color/m2_purple_500</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:statusBarColor">@color/m2_purple_700</item>
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+        <item name="cardCornerRadius">4dp</item>
+    </style>
+    <style name="Theme_ZakoCountdown_MD1_Pink" parent="Theme_ZakoCountdown_Base_MD1">
+        <item name="colorPrimary">#B93E6D</item>
+        <item name="colorAccent">#B93E6D</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:statusBarColor">#8F2B53</item>
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+        <item name="cardCornerRadius">4dp</item>
+    </style>
+    <style name="Theme_ZakoCountdown_MD1_Blue" parent="Theme_ZakoCountdown_Base_MD1">
+        <item name="colorPrimary">#0061A4</item>
+        <item name="colorAccent">#0061A4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="android:statusBarColor">#004A7C</item>
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+        <item name="cardCornerRadius">4dp</item>
+    </style>
+
+    <!-- - MD2 - -->
+    <style name="Theme_ZakoCountdown_MD2" parent="Theme_ZakoCountdown_Base_MD2">
+        <item name="colorPrimary">@color/m2_purple_500</item>
+        <item name="colorPrimaryVariant">@color/m2_purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/m2_teal_200</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+        <item name="cardCornerRadius">8dp</item>
+    </style>
+    <style name="Theme_ZakoCountdown_MD2_Pink" parent="Theme_ZakoCountdown_Base_MD2">
+        <item name="colorPrimary">#B93E6D</item>
+        <item name="colorPrimaryVariant">#8F2B53</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#B93E6D</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+        <item name="cardCornerRadius">8dp</item>
+    </style>
+    <style name="Theme_ZakoCountdown_MD2_Blue" parent="Theme_ZakoCountdown_Base_MD2">
+        <item name="colorPrimary">#0061A4</item>
+        <item name="colorPrimaryVariant">#004A7C</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#0061A4</item>
+        <item name="colorOnSecondary">#FFFFFF</item>
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="materialCardViewStyle">@style/Widget.MaterialComponents.CardView</item>
+        <item name="cardCornerRadius">8dp</item>
+    </style>
+
+    <!-- - MD3 - -->
+    <style name="Theme_ZakoCountdown_M3" parent="Theme_ZakoCountdown_Base_M3" />
+    <style name="Theme_ZakoCountdown_M3_Pink" parent="Theme_ZakoCountdown_Base_M3">
+        <item name="colorPrimary">#B93E6D</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+    </style>
+    <style name="Theme_ZakoCountdown_M3_Blue" parent="Theme_ZakoCountdown_Base_M3">
+        <item name="colorPrimary">#0061A4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+    </style>
+
+    <!-- APP的默认启动主题，继承自一个明确存在的、使用了下划线命名的样式 -->
+    <style name="Theme.ZakoCountdown" parent="Theme_ZakoCountdown_M3" />
+
+    <!-- 弹窗专用主题 -->
+    <style name="Theme.ZakoCountdown.Popup" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+    <style name="UnitValueText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginTop">4dp</item>
+        <item name="android:textAppearance">?attr/textAppearanceHeadlineMedium</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+    </style>
+    <style name="UnitLabelText">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textAppearance">?attr/textAppearanceBodySmall</item>
+    </style>
+</resources>

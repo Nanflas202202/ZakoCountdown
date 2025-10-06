@@ -1,0 +1,40 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="常驻通知">
+        <SwitchPreferenceCompat
+            app:key="enable_permanent_notification"
+            app:title="开启常驻通知"
+            app:summary="在通知栏显示一个常驻的倒计时提醒"
+            app:defaultValue="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="定时提醒">
+        <ListPreference
+            app:key="key_reminder_time"
+            app:title="日程提醒时间"
+            app:summary="在日程到达前的指定时间发送通知"
+            app:entries="@array/reminder_time_entries"
+            app:entryValues="@array/reminder_time_values"
+            app:defaultValue="1_day" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="权限与后台设置">
+        <Preference
+            app:key="permission_notification"
+            app:title="通知权限"
+            app:summary="允许应用发送通知"/>
+        <Preference
+            app:key="permission_exact_alarm"
+            app:title="精确闹钟权限"
+            app:summary="允许应用精确地在指定时间提醒你"/>
+        <Preference
+            app:key="permission_autostart"
+            app:title="自启动权限"
+            app:summary="确保手机重启后，提醒能自动恢复"/>
+        <Preference
+            app:key="permission_battery_optimization"
+            app:title="后台运行设置"
+            app:summary="防止后台任务被系统意外终止"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

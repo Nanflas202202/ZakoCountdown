@@ -1,0 +1,34 @@
+<!-- file: res/xml/root_preferences.xml (终极版) -->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <Preference
+        app:key="nav_to_personalization"
+        app:title="个性化"
+        app:summary="主题、颜色、背景图"
+        app:icon="@drawable/ic_personalization"/>
+
+    <Preference
+        app:key="nav_to_notifications"
+        app:title="通知与提醒"
+        app:summary="常驻通知、定时提醒"
+        app:icon="@drawable/ic_notifications"/>
+
+    <Preference
+        app:key="nav_to_advanced"
+        app:title="高级功能"
+        app:summary="开屏弹窗、微件"
+        app:icon="@drawable/ic_advanced"/>
+
+    <Preference
+        app:key="nav_to_permissions"
+        app:title="权限中心"
+        app:summary="检查并授予所有必要的后台与特殊权限"
+        app:icon="@drawable/ic_security"/>
+
+    <Preference
+        app:key="nav_to_about"
+        app:title="关于"
+        app:summary="版本信息、开发者"
+        app:icon="@drawable/ic_info"/>
+
+</PreferenceScreen>

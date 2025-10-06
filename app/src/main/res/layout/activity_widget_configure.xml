@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".widget.WidgetConfigureActivity">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="请选择要显示的日程"
+        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+        android:padding="16dp"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_widget_config"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="选择背景样式"
+        android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:paddingHorizontal="16dp"
+        android:paddingTop="16dp"/>
+
+    <RadioGroup
+        android:id="@+id/widget_bg_type_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="16dp">
+        <RadioButton
+            android:id="@+id/widget_bg_transparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="半透明"/>
+        <RadioButton
+            android:id="@+id/widget_bg_solid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="主题色"/>
+        <RadioButton
+            android:id="@+id/widget_bg_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="自定义图片"/>
+    </RadioGroup>
+
+    <Button
+        android:id="@+id/widget_select_image_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="选择图片"
+        android:visibility="gone"/>
+
+</LinearLayout>

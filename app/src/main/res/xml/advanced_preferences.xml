@@ -1,0 +1,28 @@
+<!-- file: res/xml/advanced_preferences.xml -->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="开屏弹窗">
+        <SwitchPreferenceCompat
+            app:key="enable_popup_reminder"
+            app:title="开启开屏弹窗"
+            app:summary="在启动指定应用时，弹出重点日程提醒"
+            app:defaultValue="true" />
+        <Preference
+            app:key="select_important_apps"
+            app:title="选择应用"
+            app:summary="选择要触发弹窗的应用"
+            app:dependency="enable_popup_reminder"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="相关权限">
+        <Preference
+            app:key="permission_accessibility"
+            app:title="无障碍服务"
+            app:summary="必要权限，点击开启"/>
+        <Preference
+            app:key="permission_overlay"
+            app:title="悬浮窗权限"
+            app:summary="在定制系统上建议开启，确保弹窗正常"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

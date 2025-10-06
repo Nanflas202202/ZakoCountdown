@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 主题设置 -->
+    <string-array name="theme_entries">
+        <item>Material Design 3 (推荐)</item>
+        <item>Material Design 2 (经典)</item>
+        <item>Material Design 1 (怀旧)</item>
+    </string-array>
+
+    <string-array name="theme_values">
+        <item>M3</item>
+        <item>M2</item>
+        <item>M1</item>
+
+    </string-array>
+    <!-- 新增：不包含MD1的稳定版主题列表 -->
+    <string-array name="theme_entries_stable">
+        <item>Material Design 3 (推荐)</item>
+        <item>Material Design 2 (经典)</item>
+    </string-array>
+    <string-array name="theme_values_stable">
+        <item>M3</item>
+        <item>M2</item>
+    </string-array>
+    <!-- 强调色设置 -->
+    <string-array name="color_entries">
+        <item>跟随壁纸 (Monet)</item>
+        <item>活力粉</item>
+        <item>天空蓝</item>
+    </string-array>
+
+    <string-array name="color_values">
+        <item>MONET</item>
+        <item>PINK</item>
+        <item>BLUE</item>
+    </string-array>
+    <string-array name="popup_mode_entries">
+        <item>自动 (推荐)</item>
+        <item>Activity 模式</item>
+        <item>悬浮窗模式</item>
+    </string-array>
+    <string-array name="popup_mode_values">
+        <item>auto</item>
+        <item>activity</item>
+        <item>window</item>
+    </string-array>
+    <string-array name="reminder_time_entries">
+        <item>不提醒</item>
+        <item>提前 1 天</item>
+        <item>提前 3 天</item>
+        <item>提前 1 周</item>
+    </string-array>
+    <string-array name="reminder_time_values">
+        <item>none</item>
+        <item>1_day</item>
+        <item>3_days</item>
+        <item>1_week</item>
+    </string-array>
+</resources>

@@ -1,0 +1,5 @@
+<!-- file: res/drawable/widget_background_transparent.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <corners android:radius="16dp" />
+    <solid android:color="#80000000" /> <!-- 半透明黑色背景 -->
+</shape>

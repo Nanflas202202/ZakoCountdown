@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="16dp"
+    android:layout_marginVertical="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/text_view_prefix_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="距离"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/text_view_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/text_view_prefix_title"
+            app:layout_constraintTop_toTopOf="@id/text_view_prefix_title"
+            app:layout_constraintBottom_toBottomOf="@id/text_view_prefix_title"
+            tools:text="毕业"/>
+
+        <TextView
+            android:id="@+id/text_view_time_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_view_title"
+            android:layout_marginTop="12dp"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            tools:text="还有"/>
+
+        <!-- 年 -->
+        <TextView
+            android:id="@+id/time_years_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/text_view_time_label"
+            android:layout_marginTop="4dp"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="2"/>
+        <TextView
+            android:id="@+id/time_years_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="年"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_years_value"
+            app:layout_constraintStart_toEndOf="@id/time_years_value"/>
+
+        <!-- 月 -->
+        <TextView
+            android:id="@+id/time_months_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_years_value"
+            app:layout_constraintStart_toEndOf="@id/time_years_label"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="3"/>
+        <TextView
+            android:id="@+id/time_months_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="月"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_months_value"
+            app:layout_constraintStart_toEndOf="@id/time_months_value"/>
+
+        <!-- 周 -->
+        <TextView
+            android:id="@+id/time_weeks_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_months_value"
+            app:layout_constraintStart_toEndOf="@id/time_months_label"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="1"/>
+        <TextView
+            android:id="@+id/time_weeks_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="周"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_weeks_value"
+            app:layout_constraintStart_toEndOf="@id/time_weeks_value"/>
+
+        <!-- 天 (周内的天) -->
+        <TextView
+            android:id="@+id/time_days_in_week_value"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_weeks_value"
+            app:layout_constraintStart_toEndOf="@id/time_weeks_label"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="5"/>
+        <TextView
+            android:id="@+id/time_days_in_week_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="天"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_days_in_week_value"
+            app:layout_constraintStart_toEndOf="@id/time_days_in_week_value"/>
+
+        <!-- 分 (新加) -->
+        <TextView
+            android:id="@+id/time_minutes_value_full"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_days_in_week_value"
+            app:layout_constraintStart_toEndOf="@id/time_days_in_week_label"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="34"/>
+        <TextView
+            android:id="@+id/time_minutes_label_full"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="分"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_minutes_value_full"
+            app:layout_constraintStart_toEndOf="@id/time_minutes_value_full"/>
+
+        <!-- 秒 (新加) -->
+        <TextView
+            android:id="@+id/time_seconds_value_full"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_minutes_value_full"
+            app:layout_constraintStart_toEndOf="@id/time_minutes_label_full"
+            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+            android:textColor="?attr/colorPrimary"
+            tools:text="56"/>
+        <TextView
+            android:id="@+id/time_seconds_label_full"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="秒"
+            android:layout_marginStart="4dp"
+            app:layout_constraintBaseline_toBaselineOf="@id/time_seconds_value_full"
+            app:layout_constraintStart_toEndOf="@id/time_seconds_value_full"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

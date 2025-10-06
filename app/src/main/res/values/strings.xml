@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ZakoCountdown</string>
+    <string name="add_new_event">添加新日程</string>
+    <string name="accessibility_service_description">用于在您打开指定应用时，提醒您重要的倒数日日程。ZakoCountdown需要此权限来检测前台应用的变化，以便及时弹出提醒。我们承诺不会收集您的任何个人信息。</string>
+</resources>
