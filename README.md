@@ -1,3 +1,3 @@
 ![ZakoLogo](./ZCLogoFull.png)
 # ZakoCountdown
-A simple app which is similar to DaysMatter
+Your worst time manager, go and use calender instead.
