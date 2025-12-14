@@ -3,7 +3,7 @@ package com.errorsiayusulif.zakocountdown.ui.settings
 
 import android.annotation.SuppressLint
 import android.app.AlarmManager
-import android.content.ActivityNotFoundException // <-- 【核心修复】
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -12,6 +12,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
+import android.text.TextUtils
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.Preference
@@ -24,21 +25,9 @@ import com.errorsiayusulif.zakocountdown.utils.SystemUtils
 class PermissionsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
-        // 不再需要设置 sharedPreferencesName
+        preferenceManager.sharedPreferencesName = "zako_prefs"
         setPreferencesFromResource(R.xml.permissions_preferences, rootKey)
-
-        // 只为没有标准Intent的选项设置监听器
-        findPreference<Preference>("permission_autostart")?.setOnPreferenceClickListener {
-            PermissionUtils.getAutostartIntent(requireContext())?.let { intent ->
-                startActivitySafely(intent, "无法跳转到自启设置页面")
-            }
-            true
-        }
-
-        findPreference<Preference>("permission_miui_background")?.setOnPreferenceClickListener {
-            goToMiuiPermission(requireContext())
-            true
-        }
+        setupListeners()
     }
 
     override fun onResume() {
@@ -47,7 +36,6 @@ class PermissionsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupListeners() {
-        // --- 所有入口都只负责跳转，不再处理状态 ---
         findPreference<Preference>("permission_notification")?.setOnPreferenceClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
@@ -72,8 +60,10 @@ class PermissionsFragment : PreferenceFragmentCompat() {
             }
             true
         }
+        // --- 【核心修复】为无障碍服务设置点击事件 ---
         findPreference<Preference>("enable_accessibility")?.setOnPreferenceClickListener {
-            startActivitySafely(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS), "无法打开无障碍设置页面"); true
+            startActivitySafely(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS), "无法打开无障碍设置页面")
+            true
         }
         findPreference<Preference>("permission_overlay")?.setOnPreferenceClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -85,7 +75,12 @@ class PermissionsFragment : PreferenceFragmentCompat() {
         findPreference<Preference>("permission_autostart")?.setOnPreferenceClickListener {
             PermissionUtils.getAutostartIntent(requireContext())?.let {
                 startActivitySafely(it, "无法跳转到自启设置页面")
-            }; true
+            }
+            true
+        }
+        findPreference<Preference>("permission_miui_background")?.setOnPreferenceClickListener {
+            goToMiuiPermission(requireContext())
+            true
         }
     }
 

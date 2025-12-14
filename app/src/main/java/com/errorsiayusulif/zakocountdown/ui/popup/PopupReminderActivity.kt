@@ -1,23 +1,25 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/popup/PopupReminderActivity.kt
-
 package com.errorsiayusulif.zakocountdown.ui.popup
 
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.databinding.ActivityPopupReminderBinding
+import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PopupReminderActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPopupReminderBinding
 
     companion object {
-        // 用于在Intent中传递数据的键
-        const val EXTRA_EVENT_NAME = "extra_event_name"
-        const val EXTRA_DAYS_LEFT = "extra_days_left"
-        const val EXTRA_OTHER_EVENTS_INFO = "extra_other_events_info"
-        const val EXTRA_DETAILS_STRING = "extra_details_string"
+        const val EXTRA_EVENT_IDS = "extra_event_ids"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,18 +27,34 @@ class PopupReminderActivity : AppCompatActivity() {
         binding = ActivityPopupReminderBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 从启动它的Intent中获取数据
-        val eventName = intent.getStringExtra(EXTRA_EVENT_NAME)
-        val daysLeft = intent.getLongExtra(EXTRA_DAYS_LEFT, 0)
+        // --- 【核心修复】接收 LongArray 并查询数据库 ---
+        val eventIds = intent.getLongArrayExtra(EXTRA_EVENT_IDS)
 
-        // 更新UI
-        binding.popupTextEventName.text = "距离 $eventName"
-        val details = intent.getStringExtra(EXTRA_DETAILS_STRING)
-        binding.popupTextDetails.text = details // <-- 更新UI
+        Log.d("PopupActivity", "Received event IDs: ${eventIds?.joinToString()}")
 
-        // 设置一个定时器，在3秒后自动关闭这个Activity
+        if (eventIds == null || eventIds.isEmpty()) {
+            binding.popupDetailsText.text = "没有找到日程信息"
+        } else {
+            binding.popupDetailsText.text = "正在加载日程..."
+            lifecycleScope.launch {
+                val repository = (application as ZakoCountdownApplication).repository
+                val detailsString = withContext(Dispatchers.IO) {
+                    val events = repository.getEventsByIds(eventIds.toList())
+                    Log.d("PopupActivity", "Found ${events.size} events from database.")
+
+                    events.take(3).joinToString("\n") { event ->
+                        val diff = TimeCalculator.calculateDifference(event.targetDate)
+                        if (diff.isPast) "「${event.title}」已过去 ${diff.totalDays} 天"
+                        else "距离「${event.title}」还有 ${diff.totalDays} 天"
+                    }
+                }
+
+                binding.popupDetailsText.text = if (detailsString.isBlank()) "没有需要提醒的日程" else detailsString
+            }
+        }
+
         Handler(Looper.getMainLooper()).postDelayed({
             finish()
-        }, 3000) // 3000毫秒 = 3秒
+        }, 5000) // 延长显示时间到5秒
     }
 }

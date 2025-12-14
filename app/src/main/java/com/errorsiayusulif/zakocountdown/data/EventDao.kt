@@ -45,4 +45,6 @@ interface EventDao {
 
     @Query("SELECT * FROM countdown_events WHERE isPinned = 1 LIMIT 1")
     suspend fun findPinnedEvent(): CountdownEvent?
+    @Query("SELECT * FROM countdown_events WHERE id IN (:ids)")
+    suspend fun getEventsByIds(ids: List<Long>): List<CountdownEvent>
 }

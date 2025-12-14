@@ -113,6 +113,12 @@ class WidgetConfigureActivity : AppCompatActivity() {
         setResult(Activity.RESULT_OK, resultValue)
         finish()
 
+        // --- 【核心修复】发送一个广播来触发全局刷新 ---
+        val updateIntent = Intent(this, WidgetUpdateReceiver::class.java).apply {
+            action = WidgetUpdateReceiver.ACTION_UPDATE_WIDGET
+        }
+        sendBroadcast(updateIntent)
+
         if (!isShortcut) {
             val appWidgetManager = AppWidgetManager.getInstance(this)
             UpdateWidgetWorker.updateWidget(this, appWidgetManager, appWidgetId)

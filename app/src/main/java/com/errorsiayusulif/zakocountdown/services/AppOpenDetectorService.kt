@@ -19,6 +19,7 @@ import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.ui.popup.PopupReminderActivity
+import com.errorsiayusulif.zakocountdown.ui.popup.PopupDataHolder // 导入
 import com.errorsiayusulif.zakocountdown.utils.SystemUtils
 import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
 import kotlinx.coroutines.*
@@ -28,33 +29,36 @@ import java.util.concurrent.TimeUnit
 class AppOpenDetectorService : AccessibilityService() {
 
     companion object {
-        const val TAG = "ZakoDetectorService" // 使用一个独特的TAG，方便过滤
-        private const val COOLDOWN_PERIOD_MS = 5000L
+        const val TAG = "ZakoDetectorService"
+        private const val COOLDOWN_PERIOD_MS = 10000L // 延长冷却时间到10秒
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val appLaunchTimestamps = mutableMapOf<String, Long>()
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // 【日志 #1】确认服务是否接收到任何事件
-        Log.i(TAG, ">>> [EVENT RECEIVED] Type: ${AccessibilityEvent.eventTypeToString(event?.eventType ?: -1)}, Pkg: ${event?.packageName}")
+        Log.v(TAG, ">>> [EVENT RECEIVED] Type: ${AccessibilityEvent.eventTypeToString(event?.eventType ?: -1)}, Pkg: ${event?.packageName}")
 
         if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val packageName = event.packageName?.toString() ?: return
 
+            // 过滤掉不关心的包
             if (packageName == "com.android.systemui" || packageName == applicationContext.packageName) {
-                Log.v(TAG, "[IGNORE] System UI or self package.")
+                return
+            }
+            // 过滤掉启动器和输入法等
+            if (event.className?.contains("Launcher") == true || event.className?.contains("InputMethod") == true) {
                 return
             }
 
+            // --- 【核心修复】只检查，不更新时间戳 ---
             val currentTime = System.currentTimeMillis()
             val lastLaunchTimeForThisApp = appLaunchTimestamps[packageName] ?: 0L
 
             if ((currentTime - lastLaunchTimeForThisApp) > COOLDOWN_PERIOD_MS) {
-                Log.d(TAG, "[COOL-DOWN PASSED] for $packageName. Firing check.")
-                appLaunchTimestamps[packageName] = currentTime
+                // 冷却检查通过，启动检查流程
                 serviceScope.launch {
-                    checkAndLaunchPopup(packageName)
+                    checkAndLaunchPopup(packageName, currentTime) // 把当前时间戳传递过去
                 }
             } else {
                 Log.v(TAG, "[IGNORE] Cooldown active for $packageName.")
@@ -62,104 +66,84 @@ class AppOpenDetectorService : AccessibilityService() {
         }
     }
 
-    private suspend fun checkAndLaunchPopup(packageName: String) {
+    private suspend fun checkAndLaunchPopup(packageName: String, launchTime: Long) {
         Log.d(TAG, "==> [CHECK START] for $packageName")
         val prefs = PreferenceManager(this)
 
         if (!prefs.isPopupReminderEnabled()) {
-            Log.w(TAG, "[CHECK FAILED] Popup reminder feature is disabled by user.")
+            Log.w(TAG, "[CHECK FAILED] Popup feature disabled.")
             return
         }
-        Log.i(TAG, "[CHECK PASSED] Popup feature is enabled.")
 
         val monitoredApps = prefs.getImportantApps()
-        Log.d(TAG, "Monitored apps list: $monitoredApps")
-
         if (monitoredApps.contains(packageName)) {
-            Log.i(TAG, "[CHECK PASSED] '$packageName' IS IN the monitored list.")
-
+            Log.i(TAG, "[CHECK PASSED] '$packageName' IS IN monitored list.")
             val repository = (application as ZakoCountdownApplication).repository
             val importantEvents = repository.getImportantEvents()
-            Log.d(TAG, "Found ${importantEvents.size} important events in database.")
 
             if (importantEvents.isNotEmpty()) {
-                Log.i(TAG, "[CHECK PASSED] Important events list is not empty.")
-                val eventToShow = importantEvents.first()
-                val now = Date()
-                val diffInMillis = eventToShow.targetDate.time - now.time
+                val eventIds = importantEvents
+                    .filter { it.targetDate.time - Date().time >= 0 }
+                    .map { it.id }
+                    .toLongArray()
 
-                if (diffInMillis < 0) {
-                    Log.w(TAG, "[CHECK FAILED] Event '${eventToShow.title}' has already passed.")
+                if (eventIds.isEmpty()) {
+                    Log.d(TAG, "[CHECK FAILED] All important events have passed.")
                     return
                 }
-                Log.i(TAG, "[CHECK PASSED] Event '${eventToShow.title}' has not passed.")
 
-                val daysLeft = TimeUnit.MILLISECONDS.toDays(diffInMillis)
-                val finalDays = if (daysLeft == 0L && diffInMillis > 0) 1 else daysLeft
+                // --- 【核心修复】在这里，我们100%确定要弹窗了，才更新时间戳！ ---
+                appLaunchTimestamps[packageName] = launchTime
+                Log.i(TAG, "[SUCCESS] All checks passed. Updating timestamp for $packageName.")
 
                 val popupMode = prefs.getPopupMode()
                 val useWindowMode = when (popupMode) {
                     PreferenceManager.POPUP_MODE_WINDOW -> true
-                    PreferenceManager.POPUP_MODE_ACTIVITY -> false
-                    else -> false // 自动模式默认使用 Activity
+                    else -> false
                 }
-                Log.d(TAG, "[DECISION] PopupMode='$popupMode', UseWindowMode=$useWindowMode")
-                val detailsString = importantEvents
-                    .take(3) // 最多显示3个，防止内容太多
-                    .joinToString("\n") { event ->
-                        val diff = TimeCalculator.calculateDifference(event.targetDate)
-                        if (diff.isPast) {
-                            "「${event.title}」已过去 ${diff.totalDays} 天"
-                        } else {
-                            "距离「${event.title}」还有 ${diff.totalDays} 天"
-                        }
-                    }
+
                 if (useWindowMode) {
-                    launchWindowPopup(detailsString)
+                    launchWindowPopup(eventIds)
                 } else {
-                    launchActivityPopup(detailsString)
+                    launchActivityPopup(eventIds)
                 }
             } else {
                 Log.w(TAG, "[CHECK FAILED] Important events list is empty.")
             }
         } else {
-            Log.w(TAG, "[CHECK FAILED] '$packageName' IS NOT in the monitored list.")
+            Log.w(TAG, "[CHECK FAILED] '$packageName' IS NOT in monitored list.")
         }
         Log.d(TAG, "<== [CHECK END] for $packageName")
     }
-
-    private suspend fun launchActivityPopup(details: String) {
+    private suspend fun launchActivityPopup(eventIds: LongArray) {
         withContext(Dispatchers.Main) {
-            //Log.i(TAG, "[ACTION] Launching in Activity mode for '${event.title}'...")
-            try {
-                withContext(Dispatchers.Main) {
-                    val intent = Intent(this@AppOpenDetectorService, PopupReminderActivity::class.java).apply {
-                        putExtra(PopupReminderActivity.EXTRA_DETAILS_STRING, details) // 传递新的字符串
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    startActivity(intent)
-                }
-                Log.d(TAG, "[SUCCESS] startActivity called.")
-            } catch (e: Exception) {
-                Log.e(TAG, "[FAILURE] Failed to start Activity", e)
+            Log.d(TAG, "Launching Activity mode with IDs: ${eventIds.joinToString()}")
+            val intent = Intent(this@AppOpenDetectorService, PopupReminderActivity::class.java).apply {
+                // --- 【核心修复】使用正确的 Key 和 Value ---
+                putExtra(PopupReminderActivity.EXTRA_EVENT_IDS, eventIds)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            startActivity(intent)
         }
     }
-
-    private suspend fun launchWindowPopup(details: String) {
+    private suspend fun launchWindowPopup(eventIds: LongArray) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
             Log.e(TAG, "[CHECK FAILED] Popup window requires SYSTEM_ALERT_WINDOW permission. Posting a notification.")
             postPermissionRequestNotification()
             return
         }
+
+        // --- 【在这里植入窃听器#1】 ---
+        Log.i(TAG, "[ACTION] Preparing to launch Window mode...")
+        Log.d(TAG, "      -> Sending Event IDs: ${eventIds.joinToString()}")
+
         withContext(Dispatchers.Main) {
-            //Log.i(TAG, "[ACTION] Launching in Window mode for '${event.title}'...")
             try {
                 val intent = Intent(this@AppOpenDetectorService, PopupViewService::class.java).apply {
-                    putExtra("extra_details_string", details) // 传递新的字符串
+                    putExtra("extra_event_ids", eventIds)
                 }
                 startService(intent)
-                Log.d(TAG, "[SUCCESS] startService for PopupViewService called.")
+                Log.d(TAG, "[SUCCESS] startService for PopupViewService called with Intent: $intent")
             } catch (e: Exception) {
                 Log.e(TAG, "[FAILURE] Failed to start PopupViewService", e)
             }

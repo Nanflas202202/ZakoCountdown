@@ -45,4 +45,7 @@ class EventRepository(private val eventDao: EventDao) {
     suspend fun getWidgetEvent(): CountdownEvent? {
         return eventDao.getWidgetEvent()
     }
+    suspend fun getEventsByIds(ids: List<Long>): List<CountdownEvent> {
+        return eventDao.getEventsByIds(ids)
+    }
 }

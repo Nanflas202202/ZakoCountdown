@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.RemoteViews
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.errorsiayusulif.zakocountdown.MainActivity
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
@@ -62,15 +63,24 @@ private suspend fun updateSingleWidget(
     val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
     // --- 【修复】backgroundType 只在这里定义一次 ---
+    // --- 【核心修复】2. 应用背景 ---
     val backgroundType = preferenceManager.getWidgetBackground(appWidgetId)
     when (backgroundType) {
-        "solid" -> views.setInt(R.id.widget_root, "setBackgroundResource", R.drawable.widget_background_solid)
-        "image" -> {
-            // val imageUri = preferenceManager.getWidgetImageUri(appWidgetId) // <-- 【修复】我们没有这个方法，暂时注释掉
-            // TODO: 异步加载图片并设置为背景
+        "solid" -> {
+            views.setInt(R.id.widget_root, "setBackgroundResource", 0) // 先清除旧背景
+            views.setInt(R.id.widget_root, "setBackgroundResource", R.drawable.widget_background_solid)
         }
-        else -> views.setInt(R.id.widget_root, "setBackgroundResource", R.drawable.widget_background_transparent)
+        "image" -> {
+            // val imageUri = preferenceManager.getWidgetImageUri(appWidgetId) // 假设有这个方法
+            // TODO: 异步加载图片并设置为背景 (这是一个高级主题，暂时使用占位符)
+            views.setInt(R.id.widget_root, "setBackgroundResource", R.drawable.widget_background_solid) // 暂时用纯色代替
+        }
+        else -> { // transparent
+            views.setInt(R.id.widget_root, "setBackgroundResource", 0)
+            views.setInt(R.id.widget_root, "setBackgroundResource", R.drawable.widget_background_transparent)
+        }
     }
+
 
     if (event != null) {
         val now = Date()
@@ -84,18 +94,22 @@ private suspend fun updateSingleWidget(
         views.setTextViewText(R.id.widget_days, "!")
     }
     // 1. 创建一个跳转到“通知设置”页面的Deep Link Intent
-    val intent = Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse("errorsiayusulif://zakocountdown/notifications")
-    )
     // 2. 将 Intent 包装成 PendingIntent
+// --- 【核心修复】1. 设置点击事件 ---
+    // 点击微件后，将打开配置页面，让用户可以重新配置这个微件
+    val configureIntent = Intent(context, WidgetConfigureActivity::class.java).apply {
+        action = AppWidgetManager.ACTION_APPWIDGET_CONFIGURE
+        putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+        flags = Intent.FLAG_ACTIVITY_NEW_TASK
+    }
     val pendingIntent = PendingIntent.getActivity(
         context,
-        appWidgetId, // 使用 appWidgetId 确保每个微件的 PendingIntent 是唯一的
-        intent,
+        appWidgetId, // 使用 appWidgetId 作为 requestCode 保证唯一性
+        configureIntent,
         PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
     )
-    // 3. 将 PendingIntent 设置给微件的根布局
     views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+
+    // 3. 将 PendingIntent 设置给微件的根布局
     appWidgetManager.updateAppWidget(appWidgetId, views)
 }

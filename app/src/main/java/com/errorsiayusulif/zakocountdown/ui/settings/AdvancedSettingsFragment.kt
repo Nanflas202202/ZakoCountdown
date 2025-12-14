@@ -19,7 +19,8 @@ class AdvancedSettingsFragment : PreferenceFragmentCompat() {
         }
 
         // 权限入口的逻辑将由 PermissionsFragment 统一处理，这里只做导航
-        findPreference<Preference>("enable_accessibility")?.setOnPreferenceClickListener {
+        findPreference<Preference>("permission_accessibility")?.setOnPreferenceClickListener {
+            // --- 【最终修复】使用全局Action ---
             findNavController().navigate(R.id.action_global_permissionsFragment)
             true
         }

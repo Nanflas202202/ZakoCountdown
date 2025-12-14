@@ -31,7 +31,7 @@ class AboutFragment : Fragment() {
         binding.aboutVersion.text = "版本 ${BuildConfig.VERSION_NAME}"
 
         // --- 绑定所有列表项 ---
-        setupRow(binding.rowDeveloper, "开发者", "Shigure Hatsuka")
+        setupRow(binding.rowDeveloper, "开发者", "Shigure Hatsukaze")
         setupRow(binding.rowStudio, "开发商", "Errorsia Yusulif Studio")
 
         setupRow(binding.rowDetails, "详细信息", isClickable = true) {
@@ -44,24 +44,24 @@ class AboutFragment : Fragment() {
 
         // 联系方式分组
         setupRow(binding.rowContact, "联系作者 (邮箱)", isClickable = true) {
-            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:your.email@example.com")) // 替换为你的邮箱
+            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("feedback@elysianrealm.xyz")) // 替换为你的邮箱
             startActivitySafely(intent, "未找到邮件应用")
         }
         setupRow(binding.rowWebsite, "访问官网", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://your.website.com")) // 替换为你的官网
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://proxy.yusulif.xyz/yusulifstudio/ZakoCountdown.html")) // 替换为你的官网
             startActivitySafely(intent, "未找到浏览器")
         }
-        setupRow(binding.rowGithub, "访问Github主页", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/your_id")) // 替换为你的Github主页
+        setupRow(binding.rowGithub, "访问Github仓库の主页", isClickable = true) {
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nanflas202202/zakocountdown")) // 替换为你的Github主页
             startActivitySafely(intent, "未找到浏览器")
         }
         // --- 【UI优化】将所有联系方式分组 ---
         setupRow(binding.rowContactTelegram, "加入Telegram群组", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/your_group")) // 替换为你的群组链接
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/TsukiKenga")) // 替换为你的群组链接
             startActivitySafely(intent, "未找到应用打开链接")
         }
         setupRow(binding.rowContactBilibili, "访问Bilibili频道", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://space.bilibili.com/your_id")) // 替换为你的B站主页
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://space.bilibili.com/1132328502")) // 替换为你的B站主页
             startActivitySafely(intent, "未找到应用打开链接")
         }
     }
