@@ -120,6 +120,56 @@ class PreferenceManager(context: Context) {
         return prefs.getBoolean("enable_popup_reminder", true)
     }
 
+    fun saveWidgetImageUri(appWidgetId: Int, uriString: String?) {
+        prefs.edit().putString("${WIDGET_PREF_IMG_PREFIX}${appWidgetId}", uriString).apply()
+    }
+
+    fun getWidgetImageUri(appWidgetId: Int): String? {
+        return prefs.getString("${WIDGET_PREF_IMG_PREFIX}${appWidgetId}", null)
+    }
+
+    // 保存微件自定义颜色 (Hex)
+    fun saveWidgetColor(appWidgetId: Int, colorHex: String?) {
+        prefs.edit().putString("${WIDGET_PREF_COLOR_PREFIX}${appWidgetId}", colorHex).apply()
+    }
+
+    fun getWidgetColor(appWidgetId: Int): String? {
+        return prefs.getString("${WIDGET_PREF_COLOR_PREFIX}${appWidgetId}", null)
+    }
+
+    // 保存微件透明度 (0-100)
+    fun saveWidgetAlpha(appWidgetId: Int, alpha: Int) {
+        prefs.edit().putInt("${WIDGET_PREF_ALPHA_PREFIX}${appWidgetId}", alpha).apply()
+    }
+
+    fun getWidgetAlpha(appWidgetId: Int): Int {
+        // 默认透明度 40% (即 60% 透明)
+        return prefs.getInt("${WIDGET_PREF_ALPHA_PREFIX}${appWidgetId}", 40)
+    }
+    // 图片透明度 (0-100)
+    fun saveWidgetImageAlpha(appWidgetId: Int, alpha: Int) {
+        prefs.edit().putInt("${WIDGET_PREF_IMG_ALPHA_PREFIX}${appWidgetId}", alpha).apply()
+    }
+    fun getWidgetImageAlpha(appWidgetId: Int): Int {
+        return prefs.getInt("${WIDGET_PREF_IMG_ALPHA_PREFIX}${appWidgetId}", 100) // 默认不透明
+    }
+
+    // 遮罩开关
+    fun saveWidgetShowScrim(appWidgetId: Int, show: Boolean) {
+        prefs.edit().putBoolean("${WIDGET_PREF_SHOW_SCRIM_PREFIX}${appWidgetId}", show).apply()
+    }
+    fun getWidgetShowScrim(appWidgetId: Int): Boolean {
+        return prefs.getBoolean("${WIDGET_PREF_SHOW_SCRIM_PREFIX}${appWidgetId}", true) // 默认开启
+    }
+
+    // 遮罩透明度 (0-100)
+    fun saveWidgetScrimAlpha(appWidgetId: Int, alpha: Int) {
+        prefs.edit().putInt("${WIDGET_PREF_SCRIM_ALPHA_PREFIX}${appWidgetId}", alpha).apply()
+    }
+    fun getWidgetScrimAlpha(appWidgetId: Int): Int {
+        return prefs.getInt("${WIDGET_PREF_SCRIM_ALPHA_PREFIX}${appWidgetId}", 40) // 默认 40%
+    }
+
 
     companion object {
         private const val PREFS_NAME = "zako_prefs"
@@ -147,5 +197,11 @@ class PreferenceManager(context: Context) {
         const val REMINDER_TIME_1_DAY = "1_day"
         const val REMINDER_TIME_3_DAYS = "3_days"
         const val REMINDER_TIME_1_WEEK = "1_week"
+        private const val WIDGET_PREF_IMG_PREFIX = "widget_img_"
+        private const val WIDGET_PREF_COLOR_PREFIX = "widget_color_"
+        private const val WIDGET_PREF_ALPHA_PREFIX = "widget_alpha_"
+        private const val WIDGET_PREF_IMG_ALPHA_PREFIX = "widget_img_alpha_"
+        private const val WIDGET_PREF_SHOW_SCRIM_PREFIX = "widget_show_scrim_"
+        private const val WIDGET_PREF_SCRIM_ALPHA_PREFIX = "widget_scrim_alpha_"
     }
 }

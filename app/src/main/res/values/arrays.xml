@@ -10,7 +10,7 @@
     <string-array name="theme_values">
         <item>M3</item>
         <item>M2</item>
-        <item>M1</item>
+        <item>MD1</item>
 
     </string-array>
     <!-- 新增：不包含MD1的稳定版主题列表 -->

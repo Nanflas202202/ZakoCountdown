@@ -1,56 +1,92 @@
-<?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- file: res/layout/widget_layout.xml (最终修复版) -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@drawable/widget_background_transparent"
-    android:padding="16dp">
+    android:layout_height="match_parent">
+    <!-- 移除了 android:padding="16dp" -->
 
-    <TextView
-        android:id="@+id/widget_title_prefix"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:text="距离"
-        android:textColor="@android:color/white"
-        android:textSize="14sp" />
+    <!-- 1. 背景层 (用于显示纯色、半透明色或图片) -->
+    <ImageView
+        android:id="@+id/widget_background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/widget_background_base" />
 
-    <TextView
-        android:id="@+id/widget_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/widget_title_prefix"
-        android:layout_alignBaseline="@id/widget_title_prefix"
-        android:layout_marginStart="4dp"
-        android:ellipsize="end"
-        android:maxLines="1"
-        android:textColor="@android:color/white"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        tools:text="毕业典礼"/>
+    <!-- 2. 遮罩层 (仅在图片模式下使用，用于叠加主题色) -->
+    <ImageView
+        android:id="@+id/widget_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:src="@drawable/widget_background_base"
+        android:visibility="gone" />
 
-    <TextView
-        android:id="@+id/widget_days"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:textColor="@android:color/white"
-        android:textSize="48sp"
-        android:textStyle="bold"
-        tools:text="123" />
+    <!-- 内容容器 (添加Padding以保持内容不贴边) -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/widget_days_suffix"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@id/widget_days"
-        android:layout_toEndOf="@id/widget_days"
-        android:layout_marginStart="8dp"
-        android:text="天"
-        android:textColor="@android:color/white"
-        android:textSize="14sp" />
+        <TextView
+            android:id="@+id/widget_title_prefix"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:text="距离"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"/>
 
+        <TextView
+            android:id="@+id/widget_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toEndOf="@id/widget_title_prefix"
+            android:layout_alignBaseline="@id/widget_title_prefix"
+            android:layout_marginStart="4dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            tools:text="毕业典礼"/>
+
+        <TextView
+            android:id="@+id/widget_days"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="@android:color/white"
+            android:textSize="48sp"
+            android:textStyle="bold"
+            android:shadowColor="#80000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4"
+            tools:text="123" />
+
+        <TextView
+            android:id="@+id/widget_days_suffix"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@id/widget_days"
+            android:layout_toEndOf="@id/widget_days"
+            android:layout_marginStart="8dp"
+            android:text="天"
+            android:textColor="@android:color/white"
+            android:textSize="14sp"
+            android:shadowColor="#80000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2" />
+    </RelativeLayout>
 </RelativeLayout>

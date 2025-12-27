@@ -13,7 +13,7 @@
         <ListPreference
             app:key="accent_color"
             app:title="强调色"
-            app:summary="选择M3主题下的强调色"
+            app:summary="选择ZakoCountdown的强调色"
             app:entries="@array/color_entries"
             app:entryValues="@array/color_values"
             app:defaultValue="MONET" />

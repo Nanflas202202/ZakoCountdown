@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit
 class CountdownAdapter(
     private val onItemClicked: (CountdownEvent) -> Unit,
     private val onLongItemClicked: (CountdownEvent, View) -> Boolean
-) : ListAdapter<CountdownEvent, CountdownAdapter.CountdownViewHolder>(EventsComparator()) {
+) : ListAdapter<CountdownEvent, CountdownAdapter.CountdownViewHolder>(CountdownViewHolder.EventsComparator()) {
 
     companion object {
         private const val VIEW_TYPE_HERO = 0
@@ -196,32 +196,56 @@ class CountdownAdapter(
         class HeroViewHolder(private val binding: ItemCountdownCardHeroBinding) : CountdownViewHolder(binding) {
             override fun stopTimer() {}
             override fun bind(event: CountdownEvent) {
+                // 1. 应用透明度 (确保在每次绑定时都应用)
                 applyCardAlpha(event)
-                applyTitleColor(binding.heroTitle, event)
 
+                // 2. 加载背景和处理文字颜色
                 if (event.backgroundUri != null) {
                     binding.heroBackgroundImage.load(Uri.parse(event.backgroundUri))
                     binding.heroScrim.visibility = View.VISIBLE
+
+                    // 有背景图时，文字强制白色，带遮罩
                     val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
-                    val scrimColor = ColorUtils.setAlphaComponent(colorPrimary, 102)
+                    val scrimColor = ColorUtils.setAlphaComponent(colorPrimary, 102) // 40%
                     binding.heroScrim.setBackgroundColor(scrimColor)
+
+                    binding.heroTitle.setTextColor(Color.WHITE)
+                    binding.heroDays.setTextColor(Color.WHITE)
+                    binding.heroLabelPrefix.setTextColor(Color.WHITE)
+                    binding.heroLabelSuffix.setTextColor(Color.WHITE)
+                    binding.heroTitle.setTextColor(Color.WHITE) // 确保这个ID存在于xml中
                 } else {
                     binding.heroBackgroundImage.setImageDrawable(null)
                     binding.heroScrim.visibility = View.GONE
+
+                    // 无背景图时，使用自定义颜色或默认色
                     applyCardColor(event)
+
+                    // 文字颜色恢复为主题默认 (通常是黑色/深灰)
+                    // 获取当前卡片背景色的对比色会更复杂，这里我们简化为：如果没设背景图，就用主题默认文本色
+                    // 或者，如果是 MD1/MD2，我们强制用 colorOnSurface
+                    val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
+                    val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+
+                    // 标题保持 Primary 色以突出显示，其他用 OnSurface
+                    binding.heroTitle.setTextColor(colorPrimary)
+                    binding.heroDays.setTextColor(colorPrimary)
+                    binding.heroLabelPrefix.setTextColor(colorOnSurface)
+                    binding.heroLabelSuffix.setTextColor(colorOnSurface)
+                    binding.heroTitle.setTextColor(colorOnSurface)
                 }
 
                 val diff = TimeCalculator.calculateDifference(event.targetDate)
-                binding.heroTitle.text = "距离 ${event.title}"
+                binding.heroTitle.text = event.title // 移除 "距离"，因为布局里有了
                 binding.heroDays.text = diff.totalDays.toString()
                 binding.heroLabelPrefix.text = if (diff.isPast) "已过" else "还有"
             }
         }
-    }
 
     class EventsComparator : DiffUtil.ItemCallback<CountdownEvent>() {
         override fun areItemsTheSame(oldItem: CountdownEvent, newItem: CountdownEvent): Boolean = oldItem.id == newItem.id
         // --- 【核心修复】比较整个对象，以检测alpha、颜色、模式等所有变化 ---
         override fun areContentsTheSame(oldItem: CountdownEvent, newItem: CountdownEvent): Boolean = oldItem == newItem
     }
+}
 }
