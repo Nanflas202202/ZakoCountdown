@@ -25,9 +25,9 @@ class LicenseFragment : Fragment() {
         binding.toggleButtonGroup.addOnButtonCheckedListener { group, checkedId, isChecked ->
             if (isChecked) {
                 when (checkedId) {
-                    R.id.button_license_zh -> loadLicense(R.raw.licenses_zh)
+                    R.id.button_license_zh -> loadLicense(R.raw.license_zh)
                     R.id.button_license_mpl_en -> loadLicense(R.raw.license_en) // <-- 添加新逻辑
-                    R.id.button_license_eys -> loadLicense(R.raw.license_eys)
+                    R.id.button_license_eys -> loadLicense(R.raw.eula)
                 }
             }
         }

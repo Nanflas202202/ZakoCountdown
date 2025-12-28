@@ -15,6 +15,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityMainBinding
 import com.errorsiayusulif.zakocountdown.receiver.SecretCodeReceiver
+import com.google.android.material.color.DynamicColors // 确保导入
 
 class MainActivity : AppCompatActivity() {
 
@@ -56,34 +57,53 @@ class MainActivity : AppCompatActivity() {
     // ... applySelectedTheme 和 onSupportNavigateUp 方法保持不变 ...
 
     private fun applySelectedTheme() {
-            val themeKey = preferenceManager.getTheme()
-            val colorKey = preferenceManager.getAccentColor()
+        val themeKey = preferenceManager.getTheme()
+        val colorKey = preferenceManager.getAccentColor()
 
-            val finalThemeResId = when (themeKey) {
-                PreferenceManager.THEME_M1 -> {
-                    when (colorKey) {
-                        PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD1_Pink
-                        PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD1_Blue
-                        else -> R.style.Theme_ZakoCountdown_MD1
-                    }
-                }
-                PreferenceManager.THEME_M2 -> {
-                    when (colorKey) {
-                        PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD2_Pink
-                        PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD2_Blue
-                        else -> R.style.Theme_ZakoCountdown_MD2
-                    }
-                }
-                else -> { // 默认为 MD3
-                    when (colorKey) {
-                        PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_M3_Pink
-                        PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_M3_Blue
-                        else -> R.style.Theme_ZakoCountdown_M3
-                    }
-                }
-            }
-            setTheme(finalThemeResId)
+        // 1. 确定基础主题资源 ID
+        // 注意：我们这里统一先应用 M3 基础，后续如果是 MD1/MD2 再覆盖
+        // 这样做是为了让 DynamicColors 有机会在 M3 模式下生效
+
+        var finalThemeResId = R.style.Theme_ZakoCountdown_M3
+
+        if (themeKey == PreferenceManager.THEME_M1) {
+            finalThemeResId = R.style.Theme_ZakoCountdown_MD1
+        } else if (themeKey == PreferenceManager.THEME_M2) {
+            finalThemeResId = R.style.Theme_ZakoCountdown_MD2
         }
+
+        // 2. 处理颜色叠加
+        // 如果不是 M3 + Monet，我们需要叠加自定义颜色
+        if (!(themeKey == PreferenceManager.THEME_M3 && colorKey == PreferenceManager.ACCENT_MONET)) {
+
+            // 先应用基础主题
+            setTheme(finalThemeResId)
+
+            // 再应用颜色叠加
+            val colorOverlayId = when (colorKey) {
+                PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_Overlay_Pink
+                PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_Overlay_Blue
+                // 如果是 Monet 或者是 MD1/MD2 的默认色，这里返回 0
+                else -> 0
+            }
+            if (colorOverlayId != 0) {
+                theme.applyStyle(colorOverlayId, true)
+            }
+        } else {
+            // --- 【Monet 核心修复】 ---
+            // 如果是 M3 + Monet，我们需要启用动态取色
+            // 这一步必须在 setTheme 之前或之后紧接着调用
+            // 注意：applyToActivityIfAvailable 会尝试应用一个系统动态主题覆盖当前主题
+
+            // 1. 先应用我们的 M3 基础主题 (无颜色定义)
+            setTheme(R.style.Theme_ZakoCountdown_M3)
+
+            // 2. 尝试应用动态颜色
+            if (DynamicColors.isDynamicColorAvailable()) {
+                DynamicColors.applyToActivityIfAvailable(this)
+            }
+        }
+    }
 
     override fun onSupportNavigateUp(): Boolean {
         return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp()

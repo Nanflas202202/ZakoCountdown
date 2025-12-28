@@ -56,4 +56,20 @@
         <item>3_days</item>
         <item>1_week</item>
     </string-array>
+
+    <!--  ↓↓↓  新增：遮罩颜色选项  ↓↓↓  -->
+    <string-array name="scrim_color_entries">
+        <item>主题色 (默认)</item>
+        <item>纯黑</item>
+        <item>纯白</item>
+        <item>自定义颜色</item> <!-- 新增 -->
+    </string-array>
+
+    <string-array name="scrim_color_values">
+        <item>theme</item>
+        <item>black</item>
+        <item>white</item>
+        <item>custom</item> <!-- 新增 -->
+    </string-array>
+    <!--  ↑↑↑  新增：遮罩颜色选项  ↑↑↑  -->
 </resources>

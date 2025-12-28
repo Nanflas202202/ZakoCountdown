@@ -73,7 +73,8 @@
                 android:layout_height="wrap_content"
                 android:text="卡片不透明度"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:layout_marginTop="24dp"/>
+                android:layout_marginTop="24dp"
+                android:id="@+id/text_alpha_label"/>
             <com.google.android.material.slider.Slider
                 android:id="@+id/slider_alpha"
                 android:layout_width="match_parent"

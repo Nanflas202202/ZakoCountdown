@@ -26,7 +26,7 @@
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="开源许可" />
+                android:text="GNU开源许可证（中文）" />
 
             <!--  ↓↓↓  添加新的按钮  ↓↓↓ -->
             <Button
@@ -34,7 +34,7 @@
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="MPL License (EN)" />
+                android:text="GNU License (EN)" />
             <!--  ↑↑↑  添加新的按钮  ↑↑↑ -->
 
             <Button

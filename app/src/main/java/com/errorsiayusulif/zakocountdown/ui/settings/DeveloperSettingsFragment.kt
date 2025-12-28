@@ -48,5 +48,9 @@ class DeveloperSettingsFragment : PreferenceFragmentCompat() {
             preferenceManager.setPopupMode(newValue as String)
             true
         }
+        findPreference<SwitchPreferenceCompat>("key_unlock_global_alpha")?.setOnPreferenceChangeListener { _, newValue ->
+            preferenceManager.setUnlockGlobalAlpha(newValue as Boolean)
+            true
+        }
     }
 }

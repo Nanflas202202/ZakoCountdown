@@ -36,7 +36,19 @@
     <!-- ============================================= -->
     <!-- =====   2. 基础骨架 (差异化配置)        ====== -->
     <!-- ============================================= -->
-
+    <!-- 叠加颜色层 (修复了这里) -->
+    <style name="Theme_ZakoCountdown_Overlay_Pink">
+        <item name="colorPrimary">#B93E6D</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#FFD9E2</item>
+        <item name="colorOnPrimaryContainer">#3E0021</item>
+    </style>
+    <style name="Theme_ZakoCountdown_Overlay_Blue">
+        <item name="colorPrimary">#0061A4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#D1E4FF</item>
+        <item name="colorOnPrimaryContainer">#001D36</item>
+    </style>
     <!-- MD1 骨架 -->
     <style name="Theme_ZakoCountdown_Base_MD1" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="materialCardViewStyle">@style/Widget.ZakoCountdown.CardView.MD1</item>

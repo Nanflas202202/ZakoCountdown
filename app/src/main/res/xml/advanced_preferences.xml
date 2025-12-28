@@ -24,5 +24,11 @@
             app:title="悬浮窗权限"
             app:summary="在定制系统上建议开启，确保弹窗正常"/>
     </PreferenceCategory>
-
+    <PreferenceCategory app:title="个性化设置">
+        <SwitchPreferenceCompat
+            app:key="key_unlock_global_alpha"
+            app:title="解锁所有卡片透明度"
+            app:summary="开启后，允许调节非置顶卡片的透明度"
+            app:defaultValue="false" />
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -20,6 +20,7 @@ import androidx.navigation.fragment.navArgs
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentCardSettingsBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
 import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModel
@@ -33,29 +34,42 @@ class CardSettingsFragment : Fragment() {
     private val args: CardSettingsFragmentArgs by navArgs()
     private var currentEvent: CountdownEvent? = null
 
+    // --- 【核心修复】声明 preferenceManager ---
+    private lateinit var preferenceManager: PreferenceManager
+
     private val homeViewModel: HomeViewModel by viewModels {
         val app = requireActivity().application as ZakoCountdownApplication
         HomeViewModelFactory(app.repository, app)
     }
 
     private val colors = listOf(
-        null, // 代表默认颜色
-        "#EF9A9A", // 浅红
-        "#F48FB1", // 浅粉
-        "#CE93D8", // 浅紫
-        "#B39DDB", // 薰衣草紫
-        "#9FA8DA", // 靛蓝灰
-        "#81D4FA", // 天空蓝
-        "#A5D6A7", // 浅绿
-        "#FFF59D", // 柠檬黄
-        "#FFCC80", // 橙黄
-        "#FFAB91", // 珊瑚粉
-        "#BCAAA4", // 暖灰
-        "#EEEEEE"  // 亮灰
+        null, "#EF9A9A", "#F48FB1", "#CE93D8", "#B39DDB", "#9FA8DA",
+        "#81D4FA", "#A5D6A7", "#FFF59D", "#FFCC80", "#FFAB91", "#BCAAA4", "#EEEEEE"
     )
+
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            try {
+                val contentResolver = requireActivity().contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, takeFlags)
+
+                currentEvent?.let { event ->
+                    val updatedEvent = event.copy(backgroundUri = uri.toString())
+                    homeViewModel.update(updatedEvent)
+                    this.currentEvent = updatedEvent
+                    Toast.makeText(context, "背景图已设置", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: SecurityException) {
+                Toast.makeText(context, "无法获取图片权限", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCardSettingsBinding.inflate(inflater, container, false)
+        // --- 【核心修复】初始化 preferenceManager ---
+        preferenceManager = PreferenceManager(requireContext())
         return binding.root
     }
 
@@ -64,15 +78,15 @@ class CardSettingsFragment : Fragment() {
 
         lifecycleScope.launch {
             currentEvent = homeViewModel.getEventById(args.eventId)
-            currentEvent?.let {
-                setupInitialState(it)
-                setupListeners(it)
-                setupColorPalette(it)
-                // --- 【新功能】根据是否置顶，显示/隐藏背景图设置 ---
-                setupWallpaperOptions(it)
+            currentEvent?.let { event ->
+                setupInitialState(event)
+                setupListeners(event)
+                setupColorPalette(event)
+                setupWallpaperOptions(event)
             }
         }
     }
+
     private fun setupInitialState(event: CountdownEvent) {
         when (event.displayMode) {
             CountdownEvent.DISPLAY_MODE_DETAILED -> binding.radioDetailed.isChecked = true
@@ -90,9 +104,15 @@ class CardSettingsFragment : Fragment() {
                 else -> CountdownEvent.DISPLAY_MODE_SIMPLE
             }
             if (newMode != event.displayMode) {
-                homeViewModel.update(event.copy(displayMode = newMode))
+                // 注意：这里我们使用当前的 currentEvent，因为它可能已经被 update 更新过（比如改了颜色）
+                currentEvent?.let {
+                    val updated = it.copy(displayMode = newMode)
+                    homeViewModel.update(updated)
+                    currentEvent = updated
+                }
             }
         }
+
         binding.sliderAlpha.addOnChangeListener { _, value, fromUser ->
             if (fromUser) {
                 currentEvent?.let {
@@ -103,62 +123,12 @@ class CardSettingsFragment : Fragment() {
             }
         }
     }
-    private fun setupColorPalette(event: CountdownEvent) {
-        val inflater = LayoutInflater.from(context)
-        for (colorHex in colors) {
-            val swatchBinding = ItemColorSwatchBinding.inflate(inflater, binding.colorPalette, false)
 
-            val color = if (colorHex == null) {
-                // 获取主题中的默认卡片颜色
-                com.google.android.material.R.attr.colorSurface
-            } else {
-                Color.parseColor(colorHex)
-            }
-
-            (swatchBinding.colorView.background as GradientDrawable).setColor(color)
-
-            if (event.colorHex == colorHex) {
-                swatchBinding.checkMark.visibility = View.VISIBLE
-            }
-
-            swatchBinding.root.setOnClickListener {
-                currentEvent?.let { current ->
-                    val updatedEvent = current.copy(colorHex = colorHex)
-                    homeViewModel.update(updatedEvent)
-                    this.currentEvent = updatedEvent // 更新本地实例
-                    updateColorPaletteSelection()
-                }
-            }
-            binding.colorPalette.addView(swatchBinding.root)
-        }
-    }
-
-    private fun updateColorPaletteSelection() {
-        binding.colorPalette.children.forEachIndexed { index, view ->
-            val swatchBinding = ItemColorSwatchBinding.bind(view)
-            val colorHexForThisSwatch = colors[index]
-            swatchBinding.checkMark.visibility = if (currentEvent?.colorHex == colorHexForThisSwatch) View.VISIBLE else View.GONE
-        }
-    }
-    // --- 【新功能】图片选择器启动器 ---
-    private val pickImageLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
-                val contentResolver = requireActivity().contentResolver
-                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                contentResolver.takePersistableUriPermission(uri, takeFlags)
-
-                currentEvent?.let { event ->
-                    val updatedEvent = event.copy(backgroundUri = uri.toString())
-                    homeViewModel.update(updatedEvent)
-                    this.currentEvent = updatedEvent
-                }
-            }
-        }
     private fun setupWallpaperOptions(event: CountdownEvent) {
-        Log.d("CardSettings", "Event: '${event.title}', isPinned: ${event.isPinned}")
+        // --- 现在这里可以正常使用 preferenceManager 了 ---
+        val isGlobalUnlock = preferenceManager.isGlobalAlphaUnlocked()
 
-        // --- 【核心修复】使用 LinearLayout 的 ID ---
+        // 1. 壁纸设置仅对置顶有效
         if (event.isPinned) {
             binding.wallpaperSettingsLayout.visibility = View.VISIBLE
             binding.buttonChangeWallpaper.setOnClickListener {
@@ -174,6 +144,53 @@ class CardSettingsFragment : Fragment() {
             }
         } else {
             binding.wallpaperSettingsLayout.visibility = View.GONE
+        }
+
+        // 2. 透明度滑块：如果置顶 OR 开发者解锁，则显示
+        if (event.isPinned || isGlobalUnlock) {
+            binding.sliderAlpha.visibility = View.VISIBLE
+            // 需要在 XML 中给 TextView 添加 id: text_alpha_label
+            binding.textAlphaLabel.visibility = View.VISIBLE
+        } else {
+            binding.sliderAlpha.visibility = View.GONE
+            binding.textAlphaLabel.visibility = View.GONE
+        }
+    }
+
+    private fun setupColorPalette(event: CountdownEvent) {
+        val inflater = LayoutInflater.from(context)
+        for (colorHex in colors) {
+            val swatchBinding = ItemColorSwatchBinding.inflate(inflater, binding.colorPalette, false)
+
+            val color = if (colorHex == null) {
+                com.google.android.material.R.attr.colorSurface
+            } else {
+                Color.parseColor(colorHex)
+            }
+
+            (swatchBinding.colorView.background as GradientDrawable).setColor(color)
+
+            if (event.colorHex == colorHex) {
+                swatchBinding.checkMark.visibility = View.VISIBLE
+            }
+
+            swatchBinding.root.setOnClickListener {
+                currentEvent?.let { current ->
+                    val updatedEvent = current.copy(colorHex = colorHex)
+                    homeViewModel.update(updatedEvent)
+                    this.currentEvent = updatedEvent
+                    updateColorPaletteSelection()
+                }
+            }
+            binding.colorPalette.addView(swatchBinding.root)
+        }
+    }
+
+    private fun updateColorPaletteSelection() {
+        binding.colorPalette.children.forEachIndexed { index, view ->
+            val swatchBinding = ItemColorSwatchBinding.bind(view)
+            val colorHexForThisSwatch = colors[index]
+            swatchBinding.checkMark.visibility = if (currentEvent?.colorHex == colorHexForThisSwatch) View.VISIBLE else View.GONE
         }
     }
 

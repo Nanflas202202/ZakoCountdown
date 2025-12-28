@@ -169,6 +169,30 @@ class PreferenceManager(context: Context) {
     fun getWidgetScrimAlpha(appWidgetId: Int): Int {
         return prefs.getInt("${WIDGET_PREF_SCRIM_ALPHA_PREFIX}${appWidgetId}", 40) // 默认 40%
     }
+    // --- 【新功能】遮罩设置 ---
+    fun getScrimColorMode(): String {
+        return prefs.getString(KEY_SCRIM_COLOR_MODE, SCRIM_MODE_THEME) ?: SCRIM_MODE_THEME
+    }
+
+    fun getScrimAlpha(): Int {
+        // 默认透明度 25% (0-100)
+        return prefs.getInt(KEY_SCRIM_ALPHA, 25)
+    }
+    fun saveScrimCustomColor(colorHex: String) {
+        prefs.edit().putString(KEY_SCRIM_CUSTOM_COLOR, colorHex).apply()
+    }
+    fun getScrimCustomColor(): String {
+        // 默认深灰色
+        return prefs.getString(KEY_SCRIM_CUSTOM_COLOR, "#333333") ?: "#333333"
+    }
+
+    // 开发者选项：解锁全局透明度
+    fun setUnlockGlobalAlpha(unlock: Boolean) {
+        prefs.edit().putBoolean(KEY_UNLOCK_GLOBAL_ALPHA, unlock).apply()
+    }
+    fun isGlobalAlphaUnlocked(): Boolean {
+        return prefs.getBoolean(KEY_UNLOCK_GLOBAL_ALPHA, false)
+    }
 
 
     companion object {
@@ -203,5 +227,15 @@ class PreferenceManager(context: Context) {
         private const val WIDGET_PREF_IMG_ALPHA_PREFIX = "widget_img_alpha_"
         private const val WIDGET_PREF_SHOW_SCRIM_PREFIX = "widget_show_scrim_"
         private const val WIDGET_PREF_SCRIM_ALPHA_PREFIX = "widget_scrim_alpha_"
+        private const val KEY_SCRIM_COLOR_MODE = "key_scrim_color_mode"
+        private const val KEY_SCRIM_ALPHA = "key_scrim_alpha"
+
+        private const val KEY_SCRIM_CUSTOM_COLOR = "key_scrim_custom_color"
+        private const val KEY_UNLOCK_GLOBAL_ALPHA = "key_unlock_global_alpha"
+
+        const val SCRIM_MODE_THEME = "theme"
+        const val SCRIM_MODE_BLACK = "black"
+        const val SCRIM_MODE_WHITE = "white"
+        const val SCRIM_MODE_CUSTOM = "custom" // 新增自定义模式
     }
 }

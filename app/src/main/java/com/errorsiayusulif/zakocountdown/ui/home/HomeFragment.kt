@@ -1,19 +1,15 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/home/HomeFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.home
 
-import android.app.PendingIntent
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
-import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
+import androidx.core.graphics.ColorUtils
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -24,8 +20,8 @@ import coil.load
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentHomeBinding
-import com.errorsiayusulif.zakocountdown.widget.ZakoWidgetProvider
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import java.util.*
@@ -50,7 +46,10 @@ class HomeFragment : Fragment() {
 
         val adapter = CountdownAdapter(
             onItemClicked = { event ->
-                val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "编辑日程", eventId = event.id)
+                val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(
+                    title = "编辑日程",
+                    eventId = event.id
+                )
                 findNavController().navigate(action)
             },
             onLongItemClicked = { event, anchorView ->
@@ -60,6 +59,9 @@ class HomeFragment : Fragment() {
         )
         binding.recyclerViewEvents.adapter = adapter
         binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
+
+        // --- 【核心修复】禁用默认动画器，防止透明度被重置为 1.0 ---
+        binding.recyclerViewEvents.itemAnimator = null
 
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean = false
@@ -93,18 +95,46 @@ class HomeFragment : Fragment() {
     }
 
     private fun loadWallpaper() {
-        val wallpaperUriString = (requireActivity().application as ZakoCountdownApplication)
-            .preferenceManager.getHomepageWallpaperUri()
+        val app = requireActivity().application as ZakoCountdownApplication
+        val wallpaperUriString = app.preferenceManager.getHomepageWallpaperUri()
 
+        // 1. 获取遮罩配置
+        val scrimMode = app.preferenceManager.getScrimColorMode()
+        val scrimAlphaPercent = app.preferenceManager.getScrimAlpha()
+        val scrimAlphaInt = (scrimAlphaPercent / 100f * 255).toInt()
+
+        // 2. 决定基础颜色
+        val baseColor = when (scrimMode) {
+            PreferenceManager.SCRIM_MODE_BLACK -> Color.BLACK
+            PreferenceManager.SCRIM_MODE_WHITE -> Color.WHITE
+            PreferenceManager.SCRIM_MODE_CUSTOM -> {
+                // 读取自定义颜色
+                Color.parseColor((requireActivity().application as ZakoCountdownApplication).preferenceManager.getScrimCustomColor())
+            }
+            else -> { // theme
+                MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+            }
+        }
+
+        // 3. 计算最终颜色
+        val finalScrimColor = ColorUtils.setAlphaComponent(baseColor, scrimAlphaInt)
+
+        // 4. 应用背景和遮罩
         if (wallpaperUriString != null) {
             binding.wallpaperImage.load(Uri.parse(wallpaperUriString)) { crossfade(true) }
-            val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
-            val scrimColor = Color.argb(102, Color.red(colorPrimary), Color.green(colorPrimary), Color.blue(colorPrimary)) // 40% alpha
-            binding.recyclerViewScrim.setBackgroundColor(scrimColor)
+            // 有壁纸时，应用计算出的遮罩
+            binding.recyclerViewScrim.setBackgroundColor(finalScrimColor)
         } else {
             binding.wallpaperImage.setImageDrawable(null)
-            val themeBackgroundColor = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface)
-            binding.recyclerViewScrim.setBackgroundColor(themeBackgroundColor)
+            // 无壁纸时，逻辑稍微特殊：
+            // 如果用户强制选了黑/白遮罩，我们就在默认背景上叠加这个遮罩
+            // 如果选的是主题色，我们通常希望保持默认背景清爽，但也可以叠加一层淡淡的主题色
+
+            // 为了视觉一致性，无壁纸时我们通常让遮罩“隐形”或者作为底色
+            // 这里我们采取的策略是：无壁纸时，recyclerViewScrim 充当不透明背景
+            // 这样能让列表在任何情况下都清晰
+            val themeSurfaceColor = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface)
+            binding.recyclerViewScrim.setBackgroundColor(themeSurfaceColor)
         }
     }
 
@@ -121,27 +151,19 @@ class HomeFragment : Fragment() {
         val popup = PopupMenu(requireContext(), anchorView)
         popup.menuInflater.inflate(R.menu.event_card_context_menu, popup.menu)
 
-        popup.menu.findItem(R.id.action_pin).title = if (event.isPinned) "取消置顶" else "设为置顶"
-        popup.menu.findItem(R.id.action_mark_important).title = if (event.isImportant) "取消重点" else "设为重点"
+        val pinMenuItem = popup.menu.findItem(R.id.action_pin)
+        pinMenuItem.title = if (event.isPinned) "取消置顶" else "设为置顶"
+
+        val importantMenuItem = popup.menu.findItem(R.id.action_mark_important)
+        importantMenuItem.title = if (event.isImportant) "取消重点" else "设为重点"
 
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.action_pin -> {
-                    homeViewModel.update(event.copy(isPinned = !event.isPinned))
-                    true
-                }
-                R.id.action_mark_important -> {
-                    homeViewModel.update(event.copy(isImportant = !event.isImportant))
-                    true
-                }
+                R.id.action_pin -> { homeViewModel.update(event.copy(isPinned = !event.isPinned)); true }
+                R.id.action_mark_important -> { homeViewModel.update(event.copy(isImportant = !event.isImportant)); true }
                 R.id.action_card_settings -> {
                     val action = HomeFragmentDirections.actionHomeFragmentToCardSettingsFragment(event.id)
-                    findNavController().navigate(action)
-                    true
-                }
-                R.id.action_add_widget -> {
-                    requestPinWidget(event)
-                    true
+                    findNavController().navigate(action); true
                 }
                 R.id.action_delete -> {
                     homeViewModel.delete(event)
@@ -153,42 +175,6 @@ class HomeFragment : Fragment() {
             }
         }
         popup.show()
-    }
-
-    private fun requestPinWidget(event: CountdownEvent) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            if (appWidgetManager.isRequestPinAppWidgetSupported) {
-                val widgetProvider = ComponentName(requireContext(), ZakoWidgetProvider::class.java)
-
-                // --- 【核心修复】 ---
-                // 1. 创建一个启动 WidgetConfigureActivity 的常规 Intent
-                val configureIntent = Intent(
-                    context,
-                    com.errorsiayusulif.zakocountdown.widget.WidgetConfigureActivity::class.java
-                ).apply {
-                    // 我们不能直接传递微件ID，因为此时它还未创建
-                    // 但我们可以传递一个“预选事件”的ID
-                    putExtra("preselected_event_id", event.id)
-                    // 添加一个标志，表明这是由快捷方式创建的
-                    putExtra("is_shortcut_creation", true)
-                }
-
-                // 2. 使用 getActivity() 创建一个启动 Activity 的 PendingIntent
-                val successCallback = PendingIntent.getActivity(
-                    context,
-                    event.id.toInt(), // 使用 event.id 确保每个请求的唯一性
-                    configureIntent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-
-                appWidgetManager.requestPinAppWidget(widgetProvider, null, successCallback)
-            } else {
-                Toast.makeText(context, "您的桌面不支持此功能", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(context, "此功能需要 Android 8.0 或更高版本", Toast.LENGTH_SHORT).show()
-        }
     }
 
     override fun onDestroyView() {

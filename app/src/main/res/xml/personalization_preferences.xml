@@ -1,5 +1,6 @@
 <!-- file: res/xml/personalization_preferences.xml -->
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory app:title="主题与颜色">
         <ListPreference
@@ -29,6 +30,24 @@
             app:key="remove_wallpaper"
             app:title="移除主页背景图"
             app:summary="恢复为默认背景"/>
+        <!--  ↓↓↓  新增：遮罩设置  ↓↓↓  -->
+        <ListPreference
+            app:key="key_scrim_color_mode"
+            app:title="背景遮罩颜色"
+            app:summary="设置覆盖在背景图上的颜色层"
+            app:entries="@array/scrim_color_entries"
+            app:entryValues="@array/scrim_color_values"
+            app:defaultValue="theme" />
+
+        <SeekBarPreference
+            app:key="key_scrim_alpha"
+            app:title="背景遮罩浓度"
+            app:summary="调节遮罩的透明度"
+            app:defaultValue="25"
+            app:min="0"
+            android:max="100"
+            app:showSeekBarValue="true"/>
+        <!--  ↑↑↑  新增：遮罩设置  ↑↑↑  -->
     </PreferenceCategory>
 
 </PreferenceScreen>
