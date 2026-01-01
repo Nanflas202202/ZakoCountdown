@@ -51,7 +51,14 @@ class MainActivity : AppCompatActivity() {
                 navController.navigate(R.id.action_global_deepDeveloperFragment)
             }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS)
+        } // 添加处理 LOG_READER 导航
+        if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER, false) == true) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                navController.navigate(R.id.action_global_logReaderFragment)
+            }, 100)
+            intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER)
         }
+
     }
 
     // ... applySelectedTheme 和 onSupportNavigateUp 方法保持不变 ...

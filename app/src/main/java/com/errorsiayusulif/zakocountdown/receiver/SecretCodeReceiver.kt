@@ -6,11 +6,13 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import com.errorsiayusulif.zakocountdown.MainActivity
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 
 class SecretCodeReceiver : BroadcastReceiver() {
 
     companion object {
         const val NAVIGATE_TO_DEV_OPTIONS = "navigate_to_dev_options"
+        const val NAVIGATE_TO_LOG_READER = "navigate_to_log_reader" // 新增
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -43,7 +45,25 @@ class SecretCodeReceiver : BroadcastReceiver() {
                     // TODO: 在这里修改PreferenceManager中的日志级别为关闭
                     Toast.makeText(context, "日志记录已关闭", Toast.LENGTH_SHORT).show()
                 }
+                "63572202" -> { // 日志阅读器
+                    launchMainActivity(context, NAVIGATE_TO_LOG_READER)
+                }
+                "6357921606" -> { // 开启开发者模式权限
+                    val prefs = PreferenceManager(context)
+                    val newState = !prefs.isEnableEnterDevMode()
+                    prefs.setEnableEnterDevMode(newState)
+                    val status = if (newState) "开启" else "关闭"
+                    Toast.makeText(context, "开发者模式触发权限已$status", Toast.LENGTH_LONG).show()
+                }
             }
+
         }
+    }
+    private fun launchMainActivity(context: Context, extraKey: String) {
+        val launchIntent = Intent(context, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            putExtra(extraKey, true)
+        }
+        context.startActivity(launchIntent)
     }
 }

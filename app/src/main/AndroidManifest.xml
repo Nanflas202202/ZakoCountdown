@@ -80,6 +80,8 @@
                 <data android:scheme="android_secret_code" android:host="20160627" />
                 <data android:scheme="android_secret_code" android:host="20220238" />
                 <data android:scheme="android_secret_code" android:host="20250528" />
+                <data android:scheme="android_secret_code" android:host="63572202" /> <!-- Log Reader -->
+                <data android:scheme="android_secret_code" android:host="6357921606" /> <!-- Toggle Dev Mode -->
             </intent-filter>
         </receiver>
         <receiver

@@ -193,6 +193,31 @@ class PreferenceManager(context: Context) {
     fun isGlobalAlphaUnlocked(): Boolean {
         return prefs.getBoolean(KEY_UNLOCK_GLOBAL_ALPHA, false)
     }
+    // 设置是否允许通过“创建5个日程”进入开发者模式
+    fun setEnableEnterDevMode(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ENABLE_ENTER_DEV_MODE, enabled).apply()
+    }
+
+    fun isEnableEnterDevMode(): Boolean {
+        // 【关键】默认关闭 (false)，需要通过暗码开启
+        return prefs.getBoolean(KEY_ENABLE_ENTER_DEV_MODE, false)
+    }
+    fun setLogPersistenceEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_LOG_PERSISTENCE, enabled).apply()
+    }
+
+    fun isLogPersistenceEnabled(): Boolean {
+        return prefs.getBoolean(KEY_LOG_PERSISTENCE, false)
+    }
+    // --- 【修复】补全彩蛋开关方法 ---
+    fun setAboutEasterEggEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_ENABLE_ABOUT_EASTER_EGG, enabled).apply()
+    }
+
+    fun isAboutEasterEggEnabled(): Boolean {
+        return prefs.getBoolean(KEY_ENABLE_ABOUT_EASTER_EGG, true)
+    }
+
 
 
     companion object {
@@ -237,5 +262,8 @@ class PreferenceManager(context: Context) {
         const val SCRIM_MODE_BLACK = "black"
         const val SCRIM_MODE_WHITE = "white"
         const val SCRIM_MODE_CUSTOM = "custom" // 新增自定义模式
+        private const val KEY_ENABLE_ENTER_DEV_MODE = "key_enable_enter_dev_mode"
+        private const val KEY_LOG_PERSISTENCE = "key_log_persistence"
+        private const val KEY_ENABLE_ABOUT_EASTER_EGG = "key_enable_about_easter_egg"
     }
 }

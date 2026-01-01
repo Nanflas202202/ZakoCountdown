@@ -146,10 +146,10 @@ class CardSettingsFragment : Fragment() {
             binding.wallpaperSettingsLayout.visibility = View.GONE
         }
 
-        // 2. 透明度滑块：如果置顶 OR 开发者解锁，则显示
+        // 2. 透明度区域：置顶 OR 开发者解锁 可见
+        // 注意：这里我们控制的是独立的 View，不再受 wallpaperSettingsLayout 的影响
         if (event.isPinned || isGlobalUnlock) {
             binding.sliderAlpha.visibility = View.VISIBLE
-            // 需要在 XML 中给 TextView 添加 id: text_alpha_label
             binding.textAlphaLabel.visibility = View.VISIBLE
         } else {
             binding.sliderAlpha.visibility = View.GONE

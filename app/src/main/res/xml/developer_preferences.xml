@@ -31,4 +31,11 @@
             app:entryValues="@array/popup_mode_values"
             app:defaultValue="auto"/>
     </PreferenceCategory>
+    <PreferenceCategory app:title="个性化">
+        <SwitchPreferenceCompat
+            app:key="key_unlock_global_alpha"
+            app:title="解锁所有卡片透明度"
+            app:summary="开启后，允许调节非置顶卡片的透明度"
+            app:defaultValue="false" />
+    </PreferenceCategory>
 </PreferenceScreen>

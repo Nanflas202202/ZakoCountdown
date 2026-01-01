@@ -1,5 +1,6 @@
+<!-- file: res/xml/deep_developer_preferences.xml -->
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory app:title="深层调试">
+    <PreferenceCategory app:title="日志设置">
         <SwitchPreferenceCompat
             app:key="log_level_info"
             app:title="日志级别：INFO"
@@ -8,12 +9,38 @@
             app:key="log_level_off"
             app:title="日志级别：关闭"
             app:summary="输入*#*#20250528#*#*触发"/>
-    </PreferenceCategory>
-    <PreferenceCategory app:title="彩蛋设置">
         <SwitchPreferenceCompat
-            app:key="key_enable_about_easter_egg"
-            app:title="开启“关于”页面的开发者模式入口"
-            app:summary="开启后，连续点击“关于”可进入开发者选项"
+            app:key="key_log_persistence"
+            app:title="日志持久化保存"
+            app:summary="将运行日志写入文件，便于回溯 (可能占用存储空间)"
             app:defaultValue="false" />
     </PreferenceCategory>
+    <PreferenceCategory app:title="开发者入口控制">
+        <SwitchPreferenceCompat
+            app:key="key_enable_enter_dev_mode"
+            app:title="允许进入普通开发者模式"
+            app:summary="开启后，主页连续创建5个'EnterDevMode'日程可触发"
+            app:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            app:key="key_enable_about_easter_egg"
+            app:title="开启“关于”页面彩蛋"
+            app:summary="开启后，连续点击“关于”可进入普通开发者选项"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="日志系统">
+        <Preference
+            app:key="nav_to_live_logs"
+            app:title="实时日志阅读器"
+            app:summary="查看当前运行时的 Logcat"/>
+
+        <Preference
+            app:key="nav_to_archived_logs"
+            app:title="查看历史日志文件"
+            app:summary="按日期查看已保存的日志"
+            app:dependency="key_log_persistence"/>
+    </PreferenceCategory>
+
+
 </PreferenceScreen>

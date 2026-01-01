@@ -139,6 +139,13 @@ class HomeFragment : Fragment() {
     }
 
     private fun checkDevModeActivation(events: List<CountdownEvent>) {
+        val app = requireActivity().application as ZakoCountdownApplication
+
+        // 1. 首先检查开关是否开启
+        if (!app.preferenceManager.isEnableEnterDevMode()) {
+            return // 如果没开启权限，直接忽略
+        }
+
         val devModeEvents = events.filter { it.title == "EnterDevMode" }
         if (devModeEvents.size >= 5) {
             Toast.makeText(requireContext(), "开发者选项已开启！", Toast.LENGTH_SHORT).show()

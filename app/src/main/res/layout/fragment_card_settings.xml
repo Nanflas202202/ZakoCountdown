@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -10,6 +12,7 @@
         android:layout_height="wrap_content"
         android:padding="16dp">
 
+        <!-- 1. 显示模式 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,6 +41,7 @@
                 android:text="完整模式 (年:月:周:天...)"/>
         </RadioGroup>
 
+        <!-- 2. 自定义颜色 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -57,31 +61,15 @@
                 android:orientation="horizontal"/>
         </HorizontalScrollView>
 
-        <!--  ↓↓↓  使用 LinearLayout 进行分组  ↓↓↓ -->
+        <!-- 3. 壁纸设置 (仅置顶卡片显示，默认 GONE) -->
         <LinearLayout
             android:id="@+id/wallpaper_settings_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:visibility="gone"
-            tools:visibility="visible"
-            xmlns:tools="http://schemas.android.com/tools">
+            tools:visibility="visible">
 
-            <!-- ... 在颜色选择下方 ... -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="卡片不透明度"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                android:layout_marginTop="24dp"
-                android:id="@+id/text_alpha_label"/>
-            <com.google.android.material.slider.Slider
-                android:id="@+id/slider_alpha"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:valueFrom="0.2"
-                android:valueTo="1.0"
-                android:stepSize="0.1"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -108,7 +96,28 @@
                     android:text="移除图片"/>
             </LinearLayout>
         </LinearLayout>
-        <!--  ↑↑↑  使用 LinearLayout 进行分组  ↑↑↑ -->
+
+        <!-- 4. 透明度设置 (独立区域，默认 GONE) -->
+        <!-- 这里的 ID text_alpha_label 和 slider_alpha 是必须的 -->
+        <TextView
+            android:id="@+id/text_alpha_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="卡片不透明度"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            android:layout_marginTop="24dp"
+            android:visibility="gone"
+            tools:visibility="visible"/>
+
+        <com.google.android.material.slider.Slider
+            android:id="@+id/slider_alpha"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:valueFrom="0.0"
+            android:valueTo="1.0"
+            android:stepSize="0.05"
+            android:visibility="gone"
+            tools:visibility="visible"/>
 
     </LinearLayout>
 </ScrollView>

@@ -110,11 +110,6 @@
         android:id="@+id/developerSettingsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeveloperSettingsFragment"
         android:label="开发者选项" />
-
-    <fragment
-        android:id="@+id/deepDeveloperFragment"
-        android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeepDeveloperFragment"
-        android:label="深层开发者选项" />
     <!-- file: res/navigation/nav_graph.xml -->
     <fragment
         android:id="@+id/notificationSettingsFragment"
@@ -148,4 +143,41 @@
         android:id="@+id/personalizationFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.PersonalizationFragment"
         android:label="个性化" />
+
+    <action
+        android:id="@+id/action_global_logReaderFragment"
+        app:destination="@id/logReaderFragment" />
+    <fragment
+        android:id="@+id/deepDeveloperFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeepDeveloperFragment"
+        android:label="深层开发者选项">
+        <action
+            android:id="@+id/action_deepDeveloperFragment_to_logReaderFragment"
+            app:destination="@id/logReaderFragment" />
+        <action
+            android:id="@+id/action_deepDeveloperFragment_to_logFileListFragment"
+            app:destination="@id/logFileListFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/logReaderFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.LogReaderFragment"
+        android:label="日志详情">
+        <!-- 定义参数，nullable=true 表示可以为空 -->
+        <argument
+            android:name="filePath"
+            app:argType="string"
+            app:nullable="true"
+            android:defaultValue="@null" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/logFileListFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.LogFileListFragment"
+        android:label="历史日志文件">
+        <action
+            android:id="@+id/action_logFileListFragment_to_logReaderFragment"
+            app:destination="@id/logReaderFragment" />
+    </fragment>
+
 </navigation>
