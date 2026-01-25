@@ -2,4 +2,6 @@
     <string name="app_name">ZakoCountdown</string>
     <string name="add_new_event">添加新日程</string>
     <string name="accessibility_service_description">用于在您打开指定应用时，提醒您重要的倒数日日程。ZakoCountdown需要此权限来检测前台应用的变化，以便及时弹出提醒。我们承诺不会收集您的任何个人信息。</string>
+    <string name="sbui_uninstall_title">卸⚡载⚡你⚡大⚡坝</string>
+    <string name="sbui_uninstall_content">您在卸载后将无法继续获得日程提示，您确定要卸载吗？\n该软件由于开发阶段，很多功能暂不完善，我们对您不好的体验深感抱歉。\n如果您有更好的意见或发现了bug，您可以发送邮件至feedback@elysianrealm.xyz或前往官方GitHub仓库反馈。\nErrorsia Yusulif Studio\n~~Exception Ignites Evolution~~\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n</string>
 </resources>

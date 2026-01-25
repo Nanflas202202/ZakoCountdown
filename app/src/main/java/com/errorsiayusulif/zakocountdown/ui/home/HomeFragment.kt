@@ -1,9 +1,11 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/home/HomeFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.home
 
+import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.provider.CalendarContract // 【核心新增】用于日历功能
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -60,7 +62,7 @@ class HomeFragment : Fragment() {
         binding.recyclerViewEvents.adapter = adapter
         binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
 
-        // --- 【核心修复】禁用默认动画器，防止透明度被重置为 1.0 ---
+        // 禁用默认动画器，防止透明度被重置为 1.0
         binding.recyclerViewEvents.itemAnimator = null
 
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
@@ -109,7 +111,11 @@ class HomeFragment : Fragment() {
             PreferenceManager.SCRIM_MODE_WHITE -> Color.WHITE
             PreferenceManager.SCRIM_MODE_CUSTOM -> {
                 // 读取自定义颜色
-                Color.parseColor((requireActivity().application as ZakoCountdownApplication).preferenceManager.getScrimCustomColor())
+                try {
+                    Color.parseColor((requireActivity().application as ZakoCountdownApplication).preferenceManager.getScrimCustomColor())
+                } catch (e: Exception) {
+                    Color.DKGRAY // 默认回退色
+                }
             }
             else -> { // theme
                 MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
@@ -126,13 +132,7 @@ class HomeFragment : Fragment() {
             binding.recyclerViewScrim.setBackgroundColor(finalScrimColor)
         } else {
             binding.wallpaperImage.setImageDrawable(null)
-            // 无壁纸时，逻辑稍微特殊：
-            // 如果用户强制选了黑/白遮罩，我们就在默认背景上叠加这个遮罩
-            // 如果选的是主题色，我们通常希望保持默认背景清爽，但也可以叠加一层淡淡的主题色
-
-            // 为了视觉一致性，无壁纸时我们通常让遮罩“隐形”或者作为底色
-            // 这里我们采取的策略是：无壁纸时，recyclerViewScrim 充当不透明背景
-            // 这样能让列表在任何情况下都清晰
+            // 无壁纸时，让列表背景色与主题 Surface 颜色一致，或者轻微叠加
             val themeSurfaceColor = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface)
             binding.recyclerViewScrim.setBackgroundColor(themeSurfaceColor)
         }
@@ -143,7 +143,7 @@ class HomeFragment : Fragment() {
 
         // 1. 首先检查开关是否开启
         if (!app.preferenceManager.isEnableEnterDevMode()) {
-            return // 如果没开启权限，直接忽略
+            return
         }
 
         val devModeEvents = events.filter { it.title == "EnterDevMode" }
@@ -168,9 +168,28 @@ class HomeFragment : Fragment() {
             when (menuItem.itemId) {
                 R.id.action_pin -> { homeViewModel.update(event.copy(isPinned = !event.isPinned)); true }
                 R.id.action_mark_important -> { homeViewModel.update(event.copy(isImportant = !event.isImportant)); true }
+
+                // --- 【新增】Task 1: 添加到系统日历 ---
+                R.id.action_add_to_calendar -> {
+                    addToSystemCalendar(event)
+                    true
+                }
+
+                // --- 【新增】Task 3: 进入分享设置页 ---
+                // 注意：由于您的分享设置页 Fragment 尚未创建，我们先预留入口。
+                // 稍后您给出界面要求后，我们将在这里填入 navigation 代码。
+                R.id.action_share_card -> {
+                    openShareSettings(event)
+                    true
+                }
+
                 R.id.action_card_settings -> {
                     val action = HomeFragmentDirections.actionHomeFragmentToCardSettingsFragment(event.id)
                     findNavController().navigate(action); true
+                }
+                R.id.action_add_widget -> {
+                    Toast.makeText(requireContext(), "请在桌面长按空白处添加 ZakoCountdown 微件", Toast.LENGTH_SHORT).show()
+                    true
                 }
                 R.id.action_delete -> {
                     homeViewModel.delete(event)
@@ -182,6 +201,41 @@ class HomeFragment : Fragment() {
             }
         }
         popup.show()
+    }
+
+    /**
+     * 将日程添加到系统日历
+     */
+    private fun addToSystemCalendar(event: CountdownEvent) {
+        try {
+            val startMillis = event.targetDate.time
+            // 默认设置日程持续1小时（虽然对于全天倒数日来说这个意义不大，但Intent需要结束时间）
+            val endMillis = startMillis + 60 * 60 * 1000
+
+            val intent = Intent(Intent.ACTION_INSERT).apply {
+                data = CalendarContract.Events.CONTENT_URI
+                putExtra(CalendarContract.Events.TITLE, event.title)
+                putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
+                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+                // 倒数日通常是全天事件
+                putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
+                putExtra(CalendarContract.Events.DESCRIPTION, "来自 ZakoCountdown 的日程提醒")
+                // 可以添加地点或其他信息
+                // putExtra(CalendarContract.Events.EVENT_LOCATION, "心之所向")
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "未找到可用的日历应用", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    /**
+     * 进入分享设置/预览界面
+     * (待实现: 等待 SharePreviewFragment 创建后，替换这里的逻辑)
+     */
+    private fun openShareSettings(event: CountdownEvent) {
+        val action = HomeFragmentDirections.actionHomeFragmentToSharePreviewFragment(event.id)
+        findNavController().navigate(action)
     }
 
     override fun onDestroyView() {

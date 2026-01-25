@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
+    android:layout_width="1080px"
+    android:layout_height="1920px"
+    android:orientation="vertical"
+    android:weightSum="10">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="6">
+        <ImageView
+            android:id="@+id/iv_background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:background="#E0E0E0" />
+        <View
+            android:id="@+id/v_scrim"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#000000" />
+    </FrameLayout>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_info_area"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="4"
+        android:background="#FFFFFF">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:orientation="vertical"
+            android:paddingHorizontal="60px"
+            android:paddingTop="60px"
+            app:layout_constraintBottom_toTopOf="@id/iv_logo"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tv_title_prefix"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="距离"
+                    android:textColor="#9E9E9E"
+                    android:textSize="40px" />
+                <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20px"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="日程标题"
+                    android:textColor="#212121"
+                    android:textSize="80px"
+                    android:textStyle="bold" />
+                <TextView
+                    android:id="@+id/tv_target_date"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2025/12/25"
+                    android:textColor="#9E9E9E"
+                    android:textSize="36px"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="120px"
+                android:layout_height="8px"
+                android:layout_marginTop="30px"
+                android:background="#EEEEEE"
+                android:backgroundTint="#40000000" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40px"
+                android:text="还有"
+                android:textColor="#757575"
+                android:textSize="44px" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10px"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tv_days"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="serif"
+                    android:includeFontPadding="false"
+                    android:text="XXX"
+                    android:textColor="#000000"
+                    android:textSize="260px"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="none"
+                    app:autoSizeMaxTextSize="260px"
+                    app:autoSizeMinTextSize="20px"
+                    app:autoSizeStepGranularity="2px"
+                    app:autoSizeTextType="uniform" />
+                <TextView
+                    android:id="@+id/tv_suffix"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="35px"
+                    android:layout_marginStart="5px"
+                    android:text="天"
+                    android:textColor="#212121"
+                    android:textSize="60px" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/iv_logo"
+            android:layout_width="match_parent"
+            android:layout_height="180px"
+            android:scaleType="centerCrop"
+            android:src="@drawable/logo_share_long"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

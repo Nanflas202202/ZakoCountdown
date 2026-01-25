@@ -22,7 +22,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ZakoCountdown"
         tools:targetApi="31">
-
+        <!-- 专门为小米手机桌面卸载添加了提示，提升用户体验 -->
+        <meta-data
+            android:name="app_description_title"
+            android:resource="@string/sbui_uninstall_title" />
+        <meta-data
+            android:name="app_description_content"
+            android:resource="@string/sbui_uninstall_content" />
         <!-- Activities -->
         <activity
             android:name=".MainActivity"
@@ -104,7 +110,16 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-
+        <!-- ↓↓↓ 新增 FileProvider 配置 ↓↓↓ -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 </manifest>

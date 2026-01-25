@@ -13,6 +13,16 @@
         android:id="@+id/action_card_settings"
         android:title="卡片个性化设置" />
     <!--  ↑↑↑  添加新的菜单项  ↑↑↑ -->
+    <!-- ↓↓↓ 新增：添加到日历 ↓↓↓ -->
+    <item
+        android:id="@+id/action_add_to_calendar"
+        android:title="添加到系统日历" />
+    <!-- ↑↑↑ 新增：添加到日历 ↑↑↑ -->
+    <!-- ... 原有内容 ... -->
+    <item
+        android:id="@+id/action_share_card"
+        android:title="生成分享卡片"
+        android:icon="@drawable/ic_share" /> <!-- 假设你有 ic_share 图标，没有可用 android 自带的 -->
     <item
         android:id="@+id/action_delete"
         android:title="删除"

@@ -23,6 +23,10 @@
         <action
             android:id="@+id/action_homeFragment_to_cardSettingsFragment"
             app:destination="@id/cardSettingsFragment" />
+        <!-- 在 homeFragment 中添加 action (或者替换之前的占位符) -->
+        <action
+            android:id="@+id/action_homeFragment_to_sharePreviewFragment"
+            app:destination="@id/sharePreviewFragment" />
     </fragment>
 
     <!-- Add/Edit -->
@@ -179,5 +183,15 @@
             android:id="@+id/action_logFileListFragment_to_logReaderFragment"
             app:destination="@id/logReaderFragment" />
     </fragment>
+    <fragment
+        android:id="@+id/sharePreviewFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.share.SharePreviewFragment"
+        android:label="生成分享卡片"
+        tools:layout="@layout/fragment_share_preview">
+        <argument
+            android:name="eventId"
+            app:argType="long" />
+    </fragment>
+
 
 </navigation>

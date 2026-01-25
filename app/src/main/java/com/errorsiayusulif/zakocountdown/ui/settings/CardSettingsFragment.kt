@@ -42,9 +42,22 @@ class CardSettingsFragment : Fragment() {
         HomeViewModelFactory(app.repository, app)
     }
 
+    // 更新色板列表
     private val colors = listOf(
-        null, "#EF9A9A", "#F48FB1", "#CE93D8", "#B39DDB", "#9FA8DA",
-        "#81D4FA", "#A5D6A7", "#FFF59D", "#FFCC80", "#FFAB91", "#BCAAA4", "#EEEEEE"
+        null, // 默认主题色
+        "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
+        "#FFEBEE", "#FFCDD2", "#EF5350", "#F44336", "#D32F2F", "#B71C1C",
+        "#FCE4EC", "#F8BBD0", "#EC407A", "#E91E63", "#C2185B", "#880E4F",
+        "#F3E5F5", "#E1BEE7", "#AB47BC", "#9C27B0", "#7B1FA2", "#4A148C",
+        "#EDE7F6", "#D1C4E9", "#7E57C2", "#673AB7", "#512DA8", "#311B92",
+        "#E8EAF6", "#C5CAE9", "#5C6BC0", "#3F51B5", "#303F9F", "#1A237E",
+        "#E3F2FD", "#BBDEFB", "#42A5F5", "#2196F3", "#1976D2", "#0D47A1",
+        "#E0F7FA", "#B2EBF2", "#26C6DA", "#00BCD4", "#0097A7", "#006064",
+        "#E0F2F1", "#B2DFDB", "#26A69A", "#009688", "#00796B", "#004D40",
+        "#E8F5E9", "#C8E6C9", "#66BB6A", "#4CAF50", "#388E3C", "#1B5E20",
+        "#FFFDE7", "#FFF9C4", "#FFEE58", "#FFEB3B", "#FBC02D", "#F57F17",
+        "#FFF3E0", "#FFE0B2", "#FFA726", "#FF9800", "#F57C00", "#E65100",
+        "#D7CCC8", "#8D6E63", "#5D4037", "#CFD8DC", "#78909C", "#455A64"
     )
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
+    android:layout_width="1080px"
+    android:layout_height="1920px"
+    android:background="#F5F5F5">
+
+    <ImageView
+        android:id="@+id/iv_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cv_card"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="80px"
+        app:cardBackgroundColor="#FFFFFF"
+        app:cardCornerRadius="40px"
+        app:cardElevation="30px"
+        app:layout_constraintBottom_toTopOf="@id/iv_logo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="80px"
+            android:paddingVertical="100px">
+
+            <!-- 标题行 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tv_title_prefix"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="距离"
+                    android:textColor="#757575"
+                    android:textSize="42px" />
+                <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20px"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="日程标题"
+                    android:textColor="#212121"
+                    android:textSize="60px"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- 分割线：必须定义 ID 为 divider -->
+            <View
+                android:id="@+id/divider"
+                android:layout_width="120px"
+                android:layout_height="6px"
+                android:layout_marginTop="50px"
+                android:background="#EEEEEE"
+                android:backgroundTint="#40000000" />
+
+            <!-- 状态 -->
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50px"
+                android:text="还有"
+                android:textColor="#757575"
+                android:textSize="42px" />
+
+            <!-- 时间容器 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10px"
+                android:gravity="bottom"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tv_days"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="sans-serif-black"
+                    android:includeFontPadding="false"
+                    android:text="XXX"
+                    android:textColor="#212121"
+                    android:textSize="240px"
+                    android:maxLines="1"
+                    android:ellipsize="none"
+                    app:autoSizeMaxTextSize="240px"
+                    app:autoSizeMinTextSize="20px"
+                    app:autoSizeStepGranularity="2px"
+                    app:autoSizeTextType="uniform" />
+
+                <TextView
+                    android:id="@+id/tv_suffix"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="30px"
+                    android:layout_marginStart="10px"
+                    android:text="天"
+                    android:textColor="#212121"
+                    android:textSize="50px" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_target_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="40px"
+                android:text="2026年1月25日"
+                android:textColor="#757575"
+                android:textSize="36px"
+                android:visibility="gone"
+                tools:visibility="visible" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+    <ImageView
+        android:id="@+id/iv_logo"
+        android:layout_width="0dp"
+        android:layout_height="238px"
+        android:layout_marginHorizontal="120px"
+        android:layout_marginTop="100px"
+        android:scaleType="fitCenter"
+        android:src="@drawable/logo_share_transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/cv_card" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
