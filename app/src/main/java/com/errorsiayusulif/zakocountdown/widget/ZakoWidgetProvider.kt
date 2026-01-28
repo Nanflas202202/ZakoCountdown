@@ -5,10 +5,11 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import androidx.work.*
-import java.util.concurrent.TimeUnit
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
+import java.util.concurrent.TimeUnit
 
-class ZakoWidgetProvider : AppWidgetProvider() {
+// ↓↓↓ 注意这里加了 open 关键字 ↓↓↓
+open class ZakoWidgetProvider : AppWidgetProvider() {
 
     companion object {
         const val WIDGET_UPDATE_WORK_NAME = "ZakoWidgetUpdateWork"
@@ -26,7 +27,7 @@ class ZakoWidgetProvider : AppWidgetProvider() {
     override fun onEnabled(context: Context) {
         // 当第一个微件被创建时，启动一个周期性的后台任务
         val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateWidgetWorker>(
-            1, TimeUnit.HOURS // 更新频率，至少为15分钟，这里设为1小时
+            1, TimeUnit.HOURS // 更新频率，至少为15分钟
         ).build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
@@ -41,12 +42,12 @@ class ZakoWidgetProvider : AppWidgetProvider() {
         WorkManager.getInstance(context).cancelUniqueWork(WIDGET_UPDATE_WORK_NAME)
     }
 
-    // 我们把原来的 updateAppWidget 删掉，因为所有更新逻辑都统一由 Worker 处理
-    // 我们提供一个公共方法，方便其他地方（比如添加日程后）也能触发一次立即更新
+    // 提供一个公共方法，方便其他地方触发立即更新
     fun enqueueOneTimeWork(context: Context) {
         val oneTimeWorkRequest = OneTimeWorkRequestBuilder<UpdateWidgetWorker>().build()
         WorkManager.getInstance(context).enqueue(oneTimeWorkRequest)
     }
+
     /**
      * 当一个或多个微件被删除时调用。
      */

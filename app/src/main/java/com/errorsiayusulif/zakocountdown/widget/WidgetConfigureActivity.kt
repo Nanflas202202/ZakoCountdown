@@ -5,7 +5,6 @@ import android.appwidget.AppWidgetManager
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -35,7 +34,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
     // 暂存配置状态
     private var tempImageUri: String? = null
-    private var tempSelectedColor: String? = null // null 代表默认主题色
+    private var tempSelectedColor: String? = null
     private var tempAlpha: Int = 40
     private var tempImageAlpha: Int = 100
     private var tempShowScrim: Boolean = true
@@ -43,10 +42,9 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
     private var selectedEvent: CountdownEvent? = null
 
-    // 颜色板
-    // 更新色板列表
+    // 更新后的色板 (同步 CardSettings 和 SharePreview)
     private val colors = listOf(
-        null, // 默认
+        null, // 默认主题色
         "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
         "#FFEBEE", "#FFCDD2", "#EF5350", "#F44336", "#D32F2F", "#B71C1C",
         "#FCE4EC", "#F8BBD0", "#EC407A", "#E91E63", "#C2185B", "#880E4F",
@@ -73,7 +71,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 1. 在 super.onCreate 之前应用主题
         preferenceManager = PreferenceManager(this)
         applyAppTheme()
 
@@ -86,26 +83,28 @@ class WidgetConfigureActivity : AppCompatActivity() {
         val extras = intent?.extras
         appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
+        // 核心修复：接收来自 HomeFragment requestPinAppWidget 的参数
         val preselectedEventId = extras?.getLong("preselected_event_id", -1L) ?: -1L
         val isShortcutCreation = extras?.getBoolean("is_shortcut_creation", false) ?: false
 
-        // 初始化UI组件
         setupColorPalette()
         setupListeners()
 
         if (isShortcutCreation && preselectedEventId != -1L) {
-            // 快捷方式逻辑
+            // --- 快捷创建逻辑：自动应用默认设置并保存，不显示UI ---
             lifecycleScope.launch {
                 val event = (application as ZakoCountdownApplication).repository.getEventById(preselectedEventId)
                 if (event != null) {
                     selectedEvent = event
-                    commitConfiguration(true)
+                    // 自动提交 (使用默认透明背景、默认颜色)
+                    commitConfiguration(isShortcut = true)
                 } else {
-                    finish()
+                    // 如果ID无效，回退到手动选择
+                    setupRecyclerView()
                 }
             }
         } else if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-            // 2. 如果是重新配置现有微件，加载已有设置
+            // --- 正常配置/重新配置逻辑 ---
             loadCurrentSettings()
             setupRecyclerView()
         } else {
@@ -113,13 +112,9 @@ class WidgetConfigureActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 应用与 MainActivity 一致的主题逻辑
-     */
     private fun applyAppTheme() {
         val themeKey = preferenceManager.getTheme()
         val colorKey = preferenceManager.getAccentColor()
-
         val finalThemeResId = when (themeKey) {
             PreferenceManager.THEME_M1 -> {
                 when (colorKey) {
@@ -135,7 +130,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
                     else -> R.style.Theme_ZakoCountdown_MD2
                 }
             }
-            else -> { // 默认为 MD3
+            else -> { // M3
                 when (colorKey) {
                     PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_M3_Pink
                     PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_M3_Blue
@@ -146,11 +141,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         setTheme(finalThemeResId)
     }
 
-    /**
-     * 回显当前微件的设置
-     */
     private fun loadCurrentSettings() {
-        // 1. 背景类型
         val bgType = preferenceManager.getWidgetBackground(appWidgetId)
         when (bgType) {
             "solid" -> binding.widgetBgSolid.isChecked = true
@@ -158,32 +149,22 @@ class WidgetConfigureActivity : AppCompatActivity() {
             else -> binding.widgetBgTransparent.isChecked = true
         }
 
-        // 2. 颜色
         tempSelectedColor = preferenceManager.getWidgetColor(appWidgetId)
-        updateColorPaletteSelection() // 刷新选中状态
+        updateColorPaletteSelection()
 
-        // 3. 基础透明度
         tempAlpha = preferenceManager.getWidgetAlpha(appWidgetId)
         binding.sliderWidgetAlpha.value = tempAlpha.toFloat()
 
-        // 4. 图片相关
         tempImageUri = preferenceManager.getWidgetImageUri(appWidgetId)
-
         tempImageAlpha = preferenceManager.getWidgetImageAlpha(appWidgetId)
         binding.sliderImageAlpha.value = tempImageAlpha.toFloat()
 
         tempShowScrim = preferenceManager.getWidgetShowScrim(appWidgetId)
         binding.switchShowScrim.isChecked = tempShowScrim
-
         tempScrimAlpha = preferenceManager.getWidgetScrimAlpha(appWidgetId)
         binding.sliderScrimAlpha.value = tempScrimAlpha.toFloat()
 
-        // 5. 手动触发一次可见性刷新
         updateVisibilityBasedOnSelection(binding.widgetBgTypeGroup.checkedRadioButtonId)
-
-        // 6. 获取当前关联的日程ID (用于在列表中高亮)
-        val currentEventId = preferenceManager.getWidgetEventId(appWidgetId)
-        // 注意：Adapter 加载是异步的，我们在 Adapter 创建时传入这个ID
     }
 
     private fun updateVisibilityBasedOnSelection(checkedId: Int) {
@@ -203,7 +184,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
                 binding.colorSelectorContainer.visibility = View.VISIBLE
             }
             R.id.widget_bg_transparent -> {
-                // 半透明模式也支持选色和调节透明度
                 binding.colorSelectorContainer.visibility = View.VISIBLE
                 binding.alphaSliderContainer.visibility = View.VISIBLE
             }
@@ -214,31 +194,27 @@ class WidgetConfigureActivity : AppCompatActivity() {
         binding.widgetBgTypeGroup.setOnCheckedChangeListener { _, checkedId ->
             updateVisibilityBasedOnSelection(checkedId)
         }
-
         binding.widgetSelectImageButton.setOnClickListener { pickImageLauncher.launch("image/*") }
-
         binding.sliderWidgetAlpha.addOnChangeListener { _, value, _ -> tempAlpha = value.toInt() }
         binding.sliderImageAlpha.addOnChangeListener { _, value, _ -> tempImageAlpha = value.toInt() }
         binding.switchShowScrim.setOnCheckedChangeListener { _, isChecked -> tempShowScrim = isChecked }
         binding.sliderScrimAlpha.addOnChangeListener { _, value, _ -> tempScrimAlpha = value.toInt() }
 
         binding.btnConfirmAddWidget.setOnClickListener {
-            // 校验
             if (binding.widgetBgTypeGroup.checkedRadioButtonId == R.id.widget_bg_image && tempImageUri == null) {
                 Toast.makeText(this, "请先选择一张图片", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            commitConfiguration(false)
+            commitConfiguration(isShortcut = false)
         }
     }
 
     private fun setupColorPalette() {
         val inflater = LayoutInflater.from(this)
-        binding.colorPalette.removeAllViews() // 防止重复添加
+        binding.colorPalette.removeAllViews()
         for (colorHex in colors) {
             val swatchBinding = ItemColorSwatchBinding.inflate(inflater, binding.colorPalette, false)
             val color = if (colorHex == null) {
-                // 获取当前主题的 colorPrimary
                 val attrs = intArrayOf(com.google.android.material.R.attr.colorPrimary)
                 val typedArray = obtainStyledAttributes(attrs)
                 val c = typedArray.getColor(0, Color.BLACK)
@@ -255,8 +231,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
             }
             binding.colorPalette.addView(swatchBinding.root)
         }
-        // 不要在 setup 中调用 updateColorPaletteSelection，因为此时视图可能还没添加完
-        // 让 loadCurrentSettings 去调用
     }
 
     private fun updateColorPaletteSelection() {
@@ -270,14 +244,10 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private fun setupRecyclerView() {
         val repo = (application as ZakoCountdownApplication).repository
         binding.recyclerViewWidgetConfig.layoutManager = LinearLayoutManager(this)
-
-        // 获取当前选中的日程ID
         val currentEventId = preferenceManager.getWidgetEventId(appWidgetId)
 
         lifecycleScope.launch {
             val allEvents = repo.getAllEventsSuspend()
-
-            // 如果找到了对应的日程，先赋值给 selectedEvent，以便不修改直接点确定
             selectedEvent = allEvents.find { it.id == currentEventId }
             if (selectedEvent != null) {
                 binding.btnConfirmAddWidget.isEnabled = true
@@ -291,29 +261,29 @@ class WidgetConfigureActivity : AppCompatActivity() {
             }
             binding.recyclerViewWidgetConfig.adapter = adapter
 
-            // 滚动到选中项
             val index = allEvents.indexOfFirst { it.id == currentEventId }
-            if (index != -1) {
-                binding.recyclerViewWidgetConfig.scrollToPosition(index)
-            }
+            if (index != -1) binding.recyclerViewWidgetConfig.scrollToPosition(index)
         }
     }
 
     private fun commitConfiguration(isShortcut: Boolean) {
         val event = selectedEvent ?: return
 
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID && !isShortcut) {
+        // 如果是快捷创建，appWidgetId 已经在 onCreate 中获取
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+            // 极端情况处理
             finish()
             return
         }
 
-        val bgType = when (binding.widgetBgTypeGroup.checkedRadioButtonId) {
+        // 确定背景类型 (如果是快捷创建，默认为 transparent)
+        val bgType = if (isShortcut) "transparent" else when (binding.widgetBgTypeGroup.checkedRadioButtonId) {
             R.id.widget_bg_solid -> "solid"
             R.id.widget_bg_image -> "image"
             else -> "transparent"
         }
 
-        // 保存所有参数
+        // 保存配置
         preferenceManager.saveWidgetBackground(appWidgetId, bgType)
         preferenceManager.saveWidgetEventId(appWidgetId, event.id)
         preferenceManager.saveWidgetColor(appWidgetId, tempSelectedColor)
@@ -326,33 +296,25 @@ class WidgetConfigureActivity : AppCompatActivity() {
         preferenceManager.saveWidgetScrimAlpha(appWidgetId, tempScrimAlpha)
         preferenceManager.saveWidgetAlpha(appWidgetId, tempAlpha)
 
+        // 设置结果，通知 Launcher 配置成功
         val resultValue = Intent().apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         }
         setResult(Activity.RESULT_OK, resultValue)
 
+        // 立即触发更新 (对于快捷创建，系统会在摆放后发送广播，但手动触发更保险)
+        val appWidgetManager = AppWidgetManager.getInstance(this)
+        UpdateWidgetWorker.updateWidget(this, appWidgetManager, appWidgetId)
+
         finish()
-
-        if (!isShortcut) {
-            val appWidgetManager = AppWidgetManager.getInstance(this)
-            UpdateWidgetWorker.updateWidget(this, appWidgetManager, appWidgetId)
-
-            // 返回桌面
-            val homeIntent = Intent(Intent.ACTION_MAIN)
-            homeIntent.addCategory(Intent.CATEGORY_HOME)
-            homeIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-            startActivity(homeIntent)
-        }
     }
 
-    // 内部 Adapter
     class ConfigAdapter(
         private val events: List<CountdownEvent>,
-        private val preSelectedId: Long, // 传入预选ID
+        private val preSelectedId: Long,
         private val onItemClick: (CountdownEvent) -> Unit
     ) : RecyclerView.Adapter<ConfigAdapter.ViewHolder>() {
 
-        // 初始化选中位置
         private var selectedPosition = events.indexOfFirst { it.id == preSelectedId }
 
         class ViewHolder(val binding: ItemWidgetConfigEventBinding) : RecyclerView.ViewHolder(binding.root)
@@ -366,15 +328,14 @@ class WidgetConfigureActivity : AppCompatActivity() {
             val event = events[position]
             holder.binding.eventTitle.text = event.title
 
-            // 选中高亮逻辑
             if (selectedPosition == position) {
-                holder.binding.cardRoot.strokeWidth = 6 // 更明显的边框
-                // 使用主题色 (这里简单硬编码一个紫色，更好应该从Context获取attr)
+                holder.binding.cardRoot.strokeWidth = 6
+                // 简单高亮色，实际应从 attr 取
                 holder.binding.cardRoot.setStrokeColor(Color.parseColor("#6750A4"))
-                holder.binding.cardRoot.setCardBackgroundColor(Color.parseColor("#EADDFF")) // 浅色背景高亮
+                holder.binding.cardRoot.setCardBackgroundColor(Color.parseColor("#EADDFF"))
             } else {
                 holder.binding.cardRoot.strokeWidth = 0
-                holder.binding.cardRoot.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, com.google.android.material.R.color.material_dynamic_neutral95)) // 默认背景
+                holder.binding.cardRoot.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, com.google.android.material.R.color.material_dynamic_neutral95))
             }
 
             holder.itemView.setOnClickListener {
