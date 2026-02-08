@@ -1,4 +1,4 @@
-<!-- file: app/src/main/res/layout/widget_layout_detailed.xml -->
+<?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_root"
@@ -19,49 +19,67 @@
         android:src="@drawable/widget_background_base"
         android:visibility="gone" />
 
-    <RelativeLayout
+    <!-- 内容区域：整体居中 -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="10dp">
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:orientation="vertical"
+        android:padding="8dp">
 
+        <!-- 标题：增加顶部边距实现下沉视觉 -->
         <TextView
             android:id="@+id/widget_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="日程标题"
             android:textColor="@android:color/white"
             android:textSize="14sp"
-            android:textStyle="bold"
             android:shadowColor="#80000000"
             android:shadowDx="1"
             android:shadowDy="1"
             android:shadowRadius="2"/>
 
-        <!-- 修复：移除 baseline -->
+        <!-- 核心数据行：增加间距 -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
             android:orientation="horizontal"
-            android:gravity="bottom|center_horizontal">
+            android:gravity="bottom">
+
+            <TextView
+                android:id="@+id/widget_detailed_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="已过"
+                android:textColor="@android:color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="5dp"
+                android:layout_marginEnd="4dp"
+                android:shadowColor="#80000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2" />
 
             <TextView
                 android:id="@+id/widget_detailed_days"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="42sp"
+                android:textSize="36sp"
                 android:textStyle="bold"
                 android:includeFontPadding="false"
                 android:shadowColor="#80000000"
                 android:shadowDx="2"
                 android:shadowDy="2"
                 android:shadowRadius="4"
-                tools:text="123" />
+                tools:text="42" />
 
             <TextView
                 android:id="@+id/widget_detailed_suffix"
@@ -69,9 +87,9 @@
                 android:layout_height="wrap_content"
                 android:text="天"
                 android:textColor="@android:color/white"
-                android:textSize="16sp"
+                android:textSize="14sp"
+                android:layout_marginBottom="5dp"
                 android:layout_marginStart="4dp"
-                android:layout_marginBottom="6dp"
                 android:shadowColor="#80000000"
                 android:shadowDx="1"
                 android:shadowDy="1"
@@ -82,16 +100,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="@android:color/white"
-                android:textSize="20sp"
-                android:layout_marginStart="12dp"
+                android:textSize="16sp"
+                android:layout_marginStart="8dp"
                 android:layout_marginBottom="4dp"
                 android:shadowColor="#80000000"
                 android:shadowDx="1"
                 android:shadowDy="1"
                 android:shadowRadius="2"
-                tools:text="08时 22分" />
+                tools:text="17时 43分" />
 
         </LinearLayout>
 
-    </RelativeLayout>
+    </LinearLayout>
 </RelativeLayout>

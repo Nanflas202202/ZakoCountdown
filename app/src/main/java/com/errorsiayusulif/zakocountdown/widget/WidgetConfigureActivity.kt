@@ -42,7 +42,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
     private var selectedEvent: CountdownEvent? = null
 
-    // 更新后的色板 (同步 CardSettings 和 SharePreview)
+    // 更新后的色板
     private val colors = listOf(
         null, // 默认主题色
         "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
@@ -60,13 +60,24 @@ class WidgetConfigureActivity : AppCompatActivity() {
         "#D7CCC8", "#8D6E63", "#5D4037", "#CFD8DC", "#78909C", "#455A64"
     )
 
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    // --- 【修复】改为 OpenDocument 以支持持久化权限 ---
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
             val contentResolver = contentResolver
             val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
-            contentResolver.takePersistableUriPermission(uri, takeFlags)
-            tempImageUri = uri.toString()
-            Toast.makeText(this, "图片已选中", Toast.LENGTH_SHORT).show()
+
+            try {
+                // 尝试获取持久权限
+                contentResolver.takePersistableUriPermission(uri, takeFlags)
+                tempImageUri = uri.toString()
+                Toast.makeText(this, "图片已选中", Toast.LENGTH_SHORT).show()
+            } catch (e: SecurityException) {
+                // 如果在极少数情况下依然失败（例如部分魔改系统），捕获异常防止闪退
+                // 并提示用户尝试其他图片或路径
+                e.printStackTrace()
+                Toast.makeText(this, "无法获取图片权限，请尝试选择其他图片", Toast.LENGTH_LONG).show()
+                tempImageUri = null // 重置
+            }
         }
     }
 
@@ -83,7 +94,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
         val extras = intent?.extras
         appWidgetId = extras?.getInt(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID) ?: AppWidgetManager.INVALID_APPWIDGET_ID
 
-        // 核心修复：接收来自 HomeFragment requestPinAppWidget 的参数
         val preselectedEventId = extras?.getLong("preselected_event_id", -1L) ?: -1L
         val isShortcutCreation = extras?.getBoolean("is_shortcut_creation", false) ?: false
 
@@ -91,20 +101,16 @@ class WidgetConfigureActivity : AppCompatActivity() {
         setupListeners()
 
         if (isShortcutCreation && preselectedEventId != -1L) {
-            // --- 快捷创建逻辑：自动应用默认设置并保存，不显示UI ---
             lifecycleScope.launch {
                 val event = (application as ZakoCountdownApplication).repository.getEventById(preselectedEventId)
                 if (event != null) {
                     selectedEvent = event
-                    // 自动提交 (使用默认透明背景、默认颜色)
                     commitConfiguration(isShortcut = true)
                 } else {
-                    // 如果ID无效，回退到手动选择
                     setupRecyclerView()
                 }
             }
         } else if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) {
-            // --- 正常配置/重新配置逻辑 ---
             loadCurrentSettings()
             setupRecyclerView()
         } else {
@@ -194,7 +200,12 @@ class WidgetConfigureActivity : AppCompatActivity() {
         binding.widgetBgTypeGroup.setOnCheckedChangeListener { _, checkedId ->
             updateVisibilityBasedOnSelection(checkedId)
         }
-        binding.widgetSelectImageButton.setOnClickListener { pickImageLauncher.launch("image/*") }
+
+        // --- 【修复】调用 launch 传入数组 ---
+        binding.widgetSelectImageButton.setOnClickListener {
+            pickImageLauncher.launch(arrayOf("image/*"))
+        }
+
         binding.sliderWidgetAlpha.addOnChangeListener { _, value, _ -> tempAlpha = value.toInt() }
         binding.sliderImageAlpha.addOnChangeListener { _, value, _ -> tempImageAlpha = value.toInt() }
         binding.switchShowScrim.setOnCheckedChangeListener { _, isChecked -> tempShowScrim = isChecked }
@@ -269,21 +280,17 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private fun commitConfiguration(isShortcut: Boolean) {
         val event = selectedEvent ?: return
 
-        // 如果是快捷创建，appWidgetId 已经在 onCreate 中获取
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
-            // 极端情况处理
             finish()
             return
         }
 
-        // 确定背景类型 (如果是快捷创建，默认为 transparent)
         val bgType = if (isShortcut) "transparent" else when (binding.widgetBgTypeGroup.checkedRadioButtonId) {
             R.id.widget_bg_solid -> "solid"
             R.id.widget_bg_image -> "image"
             else -> "transparent"
         }
 
-        // 保存配置
         preferenceManager.saveWidgetBackground(appWidgetId, bgType)
         preferenceManager.saveWidgetEventId(appWidgetId, event.id)
         preferenceManager.saveWidgetColor(appWidgetId, tempSelectedColor)
@@ -296,13 +303,11 @@ class WidgetConfigureActivity : AppCompatActivity() {
         preferenceManager.saveWidgetScrimAlpha(appWidgetId, tempScrimAlpha)
         preferenceManager.saveWidgetAlpha(appWidgetId, tempAlpha)
 
-        // 设置结果，通知 Launcher 配置成功
         val resultValue = Intent().apply {
             putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
         }
         setResult(Activity.RESULT_OK, resultValue)
 
-        // 立即触发更新 (对于快捷创建，系统会在摆放后发送广播，但手动触发更保险)
         val appWidgetManager = AppWidgetManager.getInstance(this)
         UpdateWidgetWorker.updateWidget(this, appWidgetManager, appWidgetId)
 
@@ -330,7 +335,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
             if (selectedPosition == position) {
                 holder.binding.cardRoot.strokeWidth = 6
-                // 简单高亮色，实际应从 attr 取
                 holder.binding.cardRoot.setStrokeColor(Color.parseColor("#6750A4"))
                 holder.binding.cardRoot.setCardBackgroundColor(Color.parseColor("#EADDFF"))
             } else {

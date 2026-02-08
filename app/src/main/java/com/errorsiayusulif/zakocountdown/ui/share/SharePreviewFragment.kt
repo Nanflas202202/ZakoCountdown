@@ -29,7 +29,7 @@ import androidx.core.graphics.ColorUtils
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController // 修复：补全导入
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import coil.ImageLoader
 import coil.load
@@ -59,7 +59,7 @@ class SharePreviewFragment : Fragment() {
     private var currentEvent: CountdownEvent? = null
     private lateinit var preferenceManager: PreferenceManager
 
-    // 状态控制
+    // 状态
     private var selectedLayoutId = R.layout.layout_share_template_card
     private var dateMode: Int = MODE_SIMPLE
     private var isShowTargetDate: Boolean = false
@@ -91,10 +91,18 @@ class SharePreviewFragment : Fragment() {
         "#D7CCC8", "#8D6E63", "#5D4037", "#CFD8DC", "#78909C", "#455A64"
     )
 
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
-            selectedBackgroundUri = it.toString()
-            updatePreview()
+            try {
+                val contentResolver = requireActivity().contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
+                contentResolver.takePersistableUriPermission(uri, takeFlags)
+                selectedBackgroundUri = it.toString()
+                updatePreview()
+            } catch (e: SecurityException) {
+                selectedBackgroundUri = it.toString()
+                updatePreview()
+            }
         }
     }
 
@@ -161,7 +169,8 @@ class SharePreviewFragment : Fragment() {
             refreshPreviewDataOnly()
         }
 
-        binding.btnPickImage.setOnClickListener { pickImageLauncher.launch("image/*") }
+        binding.btnPickImage.setOnClickListener { pickImageLauncher.launch(arrayOf("image/*")) }
+
         setupColorPalette(binding.paletteBackground) { color ->
             selectedBackgroundColor = color
             if (selectedLayoutId != R.layout.layout_share_template_hero) selectedBackgroundUri = null
@@ -260,16 +269,16 @@ class SharePreviewFragment : Fragment() {
         val event = currentEvent!!
         view.findViewById<TextView>(R.id.tv_title)?.text = event.title
         val diff = TimeCalculator.calculateDifference(event.targetDate)
+
         view.findViewById<TextView>(R.id.tv_status)?.text = if (diff.isPast) "已过" else "还有"
         view.findViewById<TextView>(R.id.tv_title_prefix)?.text = "距离"
-        val tvDays = view?.findViewById<TextView>(R.id.tv_days)
-        val tvSuffix = view?.findViewById<TextView>(R.id.tv_suffix)
+
+        val tvDays = view.findViewById<TextView>(R.id.tv_days)
+        val tvSuffix = view.findViewById<TextView>(R.id.tv_suffix)
 
         when (dateMode) {
             MODE_DETAILED -> {
-                // 确保没有空格，节省空间
-                val text = "${diff.totalDays}天${String.format("%02d", diff.hours)}时${String.format("%02d", diff.minutes)}分${String.format("%02d", diff.seconds)}秒"
-                tvDays?.text = text
+                tvDays?.text = "${diff.totalDays}天${String.format("%02d", diff.hours)}时${String.format("%02d", diff.minutes)}分${String.format("%02d", diff.seconds)}秒"
                 tvSuffix?.visibility = View.GONE
             }
             MODE_FULL -> {
@@ -312,7 +321,7 @@ class SharePreviewFragment : Fragment() {
             }
             R.layout.layout_share_template_hero -> {
                 if (selectedBackgroundUri != null) ivBackground?.load(Uri.parse(selectedBackgroundUri)) { allowHardware(false) }
-                else { ivBackground?.setImageDrawable(null); ivBackground?.setBackgroundColor(selectedBackgroundColor) }
+                else { ivBackground?.setImageDrawable(null); ivBackground?.setBackgroundColor(Color.parseColor("#E0E0E0")) }
                 view.findViewById<View>(R.id.cl_info_area)?.setBackgroundColor(selectedCardColor)
                 view.findViewById<View>(R.id.v_scrim)?.apply {
                     setBackgroundColor(selectedBackgroundColor)

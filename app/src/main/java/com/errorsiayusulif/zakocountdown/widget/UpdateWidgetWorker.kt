@@ -25,6 +25,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class UpdateWidgetWorker(appContext: Context, workerParams: WorkerParameters) :
@@ -80,6 +83,7 @@ private suspend fun updateSingleWidget(
     val repository = (context.applicationContext as ZakoCountdownApplication).repository
     val views = RemoteViews(context.packageName, layoutId)
 
+    // 1. 设置点击事件 (跳转到配置页)
     val configureIntent = Intent(context, WidgetConfigureActivity::class.java).apply {
         action = AppWidgetManager.ACTION_APPWIDGET_CONFIGURE
         putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
@@ -93,7 +97,7 @@ private suspend fun updateSingleWidget(
     )
     views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
 
-    // --- 背景处理逻辑 (保持不变) ---
+    // 2. 处理背景 (保持不变)
     val backgroundType = preferenceManager.getWidgetBackground(appWidgetId)
     views.setViewVisibility(R.id.widget_background_image, View.GONE)
     views.setViewVisibility(R.id.widget_scrim, View.GONE)
@@ -177,32 +181,35 @@ private suspend fun updateSingleWidget(
 
     if (event != null) {
         val diff = TimeCalculator.calculateDifference(event.targetDate)
+        val label = if (diff.isPast) "已过" else "还有"
 
         when (layoutId) {
             R.layout.widget_layout -> { // Simple (2x2)
-                val label = if (diff.isPast) "已过" else "还有"
-                views.setTextViewText(R.id.widget_title, event.title)
+                views.setTextViewText(R.id.widget_title, event.title) // 居中标题
                 views.setTextViewText(R.id.widget_status_label, label)
                 views.setTextViewText(R.id.widget_days, diff.totalDays.toString())
                 views.setTextViewText(R.id.widget_days_suffix, "天")
             }
             R.layout.widget_layout_detailed -> { // Detailed (天时分)
                 views.setTextViewText(R.id.widget_title, "距离 ${event.title}")
+                views.setTextViewText(R.id.widget_detailed_status, label)
                 views.setTextViewText(R.id.widget_detailed_days, diff.totalDays.toString())
                 val timeString = "${String.format("%02d", diff.hours)}时 ${String.format("%02d", diff.minutes)}分"
                 views.setTextViewText(R.id.widget_detailed_time, timeString)
             }
-            R.layout.widget_layout_full -> { // Full (yyyy-mm-ww-dd)
-                views.setTextViewText(R.id.widget_title, event.title)
+            R.layout.widget_layout_full -> { // Full (年 月 周 天)
+                views.setTextViewText(R.id.widget_title, "距离 ${event.title}")
+                views.setTextViewText(R.id.widget_full_status, label)
 
-                // --- 【核心修改】构造完整倒数格式 ---
+                // --- 核心修改：改为 年+月+周+天 ---
                 val sb = StringBuilder()
-                if (diff.years > 0) sb.append("${diff.years}年")
-                if (diff.months > 0) sb.append("${diff.months}月")
-                if (diff.weeks > 0) sb.append("${diff.weeks}周")
+                if (diff.years > 0) sb.append("${diff.years}年 ")
+                if (diff.months > 0) sb.append("${diff.months}月 ")
+                if (diff.weeks > 0) sb.append("${diff.weeks}周 ")
                 sb.append("${diff.daysInWeek}天")
 
                 val fullText = sb.toString()
+                // 使用 widget_full_text (注意 XML 中 ID 要匹配)
                 views.setTextViewText(R.id.widget_full_text, if(fullText.isBlank()) "0天" else fullText)
             }
         }
@@ -214,8 +221,10 @@ private suspend fun updateSingleWidget(
         } else if (layoutId == R.layout.widget_layout_detailed) {
             views.setTextViewText(R.id.widget_detailed_days, "-")
             views.setTextViewText(R.id.widget_detailed_time, "")
+            views.setTextViewText(R.id.widget_detailed_status, "")
         } else if (layoutId == R.layout.widget_layout_full) {
             views.setTextViewText(R.id.widget_full_text, "- - -")
+            views.setTextViewText(R.id.widget_full_status, "")
         }
     }
 

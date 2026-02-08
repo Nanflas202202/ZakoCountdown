@@ -6,7 +6,6 @@ import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,7 +16,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
-import com.errorsiayusulif.zakocountdown.R
+import com.errorsiayusulif.zakocountdown.R // <--- 【核心修复】添加这一行导入
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
@@ -33,8 +32,6 @@ class CardSettingsFragment : Fragment() {
     private val binding get() = _binding!!
     private val args: CardSettingsFragmentArgs by navArgs()
     private var currentEvent: CountdownEvent? = null
-
-    // --- 【核心修复】声明 preferenceManager ---
     private lateinit var preferenceManager: PreferenceManager
 
     private val homeViewModel: HomeViewModel by viewModels {
@@ -42,10 +39,8 @@ class CardSettingsFragment : Fragment() {
         HomeViewModelFactory(app.repository, app)
     }
 
-    // 更新色板列表
     private val colors = listOf(
-        null, // 默认主题色
-        "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
+        null, "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
         "#FFEBEE", "#FFCDD2", "#EF5350", "#F44336", "#D32F2F", "#B71C1C",
         "#FCE4EC", "#F8BBD0", "#EC407A", "#E91E63", "#C2185B", "#880E4F",
         "#F3E5F5", "#E1BEE7", "#AB47BC", "#9C27B0", "#7B1FA2", "#4A148C",
@@ -60,7 +55,8 @@ class CardSettingsFragment : Fragment() {
         "#D7CCC8", "#8D6E63", "#5D4037", "#CFD8DC", "#78909C", "#455A64"
     )
 
-    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+    // --- 修复：使用 OpenDocument ---
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
             try {
                 val contentResolver = requireActivity().contentResolver
@@ -74,14 +70,14 @@ class CardSettingsFragment : Fragment() {
                     Toast.makeText(context, "背景图已设置", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: SecurityException) {
-                Toast.makeText(context, "无法获取图片权限", Toast.LENGTH_SHORT).show()
+                e.printStackTrace()
+                Toast.makeText(context, "无法获取图片权限，请尝试其他图片", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentCardSettingsBinding.inflate(inflater, container, false)
-        // --- 【核心修复】初始化 preferenceManager ---
         preferenceManager = PreferenceManager(requireContext())
         return binding.root
     }
@@ -117,7 +113,6 @@ class CardSettingsFragment : Fragment() {
                 else -> CountdownEvent.DISPLAY_MODE_SIMPLE
             }
             if (newMode != event.displayMode) {
-                // 注意：这里我们使用当前的 currentEvent，因为它可能已经被 update 更新过（比如改了颜色）
                 currentEvent?.let {
                     val updated = it.copy(displayMode = newMode)
                     homeViewModel.update(updated)
@@ -138,14 +133,13 @@ class CardSettingsFragment : Fragment() {
     }
 
     private fun setupWallpaperOptions(event: CountdownEvent) {
-        // --- 现在这里可以正常使用 preferenceManager 了 ---
         val isGlobalUnlock = preferenceManager.isGlobalAlphaUnlocked()
 
-        // 1. 壁纸设置仅对置顶有效
         if (event.isPinned) {
             binding.wallpaperSettingsLayout.visibility = View.VISIBLE
             binding.buttonChangeWallpaper.setOnClickListener {
-                pickImageLauncher.launch("image/*")
+                // --- 修复：传入数组 ---
+                pickImageLauncher.launch(arrayOf("image/*"))
             }
             binding.buttonRemoveWallpaper.setOnClickListener {
                 currentEvent?.let { current ->
@@ -159,8 +153,6 @@ class CardSettingsFragment : Fragment() {
             binding.wallpaperSettingsLayout.visibility = View.GONE
         }
 
-        // 2. 透明度区域：置顶 OR 开发者解锁 可见
-        // 注意：这里我们控制的是独立的 View，不再受 wallpaperSettingsLayout 的影响
         if (event.isPinned || isGlobalUnlock) {
             binding.sliderAlpha.visibility = View.VISIBLE
             binding.textAlphaLabel.visibility = View.VISIBLE
@@ -172,6 +164,7 @@ class CardSettingsFragment : Fragment() {
 
     private fun setupColorPalette(event: CountdownEvent) {
         val inflater = LayoutInflater.from(context)
+        binding.colorPalette.removeAllViews()
         for (colorHex in colors) {
             val swatchBinding = ItemColorSwatchBinding.inflate(inflater, binding.colorPalette, false)
 
