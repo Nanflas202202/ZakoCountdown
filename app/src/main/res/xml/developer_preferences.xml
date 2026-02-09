@@ -38,4 +38,11 @@
             app:summary="开启后，允许调节非置顶卡片的透明度"
             app:defaultValue="false" />
     </PreferenceCategory>
+    <PreferenceCategory app:title="功能测试">
+        <SwitchPreferenceCompat
+            app:key="key_enable_agenda_book"
+            app:title="启用[日程本]功能"
+            app:summary="在导航栏显示日程本入口 (Alpha)"
+            app:defaultValue="false" />
+    </PreferenceCategory>
 </PreferenceScreen>

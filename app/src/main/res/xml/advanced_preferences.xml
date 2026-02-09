@@ -30,5 +30,12 @@
             app:title="解锁所有卡片透明度"
             app:summary="开启后，允许调节非置顶卡片的透明度"
             app:defaultValue="false" />
+        <ListPreference
+            app:key="key_nav_mode"
+            app:title="导航栏样式"
+            app:summary="切换侧滑抽屉或底部导航栏"
+            app:entries="@array/nav_mode_entries"
+            app:entryValues="@array/nav_mode_values"
+            app:defaultValue="drawer" />
     </PreferenceCategory>
 </PreferenceScreen>

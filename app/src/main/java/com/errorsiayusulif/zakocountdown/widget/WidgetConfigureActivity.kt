@@ -1,3 +1,4 @@
+// file: app/src/main/java/com/errorsiayusulif/zakocountdown/widget/WidgetConfigureActivity.kt
 package com.errorsiayusulif.zakocountdown.widget
 
 import android.app.Activity
@@ -32,7 +33,6 @@ class WidgetConfigureActivity : AppCompatActivity() {
     private lateinit var preferenceManager: PreferenceManager
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
 
-    // 暂存配置状态
     private var tempImageUri: String? = null
     private var tempSelectedColor: String? = null
     private var tempAlpha: Int = 40
@@ -42,10 +42,8 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
     private var selectedEvent: CountdownEvent? = null
 
-    // 更新后的色板
     private val colors = listOf(
-        null, // 默认主题色
-        "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
+        null, "#FFFFFF", "#F5F5F5", "#E0E0E0", "#9E9E9E", "#424242", "#000000",
         "#FFEBEE", "#FFCDD2", "#EF5350", "#F44336", "#D32F2F", "#B71C1C",
         "#FCE4EC", "#F8BBD0", "#EC407A", "#E91E63", "#C2185B", "#880E4F",
         "#F3E5F5", "#E1BEE7", "#AB47BC", "#9C27B0", "#7B1FA2", "#4A148C",
@@ -60,23 +58,16 @@ class WidgetConfigureActivity : AppCompatActivity() {
         "#D7CCC8", "#8D6E63", "#5D4037", "#CFD8DC", "#78909C", "#455A64"
     )
 
-    // --- 【修复】改为 OpenDocument 以支持持久化权限 ---
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let {
-            val contentResolver = contentResolver
-            val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
-
             try {
-                // 尝试获取持久权限
+                val contentResolver = contentResolver
+                val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 contentResolver.takePersistableUriPermission(uri, takeFlags)
                 tempImageUri = uri.toString()
                 Toast.makeText(this, "图片已选中", Toast.LENGTH_SHORT).show()
             } catch (e: SecurityException) {
-                // 如果在极少数情况下依然失败（例如部分魔改系统），捕获异常防止闪退
-                // 并提示用户尝试其他图片或路径
-                e.printStackTrace()
-                Toast.makeText(this, "无法获取图片权限，请尝试选择其他图片", Toast.LENGTH_LONG).show()
-                tempImageUri = null // 重置
+                tempImageUri = uri.toString()
             }
         }
     }
@@ -200,12 +191,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         binding.widgetBgTypeGroup.setOnCheckedChangeListener { _, checkedId ->
             updateVisibilityBasedOnSelection(checkedId)
         }
-
-        // --- 【修复】调用 launch 传入数组 ---
-        binding.widgetSelectImageButton.setOnClickListener {
-            pickImageLauncher.launch(arrayOf("image/*"))
-        }
-
+        binding.widgetSelectImageButton.setOnClickListener { pickImageLauncher.launch(arrayOf("image/*")) }
         binding.sliderWidgetAlpha.addOnChangeListener { _, value, _ -> tempAlpha = value.toInt() }
         binding.sliderImageAlpha.addOnChangeListener { _, value, _ -> tempImageAlpha = value.toInt() }
         binding.switchShowScrim.setOnCheckedChangeListener { _, isChecked -> tempShowScrim = isChecked }
@@ -335,8 +321,15 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
             if (selectedPosition == position) {
                 holder.binding.cardRoot.strokeWidth = 6
-                holder.binding.cardRoot.setStrokeColor(Color.parseColor("#6750A4"))
-                holder.binding.cardRoot.setCardBackgroundColor(Color.parseColor("#EADDFF"))
+                // --- 修复：使用动态主题色，而非硬编码紫色 ---
+                val attrs = intArrayOf(com.google.android.material.R.attr.colorPrimary, com.google.android.material.R.attr.colorPrimaryContainer)
+                val typedArray = holder.itemView.context.obtainStyledAttributes(attrs)
+                val colorPrimary = typedArray.getColor(0, Color.BLACK)
+                val colorContainer = typedArray.getColor(1, Color.LTGRAY)
+                typedArray.recycle()
+
+                holder.binding.cardRoot.setStrokeColor(colorPrimary)
+                holder.binding.cardRoot.setCardBackgroundColor(colorContainer)
             } else {
                 holder.binding.cardRoot.strokeWidth = 0
                 holder.binding.cardRoot.setCardBackgroundColor(ContextCompat.getColor(holder.itemView.context, com.google.android.material.R.color.material_dynamic_neutral95))

@@ -61,7 +61,7 @@
                 android:orientation="horizontal"/>
         </HorizontalScrollView>
 
-        <!-- 3. 壁纸设置 (仅置顶卡片显示，默认 GONE) -->
+        <!-- 3. 壁纸设置 (仅置顶卡片显示) -->
         <LinearLayout
             android:id="@+id/wallpaper_settings_layout"
             android:layout_width="match_parent"
@@ -82,14 +82,19 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_marginTop="8dp">
+
+                <!-- 使用动态样式 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_change_wallpaper"
+                    style="?attr/materialButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="选择图片"/>
+
+                <!-- 使用动态无边框样式 -->
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_remove_wallpaper"
-                    style="@style/Widget.Material3.Button.TextButton"
+                    style="?attr/borderlessButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -97,8 +102,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- 4. 透明度设置 (独立区域，默认 GONE) -->
-        <!-- 这里的 ID text_alpha_label 和 slider_alpha 是必须的 -->
+        <!-- 4. 透明度设置 -->
         <TextView
             android:id="@+id/text_alpha_label"
             android:layout_width="wrap_content"

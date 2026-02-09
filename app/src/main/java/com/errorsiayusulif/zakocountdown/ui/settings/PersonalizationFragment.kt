@@ -5,6 +5,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -20,6 +21,8 @@ import androidx.preference.SeekBarPreference
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
+import java.io.File
+import java.io.FileOutputStream
 
 class PersonalizationFragment : PreferenceFragmentCompat() {
 
@@ -34,122 +37,135 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
     )
 
     private val pickImageLauncher =
-        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-            uri?.let {
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            uri?.let { sourceUri ->
                 try {
-                    val contentResolver = requireActivity().contentResolver
-                    val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    contentResolver.takePersistableUriPermission(uri, takeFlags)
-                    appPreferenceManager.saveHomepageWallpaperUri(uri.toString())
-                    Toast.makeText(requireContext(), "背景图已设置", Toast.LENGTH_SHORT).show()
-                } catch (e: SecurityException) {
-                    Toast.makeText(requireContext(), "无法获取图片权限", Toast.LENGTH_LONG).show()
+                    val context = requireContext()
+                    val inputStream = context.contentResolver.openInputStream(sourceUri)
+                    if (inputStream != null) {
+                        val file = File(context.filesDir, "home_wallpaper_cache.png")
+                        val outputStream = FileOutputStream(file)
+                        inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
+                        val localUri = Uri.fromFile(file).toString()
+                        appPreferenceManager.saveHomepageWallpaperUri(localUri)
+                        Toast.makeText(requireContext(), "壁纸设置成功", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(requireContext(), "无法读取图片", Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    Toast.makeText(requireContext(), "设置失败: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
 
-    // 1. 初始化 Preference 逻辑
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.sharedPreferencesName = "zako_prefs"
         setPreferencesFromResource(R.xml.personalization_preferences, rootKey)
         appPreferenceManager = PreferenceManager(requireContext())
-
         setupPreferenceListeners()
+
+        // 初始化时更新 Monet 选项状态
+        updateAccentColorOptions(appPreferenceManager.getTheme())
     }
 
-    // 2. 初始化 View 结构
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         val view = inflater.inflate(R.layout.fragment_personalization, container, false)
         val listContainer = view.findViewById<ViewGroup>(android.R.id.list_container)
         val prefsView = super.onCreateView(inflater, listContainer, savedInstanceState)
         listContainer.addView(prefsView)
-
         paletteContainer = view.findViewById(R.id.scrim_color_palette_container)
         paletteLayout = view.findViewById(R.id.scrim_color_palette)
-
         return view
     }
 
-    // 3. 在 View 创建完成后，初始化与 View 相关的逻辑
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        // 放在这里执行，确保 paletteContainer 已经初始化
         setupColorPalette()
         updatePaletteVisibility(appPreferenceManager.getScrimColorMode())
     }
 
     private fun setupPreferenceListeners() {
         findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
-            appPreferenceManager.saveTheme(newValue as String)
+            val newTheme = newValue as String
+            appPreferenceManager.saveTheme(newTheme)
+
+            // 切换主题时，检查是否需要禁用 Monet
+            updateAccentColorOptions(newTheme)
+
             activity?.recreate()
             true
         }
-
         findPreference<ListPreference>("accent_color")?.setOnPreferenceChangeListener { _, newValue ->
             appPreferenceManager.saveAccentColor(newValue as String)
             activity?.recreate()
             true
         }
-
         findPreference<Preference>("change_wallpaper")?.setOnPreferenceClickListener {
-            pickImageLauncher.launch("image/*")
+            pickImageLauncher.launch(arrayOf("image/*"))
             true
         }
-
         findPreference<Preference>("remove_wallpaper")?.setOnPreferenceClickListener {
             appPreferenceManager.saveHomepageWallpaperUri(null)
+            val file = File(requireContext().filesDir, "home_wallpaper_cache.png")
+            if (file.exists()) file.delete()
             Toast.makeText(requireContext(), "背景图已移除", Toast.LENGTH_SHORT).show()
             true
         }
-
-        // 遮罩模式监听
         findPreference<ListPreference>("key_scrim_color_mode")?.setOnPreferenceChangeListener { _, newValue ->
-            // 这里调用 View 相关方法是安全的，因为监听器触发时 View 肯定已经创建了
             updatePaletteVisibility(newValue as String)
             true
         }
+        findPreference<SeekBarPreference>("key_scrim_alpha")?.setOnPreferenceChangeListener { _, _ -> true }
+    }
 
-        findPreference<SeekBarPreference>("key_scrim_alpha")?.setOnPreferenceChangeListener { _, _ ->
-            true
+    /**
+     * 根据当前主题和系统版本，动态调整强调色选项
+     */
+    private fun updateAccentColorOptions(currentTheme: String) {
+        val accentPref = findPreference<ListPreference>("accent_color") ?: return
+
+        // 允许 Monet 的条件：系统 >= Android 12 且 主题 == M3
+        val isMonetSupported = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) &&
+                (currentTheme == PreferenceManager.THEME_M3)
+
+        if (isMonetSupported) {
+            // 显示所有选项
+            accentPref.entries = arrayOf("跟随壁纸 (Monet)", "活力粉", "天空蓝")
+            accentPref.entryValues = arrayOf(PreferenceManager.ACCENT_MONET, PreferenceManager.ACCENT_PINK, PreferenceManager.ACCENT_BLUE)
+        } else {
+            // 移除 Monet 选项
+            accentPref.entries = arrayOf("活力粉", "天空蓝")
+            accentPref.entryValues = arrayOf(PreferenceManager.ACCENT_PINK, PreferenceManager.ACCENT_BLUE)
+
+            // 如果当前选中的是 Monet，强制切换回 蓝色 (默认)
+            if (accentPref.value == PreferenceManager.ACCENT_MONET) {
+                accentPref.value = PreferenceManager.ACCENT_BLUE
+                appPreferenceManager.saveAccentColor(PreferenceManager.ACCENT_BLUE)
+            }
         }
     }
 
     private fun updatePaletteVisibility(mode: String) {
-        // 增加空安全检查，防止极端情况
         if (::paletteContainer.isInitialized) {
-            if (mode == PreferenceManager.SCRIM_MODE_CUSTOM) {
-                paletteContainer.visibility = View.VISIBLE
-            } else {
-                paletteContainer.visibility = View.GONE
-            }
+            paletteContainer.visibility = if (mode == PreferenceManager.SCRIM_MODE_CUSTOM) View.VISIBLE else View.GONE
         }
     }
 
     private fun setupColorPalette() {
         val inflater = LayoutInflater.from(context)
         val currentSelected = appPreferenceManager.getScrimCustomColor()
-
-        // 清空旧视图防止重复添加
         paletteLayout.removeAllViews()
-
         for (colorHex in colors) {
             val swatchBinding = ItemColorSwatchBinding.inflate(inflater, paletteLayout, false)
             val color = Color.parseColor(colorHex)
             (swatchBinding.colorView.background as GradientDrawable).setColor(color)
-
             if (colorHex.equals(currentSelected, ignoreCase = true)) {
                 swatchBinding.checkMark.visibility = View.VISIBLE
             }
-
             swatchBinding.root.setOnClickListener {
                 appPreferenceManager.saveScrimCustomColor(colorHex)
-
-                // 更新选中状态
-                paletteLayout.children.forEach { view ->
-                    val binding = ItemColorSwatchBinding.bind(view)
-                    binding.checkMark.visibility = View.GONE
-                }
+                paletteLayout.children.forEach { view -> ItemColorSwatchBinding.bind(view).checkMark.visibility = View.GONE }
                 swatchBinding.checkMark.visibility = View.VISIBLE
             }
             paletteLayout.addView(swatchBinding.root)

@@ -109,11 +109,34 @@ class SharePreviewFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         preferenceManager = PreferenceManager(requireContext())
         val themeKey = preferenceManager.getTheme()
+        val colorKey = preferenceManager.getAccentColor()
+
+        // --- 核心修复：完整的颜色变体判断逻辑 ---
         val themeResId = when (themeKey) {
-            PreferenceManager.THEME_M1 -> R.style.Theme_ZakoCountdown_MD1
-            PreferenceManager.THEME_M2 -> R.style.Theme_ZakoCountdown_MD2
-            else -> R.style.Theme_ZakoCountdown_M3
+            PreferenceManager.THEME_M1 -> {
+                when (colorKey) {
+                    PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD1_Pink
+                    PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD1_Blue
+                    else -> R.style.Theme_ZakoCountdown_MD1
+                }
+            }
+            PreferenceManager.THEME_M2 -> {
+                when (colorKey) {
+                    PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD2_Pink
+                    PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD2_Blue
+                    else -> R.style.Theme_ZakoCountdown_MD2
+                }
+            }
+            else -> { // M3
+                when (colorKey) {
+                    PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_M3_Pink
+                    PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_M3_Blue
+                    else -> R.style.Theme_ZakoCountdown_M3
+                }
+            }
         }
+
+        // 使用正确的 ContextThemeWrapper
         val themedContext = ContextThemeWrapper(requireContext(), themeResId)
         _binding = FragmentSharePreviewBinding.inflate(inflater.cloneInContext(themedContext), container, false)
         return binding.root
@@ -135,6 +158,10 @@ class SharePreviewFragment : Fragment() {
             updatePreview()
         }
     }
+
+    // ... 其余逻辑代码与之前版本一致，无需变动 ...
+    // (setupUI, updatePreview, saveImageToGallery 等方法)
+    // 为了节省空间，此处省略未变动的方法实现，请使用上一次提供的 SharePreviewFragment.kt 中的其余部分。
 
     private fun setupUI() {
         binding.toggleLayout.addOnButtonCheckedListener { _, checkedId, isChecked ->
@@ -250,7 +277,8 @@ class SharePreviewFragment : Fragment() {
 
     private fun updatePreview() {
         binding.previewContainer.removeAllViews()
-        val templateView = LayoutInflater.from(requireContext()).inflate(selectedLayoutId, binding.previewContainer, false)
+        // 这里的 inflater 已经是 wrapped context，所以直接使用即可
+        val templateView = LayoutInflater.from(binding.root.context).inflate(selectedLayoutId, binding.previewContainer, false)
         binding.previewContainer.addView(templateView)
         updatePreviewViewData(templateView)
         updatePreviewViewProperties(templateView)

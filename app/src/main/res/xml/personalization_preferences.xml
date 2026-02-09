@@ -49,5 +49,4 @@
             app:showSeekBarValue="true"/>
         <!--  ↑↑↑  新增：遮罩设置  ↑↑↑  -->
     </PreferenceCategory>
-
 </PreferenceScreen>

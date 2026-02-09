@@ -34,7 +34,10 @@ data class CountdownEvent(
     // --- 【新功能】添加显示模式字段 ---
     var displayMode: String = DISPLAY_MODE_SIMPLE,
     // data/CountdownEvent.kt
-    var cardAlpha: Float? = null // 添加这个字段
+    var cardAlpha: Float? = null, // 添加这个字段
+    // --- 【新增】所属日程本ID ---
+    // null 代表“默认/全部”分类，不属于任何特定自定义日程本
+    var bookId: Long? = null
 ) {
     companion object {
             const val DISPLAY_MODE_SIMPLE = "SIMPLE" // 只显示总天数

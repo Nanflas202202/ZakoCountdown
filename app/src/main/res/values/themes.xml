@@ -1,155 +1,201 @@
-<!-- file: res/values/themes.xml (风格差异化增强版) -->
+<!-- file: app/src/main/res/values/themes.xml -->
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ============================================= -->
-    <!-- =====   1. 组件样式定义 (风格化)        ====== -->
+    <!-- =====   1. 组件样式定义 (Button/Switch) ====== -->
     <!-- ============================================= -->
 
-    <!-- MD1 卡片: 直角/极小圆角，高阴影 -->
-    <style name="Widget.ZakoCountdown.CardView.MD1" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">2dp</item>
-        <item name="cardElevation">8dp</item>
-        <item name="contentPadding">0dp</item>
+    <!-- MD1 按钮: 直角，高阴影 -->
+    <style name="Widget.Zako.Button.MD1" parent="Widget.MaterialComponents.Button">
+        <item name="cornerRadius">2dp</item>
+        <item name="elevation">4dp</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">#FFFFFF</item>
+    </style>
+    <!-- MD1 开关: 经典样式 -->
+    <style name="Widget.Zako.Switch.MD1" parent="Widget.AppCompat.CompoundButton.Switch">
+        <item name="thumbTint">?attr/colorAccent</item>
+        <item name="trackTint">?attr/colorAccent</item>
     </style>
 
-    <!-- MD2 卡片: 标准圆角 (8dp)，柔和阴影 -->
+    <!-- MD2 按钮: 4dp圆角 -->
+    <style name="Widget.Zako.Button.MD2" parent="Widget.MaterialComponents.Button">
+        <item name="cornerRadius">4dp</item>
+        <item name="elevation">2dp</item>
+        <item name="backgroundTint">?attr/colorPrimary</item>
+    </style>
+    <!-- MD2 开关 -->
+    <style name="Widget.Zako.Switch.MD2" parent="Widget.MaterialComponents.CompoundButton.Switch">
+        <item name="thumbTint">?attr/colorAccent</item>
+        <item name="trackTint">?attr/colorAccent</item>
+    </style>
+
+    <!-- MD2 Toolbar 专用：白色背景，深色文字 (修复报错) -->
+    <style name="Widget.ZakoCountdown.Toolbar.MD2.Surface" parent="Widget.MaterialComponents.Toolbar.Surface">
+        <item name="android:background">?attr/colorSurface</item>
+        <item name="titleTextColor">?attr/colorOnSurface</item>
+        <item name="navigationIconTint">?attr/colorOnSurface</item>
+        <item name="actionMenuTextColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="Widget.ZakoCountdown.CardView.MD1" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">2dp</item>
+        <item name="cardElevation">6dp</item>
+    </style>
+
     <style name="Widget.ZakoCountdown.CardView.MD2" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">8dp</item>
         <item name="cardElevation">4dp</item>
     </style>
 
-    <!-- MD1 Toolbar: 纯色，无圆角 -->
     <style name="Widget.ZakoCountdown.Toolbar.MD1" parent="Widget.AppCompat.Toolbar">
         <item name="android:background">?attr/colorPrimary</item>
         <item name="titleTextColor">#FFFFFF</item>
         <item name="subtitleTextColor">#FFFFFF</item>
         <item name="navigationIconTint">#FFFFFF</item>
-    </style>
-
-    <!-- MD2 Toolbar: 继承 Material，标准行为 -->
-    <style name="Widget.ZakoCountdown.Toolbar.MD2" parent="Widget.MaterialComponents.Toolbar.Primary">
-        <item name="android:background">?attr/colorPrimary</item>
-        <item name="titleTextColor">?attr/colorOnPrimary</item>
-        <item name="navigationIconTint">?attr/colorOnPrimary</item>
+        <item name="actionMenuTextColor">#FFFFFF</item>
     </style>
 
     <!-- ============================================= -->
-    <!-- =====   2. 基础骨架 (差异化配置)        ====== -->
+    <!-- =====   2. 基础骨架 (绑定组件样式)      ====== -->
     <!-- ============================================= -->
-    <!-- 叠加颜色层 (修复了这里) -->
-    <style name="Theme_ZakoCountdown_Overlay_Pink">
-        <item name="colorPrimary">#B93E6D</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorPrimaryContainer">#FFD9E2</item>
-        <item name="colorOnPrimaryContainer">#3E0021</item>
-    </style>
-    <style name="Theme_ZakoCountdown_Overlay_Blue">
-        <item name="colorPrimary">#0061A4</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorPrimaryContainer">#D1E4FF</item>
-        <item name="colorOnPrimaryContainer">#001D36</item>
-    </style>
-    <!-- MD1 骨架 -->
+
+    <!-- MD1 Base -->
     <style name="Theme_ZakoCountdown_Base_MD1" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="materialButtonStyle">@style/Widget.Zako.Button.MD1</item>
+        <item name="switchStyle">@style/Widget.Zako.Switch.MD1</item>
+        <item name="radioButtonStyle">@style/Widget.AppCompat.CompoundButton.RadioButton</item>
+        <item name="checkboxStyle">@style/Widget.AppCompat.CompoundButton.CheckBox</item>
+
         <item name="materialCardViewStyle">@style/Widget.ZakoCountdown.CardView.MD1</item>
         <item name="toolbarStyle">@style/Widget.ZakoCountdown.Toolbar.MD1</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
-        <!-- 侧滑栏样式：MD1 倾向于深色背景或强调色背景 -->
         <item name="navigationViewStyle">@style/Widget.MaterialComponents.NavigationView</item>
-        <!-- 强制状态栏不透明 -->
         <item name="android:windowTranslucentStatus">false</item>
     </style>
 
-    <!-- MD2 骨架 -->
+    <!-- MD2 Base -->
     <style name="Theme_ZakoCountdown_Base_MD2" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="materialButtonStyle">@style/Widget.Zako.Button.MD2</item>
+        <item name="switchStyle">@style/Widget.Zako.Switch.MD2</item>
+
         <item name="materialCardViewStyle">@style/Widget.ZakoCountdown.CardView.MD2</item>
-        <item name="toolbarStyle">@style/Widget.ZakoCountdown.Toolbar.MD2</item>
+        <item name="toolbarStyle">@style/Widget.ZakoCountdown.Toolbar.MD2.Surface</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
-    <!-- MD3 骨架 -->
+    <!-- MD3 Base -->
     <style name="Theme_ZakoCountdown_Base_M3" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="toolbarStyle">@style/Widget.Material3.Toolbar.Surface</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
     </style>
 
-
     <!-- ============================================= -->
-    <!-- =====   3. 成品主题 (配色)             ====== -->
+    <!-- =====   3. 成品主题 (配色强制统一)      ====== -->
     <!-- ============================================= -->
 
-    <!-- - MD1 (经典 Indigo) - -->
+    <!-- MD1: 强制 Accent = Primary -->
     <style name="Theme_ZakoCountdown_MD1" parent="Theme_ZakoCountdown_Base_MD1">
         <item name="colorPrimary">#3F51B5</item>
         <item name="colorPrimaryDark">#303F9F</item>
-        <item name="colorAccent">#FF4081</item>
-        <item name="colorSecondary">#FF4081</item>
+        <item name="colorAccent">#3F51B5</item> <!-- 统一 -->
+        <item name="colorControlActivated">#3F51B5</item> <!-- 统一开关颜色 -->
+        <item name="colorSecondary">#3F51B5</item>
         <item name="android:statusBarColor">#303F9F</item>
         <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorOnSecondary">#FFFFFF</item>
-        <!-- 侧滑栏头部背景强制为主色 -->
-        <item name="colorSurface">#FFFFFF</item>
-        <item name="colorOnSurface">#000000</item>
     </style>
 
-    <!-- MD1 变种略... 保持之前的 Pink/Blue 逻辑，只需替换父主题为 Theme_ZakoCountdown_Base_MD1 -->
     <style name="Theme_ZakoCountdown_MD1_Pink" parent="Theme_ZakoCountdown_Base_MD1">
         <item name="colorPrimary">#E91E63</item>
         <item name="colorPrimaryDark">#C2185B</item>
-        <item name="colorAccent">#FFC107</item>
-        <item name="colorSecondary">#FFC107</item>
+        <item name="colorAccent">#E91E63</item>
+        <item name="colorControlActivated">#E91E63</item>
+        <item name="colorSecondary">#E91E63</item>
         <item name="android:statusBarColor">#C2185B</item>
         <item name="colorOnPrimary">#FFFFFF</item>
     </style>
+
     <style name="Theme_ZakoCountdown_MD1_Blue" parent="Theme_ZakoCountdown_Base_MD1">
         <item name="colorPrimary">#2196F3</item>
         <item name="colorPrimaryDark">#1976D2</item>
-        <item name="colorAccent">#FF5722</item>
-        <item name="colorSecondary">#FF5722</item>
+        <item name="colorAccent">#2196F3</item>
+        <item name="colorControlActivated">#2196F3</item>
+        <item name="colorSecondary">#2196F3</item>
         <item name="android:statusBarColor">#1976D2</item>
         <item name="colorOnPrimary">#FFFFFF</item>
     </style>
 
-    <!-- - MD2 (Google Purple) - -->
+    <!-- MD2: 白色标题栏，强调色统一 -->
     <style name="Theme_ZakoCountdown_MD2" parent="Theme_ZakoCountdown_Base_MD2">
         <item name="colorPrimary">#6200EE</item>
         <item name="colorPrimaryVariant">#3700B3</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
-        <item name="colorSecondary">#03DAC6</item>
-        <item name="colorOnSecondary">#000000</item>
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="colorAccent">#6200EE</item>
+        <item name="colorControlActivated">#6200EE</item>
+        <item name="colorSecondary">#6200EE</item>
+        <item name="android:statusBarColor">#F5F5F5</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
+
     <style name="Theme_ZakoCountdown_MD2_Pink" parent="Theme_ZakoCountdown_Base_MD2">
         <item name="colorPrimary">#D81B60</item>
         <item name="colorPrimaryVariant">#AD1457</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorAccent">#D81B60</item>
+        <item name="colorControlActivated">#D81B60</item>
         <item name="colorSecondary">#D81B60</item>
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">#F5F5F5</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
+
     <style name="Theme_ZakoCountdown_MD2_Blue" parent="Theme_ZakoCountdown_Base_MD2">
         <item name="colorPrimary">#1976D2</item>
         <item name="colorPrimaryVariant">#0D47A1</item>
-        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorAccent">#1976D2</item>
+        <item name="colorControlActivated">#1976D2</item>
         <item name="colorSecondary">#1976D2</item>
-        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <item name="android:statusBarColor">#F5F5F5</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
-    <!-- - MD3 - -->
+    <!-- MD3: 定义完整的 Color Container，解决底部栏紫色问题 -->
     <style name="Theme_ZakoCountdown_M3" parent="Theme_ZakoCountdown_Base_M3" />
+
     <style name="Theme_ZakoCountdown_M3_Pink" parent="Theme_ZakoCountdown_Base_M3">
         <item name="colorPrimary">#B93E6D</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#FFD9E2</item>
         <item name="colorOnPrimaryContainer">#3E0021</item>
+        <item name="colorSecondary">#B93E6D</item>
+        <item name="colorSecondaryContainer">#FFD9E2</item> <!-- 底部栏选中背景 -->
+        <item name="colorOnSecondaryContainer">#3E0021</item> <!-- 底部栏选中图标色 -->
     </style>
+
     <style name="Theme_ZakoCountdown_M3_Blue" parent="Theme_ZakoCountdown_Base_M3">
         <item name="colorPrimary">#0061A4</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#D1E4FF</item>
         <item name="colorOnPrimaryContainer">#001D36</item>
+        <item name="colorSecondary">#0061A4</item>
+        <item name="colorSecondaryContainer">#D1E4FF</item> <!-- 底部栏选中背景 -->
+        <item name="colorOnSecondaryContainer">#001D36</item> <!-- 底部栏选中图标色 -->
     </style>
 
-    <!-- 默认主题 -->
+    <!-- Overlay 仅用于动态叠加 -->
+    <style name="Theme_ZakoCountdown_Overlay_Pink">
+        <item name="colorPrimary">#B93E6D</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#FFD9E2</item>
+        <item name="colorOnPrimaryContainer">#3E0021</item>
+        <item name="colorSecondaryContainer">#FFD9E2</item>
+    </style>
+
+    <style name="Theme_ZakoCountdown_Overlay_Blue">
+        <item name="colorPrimary">#0061A4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#D1E4FF</item>
+        <item name="colorOnPrimaryContainer">#001D36</item>
+        <item name="colorSecondaryContainer">#D1E4FF</item>
+    </style>
+
     <style name="Theme.ZakoCountdown" parent="Theme_ZakoCountdown_M3" />
 
     <style name="Theme.ZakoCountdown.Popup" parent="Theme.Material3.DayNight.NoActionBar">

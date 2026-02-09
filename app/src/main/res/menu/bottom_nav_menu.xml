@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_home"
+        android:title="首页" />
+
+    <!-- 新增项：日程本 -->
+    <item
+        android:id="@+id/agendaBookFragment"
+        android:icon="@drawable/ic_collections_bookmark"
+        android:title="日程本"
+        android:visible="false" /> <!-- 默认不可见 -->
+
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/ic_settings"
+        android:title="设置" />
+</menu>

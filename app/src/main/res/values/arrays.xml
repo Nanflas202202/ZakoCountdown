@@ -72,4 +72,13 @@
         <item>custom</item> <!-- 新增 -->
     </string-array>
     <!--  ↑↑↑  新增：遮罩颜色选项  ↑↑↑  -->
+    <string-array name="nav_mode_entries">
+        <item>侧滑抽屉 (默认)</item>
+        <item>底部导航栏</item>
+    </string-array>
+
+    <string-array name="nav_mode_values">
+        <item>drawer</item>
+        <item>bottom</item>
+    </string-array>
 </resources>

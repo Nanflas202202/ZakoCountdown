@@ -1,24 +1,16 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/data/PreferenceManager.kt
-
 package com.errorsiayusulif.zakocountdown.data
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
 import android.os.Build
 
 class PreferenceManager(context: Context) {
 
-    // --- 【核心修复】 ---
-    // 声明为一个 lateinit var，表示它是一个稍后会被初始化的变量
-    // --- 【核心修复】恢复为最简单的、默认的 SharedPreferences 初始化方式 ---
-    // 并确保 context 是 applicationContext，防止内存泄漏
     private val prefs: SharedPreferences =
         context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    // 删除 lateinit 和 init 代码块
-
-
+    var sharedPreferencesName: String = PREFS_NAME
 
     fun saveTheme(theme: String) {
         prefs.edit().putString(KEY_THEME, theme).apply()
@@ -32,8 +24,34 @@ class PreferenceManager(context: Context) {
         prefs.edit().putString(KEY_ACCENT_COLOR, color).apply()
     }
 
+    // --- 【核心修改】智能获取颜色 ---
     fun getAccentColor(): String {
-        return prefs.getString(KEY_ACCENT_COLOR, ACCENT_MONET) ?: ACCENT_MONET
+        val selectedColor = prefs.getString(KEY_ACCENT_COLOR, ACCENT_MONET) ?: ACCENT_MONET
+        val currentTheme = getTheme()
+
+        // 如果用户选择了 Monet
+        if (selectedColor == ACCENT_MONET) {
+            // 1. 如果系统不支持 (Android 12 以下) -> 强制蓝色
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+                return ACCENT_BLUE
+            }
+            // 2. 如果当前主题是 MD1 或 MD2 (风格不兼容) -> 强制蓝色
+            if (currentTheme == THEME_M1 || currentTheme == THEME_M2) {
+                return ACCENT_BLUE
+            }
+        }
+        return selectedColor
+    }
+
+    // ... 其他方法保持不变 (复制您之前的文件内容，这里仅列出核心修改) ...
+    // 为节省篇幅，请确保包含 saveNavMode, getNavMode 等所有之前的 getter/setter
+
+    fun saveNavMode(mode: String) {
+        prefs.edit().putString(KEY_NAV_MODE, mode).apply()
+    }
+
+    fun getNavMode(): String {
+        return prefs.getString(KEY_NAV_MODE, NAV_MODE_DRAWER) ?: NAV_MODE_DRAWER
     }
 
     fun saveImportantApps(selectedApps: Set<String>) {
@@ -89,9 +107,7 @@ class PreferenceManager(context: Context) {
     }
 
     fun isPermanentNotificationEnabled(): Boolean {
-        val isEnabled = prefs.getBoolean("enable_permanent_notification", false)
-        Log.d("PrefManager", "Reading 'enable_permanent_notification': value is $isEnabled")
-        return isEnabled
+        return prefs.getBoolean("enable_permanent_notification", false)
     }
 
     fun setPopupMode(mode: String) {
@@ -128,7 +144,6 @@ class PreferenceManager(context: Context) {
         return prefs.getString("${WIDGET_PREF_IMG_PREFIX}${appWidgetId}", null)
     }
 
-    // 保存微件自定义颜色 (Hex)
     fun saveWidgetColor(appWidgetId: Int, colorHex: String?) {
         prefs.edit().putString("${WIDGET_PREF_COLOR_PREFIX}${appWidgetId}", colorHex).apply()
     }
@@ -137,69 +152,61 @@ class PreferenceManager(context: Context) {
         return prefs.getString("${WIDGET_PREF_COLOR_PREFIX}${appWidgetId}", null)
     }
 
-    // 保存微件透明度 (0-100)
     fun saveWidgetAlpha(appWidgetId: Int, alpha: Int) {
         prefs.edit().putInt("${WIDGET_PREF_ALPHA_PREFIX}${appWidgetId}", alpha).apply()
     }
 
     fun getWidgetAlpha(appWidgetId: Int): Int {
-        // 默认透明度 40% (即 60% 透明)
         return prefs.getInt("${WIDGET_PREF_ALPHA_PREFIX}${appWidgetId}", 40)
     }
-    // 图片透明度 (0-100)
+
     fun saveWidgetImageAlpha(appWidgetId: Int, alpha: Int) {
         prefs.edit().putInt("${WIDGET_PREF_IMG_ALPHA_PREFIX}${appWidgetId}", alpha).apply()
     }
     fun getWidgetImageAlpha(appWidgetId: Int): Int {
-        return prefs.getInt("${WIDGET_PREF_IMG_ALPHA_PREFIX}${appWidgetId}", 100) // 默认不透明
+        return prefs.getInt("${WIDGET_PREF_IMG_ALPHA_PREFIX}${appWidgetId}", 100)
     }
 
-    // 遮罩开关
     fun saveWidgetShowScrim(appWidgetId: Int, show: Boolean) {
         prefs.edit().putBoolean("${WIDGET_PREF_SHOW_SCRIM_PREFIX}${appWidgetId}", show).apply()
     }
     fun getWidgetShowScrim(appWidgetId: Int): Boolean {
-        return prefs.getBoolean("${WIDGET_PREF_SHOW_SCRIM_PREFIX}${appWidgetId}", true) // 默认开启
+        return prefs.getBoolean("${WIDGET_PREF_SHOW_SCRIM_PREFIX}${appWidgetId}", true)
     }
 
-    // 遮罩透明度 (0-100)
     fun saveWidgetScrimAlpha(appWidgetId: Int, alpha: Int) {
         prefs.edit().putInt("${WIDGET_PREF_SCRIM_ALPHA_PREFIX}${appWidgetId}", alpha).apply()
     }
     fun getWidgetScrimAlpha(appWidgetId: Int): Int {
-        return prefs.getInt("${WIDGET_PREF_SCRIM_ALPHA_PREFIX}${appWidgetId}", 40) // 默认 40%
+        return prefs.getInt("${WIDGET_PREF_SCRIM_ALPHA_PREFIX}${appWidgetId}", 40)
     }
-    // --- 【新功能】遮罩设置 ---
+
     fun getScrimColorMode(): String {
         return prefs.getString(KEY_SCRIM_COLOR_MODE, SCRIM_MODE_THEME) ?: SCRIM_MODE_THEME
     }
 
     fun getScrimAlpha(): Int {
-        // 默认透明度 25% (0-100)
         return prefs.getInt(KEY_SCRIM_ALPHA, 25)
     }
     fun saveScrimCustomColor(colorHex: String) {
         prefs.edit().putString(KEY_SCRIM_CUSTOM_COLOR, colorHex).apply()
     }
     fun getScrimCustomColor(): String {
-        // 默认深灰色
         return prefs.getString(KEY_SCRIM_CUSTOM_COLOR, "#333333") ?: "#333333"
     }
 
-    // 开发者选项：解锁全局透明度
     fun setUnlockGlobalAlpha(unlock: Boolean) {
         prefs.edit().putBoolean(KEY_UNLOCK_GLOBAL_ALPHA, unlock).apply()
     }
     fun isGlobalAlphaUnlocked(): Boolean {
         return prefs.getBoolean(KEY_UNLOCK_GLOBAL_ALPHA, false)
     }
-    // 设置是否允许通过“创建5个日程”进入开发者模式
+
     fun setEnableEnterDevMode(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ENABLE_ENTER_DEV_MODE, enabled).apply()
     }
 
     fun isEnableEnterDevMode(): Boolean {
-        // 【关键】默认关闭 (false)，需要通过暗码开启
         return prefs.getBoolean(KEY_ENABLE_ENTER_DEV_MODE, false)
     }
     fun setLogPersistenceEnabled(enabled: Boolean) {
@@ -209,7 +216,7 @@ class PreferenceManager(context: Context) {
     fun isLogPersistenceEnabled(): Boolean {
         return prefs.getBoolean(KEY_LOG_PERSISTENCE, false)
     }
-    // --- 【修复】补全彩蛋开关方法 ---
+
     fun setAboutEasterEggEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_ENABLE_ABOUT_EASTER_EGG, enabled).apply()
     }
@@ -217,8 +224,14 @@ class PreferenceManager(context: Context) {
     fun isAboutEasterEggEnabled(): Boolean {
         return prefs.getBoolean(KEY_ENABLE_ABOUT_EASTER_EGG, true)
     }
+    // 在 PreferenceManager 类中添加
+    fun setAgendaBookEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("key_enable_agenda_book", enabled).apply()
+    }
 
-
+    fun isAgendaBookEnabled(): Boolean {
+        return prefs.getBoolean("key_enable_agenda_book", false)
+    }
 
     companion object {
         private const val PREFS_NAME = "zako_prefs"
@@ -261,9 +274,12 @@ class PreferenceManager(context: Context) {
         const val SCRIM_MODE_THEME = "theme"
         const val SCRIM_MODE_BLACK = "black"
         const val SCRIM_MODE_WHITE = "white"
-        const val SCRIM_MODE_CUSTOM = "custom" // 新增自定义模式
+        const val SCRIM_MODE_CUSTOM = "custom"
         private const val KEY_ENABLE_ENTER_DEV_MODE = "key_enable_enter_dev_mode"
         private const val KEY_LOG_PERSISTENCE = "key_log_persistence"
         private const val KEY_ENABLE_ABOUT_EASTER_EGG = "key_enable_about_easter_egg"
+        private const val KEY_NAV_MODE = "key_nav_mode"
+        const val NAV_MODE_DRAWER = "drawer"
+        const val NAV_MODE_BOTTOM = "bottom"
     }
 }

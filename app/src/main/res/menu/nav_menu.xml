@@ -5,6 +5,13 @@
             android:id="@+id/homeFragment"
             android:icon="@drawable/ic_home"
             android:title="首页" />
+
+        <item
+            android:id="@+id/agendaBookFragment"
+            android:icon="@drawable/ic_collections_bookmark"
+            android:title="日程本"
+            android:visible="false" />
+
         <item
             android:id="@+id/settingsFragment"
             android:icon="@drawable/ic_settings"

@@ -5,7 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.GravityCompat
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -15,7 +18,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityMainBinding
 import com.errorsiayusulif.zakocountdown.receiver.SecretCodeReceiver
-import com.google.android.material.color.DynamicColors // 确保导入
+import com.google.android.material.color.DynamicColors
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,75 +40,141 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment), binding.drawerLayout)
-        setupActionBarWithNavController(navController, appBarConfiguration)
-        binding.navView.setupWithNavController(navController)
-
+        setupNavigationMode()
         handleIntent(intent)
+    }
+
+    private fun setupNavigationMode() {
+        val navMode = preferenceManager.getNavMode()
+        // 获取开关状态
+        val isAgendaEnabled = preferenceManager.isAgendaBookEnabled()
+
+
+        if (navMode == PreferenceManager.NAV_MODE_BOTTOM) {
+            // --- 底部导航模式 ---
+            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
+            binding.bottomNavView.visibility = View.VISIBLE
+
+            // 1. 基础绑定
+            binding.bottomNavView.setupWithNavController(navController)
+            // --- 动态控制底部栏可见性 ---
+            binding.bottomNavView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
+
+            // 更新 AppBar 配置，将 Agenda 也视为顶级页面 (无返回箭头)
+            val topLevelDestinations = mutableSetOf(R.id.homeFragment, R.id.settingsFragment)
+            if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
+
+            appBarConfiguration = AppBarConfiguration(topLevelDestinations)
+            setupActionBarWithNavController(navController, appBarConfiguration)
+            // 2. 修复高亮逻辑：处理设置页的子页面
+            navController.addOnDestinationChangedListener { _, destination, _ ->
+                if (binding.bottomNavView.visibility == View.VISIBLE) {
+                    when (destination.id) {
+                        // --- 【核心修复】将首页的所有子页面都归类为 Home ---
+                        R.id.homeFragment,
+                        R.id.addEditEventFragment,     // 编辑/添加
+                        R.id.cardSettingsFragment,     // 卡片设置
+                        R.id.sharePreviewFragment -> { // 分享预览
+                            val item = binding.bottomNavView.menu.findItem(R.id.homeFragment)
+                            if (!item.isChecked) item.isChecked = true
+                        }
+
+                        // --- 设置页及其子页面 ---
+                        R.id.settingsFragment,
+                        R.id.personalizationFragment,
+                        R.id.notificationSettingsFragment,
+                        R.id.advancedSettingsFragment,
+                        R.id.permissionsFragment,
+                        R.id.aboutFragment,
+                        R.id.appSelectorFragment,
+                        R.id.developerSettingsFragment,
+                        R.id.deepDeveloperFragment,
+                        R.id.buildDetailsFragment,
+                        R.id.licenseFragment,
+                        R.id.logReaderFragment,
+                        R.id.logFileListFragment,
+                        R.id.agendaBookFragment -> { // 日程本列表(如果是从设置进)或者作为独立Tab
+                            // 注意：如果日程本是作为第三个Tab存在的，这里不需要处理；
+                            // 如果是从设置里进去的，才在这里处理。根据之前的逻辑，它是顶级Tab。
+                            val item = binding.bottomNavView.menu.findItem(R.id.settingsFragment)
+                            if (!item.isChecked) item.isChecked = true
+                        }
+                    }
+
+                    // 特殊处理：如果是 AgendaBookFragment 且它在菜单中可见（作为第3个Tab）
+                    if (destination.id == R.id.agendaBookFragment) {
+                        val agendaItem = binding.bottomNavView.menu.findItem(R.id.agendaBookFragment)
+                        if (agendaItem != null && agendaItem.isVisible && !agendaItem.isChecked) {
+                            agendaItem.isChecked = true
+                        }
+                    }
+                }
+            }
+
+            // 配置 ActionBar，这两个顶级页面不显示返回箭头
+            appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment, R.id.settingsFragment))
+            setupActionBarWithNavController(navController, appBarConfiguration)
+
+        } else {
+            // --- 侧滑抽屉模式 ---
+            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+            binding.bottomNavView.visibility = View.GONE
+            binding.navView.setupWithNavController(navController)
+            // --- 动态控制侧滑栏可见性 ---
+            binding.navView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
+            appBarConfiguration = AppBarConfiguration(setOf(R.id.homeFragment), binding.drawerLayout)
+            setupActionBarWithNavController(navController, appBarConfiguration)
+        }
     }
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS, false) == true) {
             Handler(Looper.getMainLooper()).postDelayed({
-                // 使用 R 文件中的 ID，这是最可靠的方式
                 navController.navigate(R.id.action_global_deepDeveloperFragment)
             }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS)
-        } // 添加处理 LOG_READER 导航
+        }
         if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER, false) == true) {
             Handler(Looper.getMainLooper()).postDelayed({
                 navController.navigate(R.id.action_global_logReaderFragment)
             }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER)
         }
-
     }
-
-    // ... applySelectedTheme 和 onSupportNavigateUp 方法保持不变 ...
 
     private fun applySelectedTheme() {
         val themeKey = preferenceManager.getTheme()
-        val colorKey = preferenceManager.getAccentColor()
+        val colorKey = preferenceManager.getAccentColor() // 这里已经包含了 fallback 逻辑
 
-        // 1. 确定基础主题资源 ID
-        // 注意：我们这里统一先应用 M3 基础，后续如果是 MD1/MD2 再覆盖
-        // 这样做是为了让 DynamicColors 有机会在 M3 模式下生效
-
-        var finalThemeResId = R.style.Theme_ZakoCountdown_M3
-
-        if (themeKey == PreferenceManager.THEME_M1) {
-            finalThemeResId = R.style.Theme_ZakoCountdown_MD1
-        } else if (themeKey == PreferenceManager.THEME_M2) {
-            finalThemeResId = R.style.Theme_ZakoCountdown_MD2
+        // 根据组合确定具体的主题资源 ID
+        val themeResId = when (themeKey) {
+            PreferenceManager.THEME_M1 -> {
+                when (colorKey) {
+                    PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD1_Pink
+                    PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD1_Blue
+                    else -> R.style.Theme_ZakoCountdown_MD1
+                }
+            }
+            PreferenceManager.THEME_M2 -> {
+                when (colorKey) {
+                    PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD2_Pink
+                    PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD2_Blue
+                    else -> R.style.Theme_ZakoCountdown_MD2
+                }
+            }
+            else -> { // M3
+                when (colorKey) {
+                    PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_M3_Pink
+                    PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_M3_Blue
+                    else -> R.style.Theme_ZakoCountdown_M3
+                }
+            }
         }
 
-        // 2. 处理颜色叠加
-        // 如果不是 M3 + Monet，我们需要叠加自定义颜色
-        if (!(themeKey == PreferenceManager.THEME_M3 && colorKey == PreferenceManager.ACCENT_MONET)) {
+        setTheme(themeResId)
 
-            // 先应用基础主题
-            setTheme(finalThemeResId)
-
-            // 再应用颜色叠加
-            val colorOverlayId = when (colorKey) {
-                PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_Overlay_Pink
-                PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_Overlay_Blue
-                // 如果是 Monet 或者是 MD1/MD2 的默认色，这里返回 0
-                else -> 0
-            }
-            if (colorOverlayId != 0) {
-                theme.applyStyle(colorOverlayId, true)
-            }
-        } else {
-            // --- 【Monet 核心修复】 ---
-            // 如果是 M3 + Monet，我们需要启用动态取色
-            // 这一步必须在 setTheme 之前或之后紧接着调用
-            // 注意：applyToActivityIfAvailable 会尝试应用一个系统动态主题覆盖当前主题
-
-            // 1. 先应用我们的 M3 基础主题 (无颜色定义)
-            setTheme(R.style.Theme_ZakoCountdown_M3)
-
-            // 2. 尝试应用动态颜色
+        // 仅在 M3 + Monet 且系统支持时应用动态色
+        if (themeKey == PreferenceManager.THEME_M3 && colorKey == PreferenceManager.ACCENT_MONET) {
             if (DynamicColors.isDynamicColorAvailable()) {
                 DynamicColors.applyToActivityIfAvailable(this)
             }
@@ -114,5 +183,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onSupportNavigateUp(): Boolean {
         return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp()
+    }
+
+    override fun onBackPressed() {
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
+        } else {
+            super.onBackPressed()
+        }
     }
 }

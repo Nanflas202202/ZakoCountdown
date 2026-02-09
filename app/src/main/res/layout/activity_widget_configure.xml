@@ -71,7 +71,8 @@
                     android:text="图片"
                     android:layout_weight="1"/>
             </RadioGroup>
-            <!-- 1. 图片透明度 (图片模式下显示) -->
+
+            <!-- 1. 图片透明度 -->
             <LinearLayout
                 android:id="@+id/image_alpha_container"
                 android:layout_width="match_parent"
@@ -95,7 +96,7 @@
                     android:stepSize="10"/>
             </LinearLayout>
 
-            <!-- 2. 遮罩设置 (图片模式下显示) -->
+            <!-- 2. 遮罩设置 -->
             <LinearLayout
                 android:id="@+id/scrim_settings_container"
                 android:layout_width="match_parent"
@@ -126,7 +127,7 @@
                     android:stepSize="10"/>
             </LinearLayout>
 
-            <!-- 颜色选择器 (半透明和不透明模式共享) -->
+            <!-- 颜色选择器 -->
             <HorizontalScrollView
                 android:id="@+id/color_selector_container"
                 android:layout_width="match_parent"
@@ -141,7 +142,7 @@
                     android:orientation="horizontal"/>
             </HorizontalScrollView>
 
-            <!-- 透明度滑块 (仅在半透明模式显示) -->
+            <!-- 透明度滑块 -->
             <LinearLayout
                 android:id="@+id/alpha_slider_container"
                 android:layout_width="match_parent"
@@ -165,23 +166,25 @@
                     android:stepSize="10"/>
             </LinearLayout>
 
+            <!-- 使用动态样式 -->
             <Button
                 android:id="@+id/widget_select_image_button"
-                style="@style/Widget.Material3.Button.TonalButton"
+                style="?attr/materialButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
                 android:text="选择图片"
                 android:visibility="gone"/>
 
-            <!-- 确认按钮 -->
+            <!-- 使用动态样式 -->
             <Button
                 android:id="@+id/btn_confirm_add_widget"
+                style="?attr/materialButtonStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
                 android:text="添加微件"
-                android:enabled="false"/> <!-- 默认禁用，直到选择了日程 -->
+                android:enabled="false"/>
 
         </LinearLayout>
     </ScrollView>

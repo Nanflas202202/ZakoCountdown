@@ -35,9 +35,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_input_layout_title" />
 
+    <!-- 使用动态无边框样式 -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_date_picker"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="?attr/borderlessButtonStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         tools:text="2024年12月25日"
@@ -57,9 +58,10 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_date_picker" />
 
+    <!-- 使用动态无边框样式 -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_time_picker"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
+        style="?attr/borderlessButtonStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         tools:text="18:00"
