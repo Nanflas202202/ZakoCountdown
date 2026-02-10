@@ -10,7 +10,7 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 
 // --- 版本升级到 7 ---
-@Database(entities = [CountdownEvent::class, AgendaBook::class], version = 7, exportSchema = false)
+@Database(entities = [CountdownEvent::class, AgendaBook::class], version = 9, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
@@ -40,6 +40,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        // --- 【新增】迁移策略：7 -> 8 ---
+        private val MIGRATION_7_8 = object : Migration(7, 8) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // 为 agenda_books 表添加 coverImageUri 列
+                database.execSQL("ALTER TABLE `agenda_books` ADD COLUMN `coverImageUri` TEXT DEFAULT NULL")
+            }
+        }
+        // --- 【新增】迁移策略：8 -> 9 ---
+        private val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE `agenda_books` ADD COLUMN `cardAlpha` REAL NOT NULL DEFAULT 1.0")
+                database.execSQL("ALTER TABLE `agenda_books` ADD COLUMN `sortOrder` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -47,8 +61,8 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "zako_countdown_database"
                 )
-                    .addMigrations(MIGRATION_6_7) // 添加迁移策略
-                    .fallbackToDestructiveMigration() // 作为最后防线
+                    .addMigrations(MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9) // 添加新迁移
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

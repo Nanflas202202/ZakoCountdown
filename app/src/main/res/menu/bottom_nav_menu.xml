@@ -5,12 +5,12 @@
         android:icon="@drawable/ic_home"
         android:title="首页" />
 
-    <!-- 新增项：日程本 -->
+    <!-- 默认设为 visible="false"，由代码控制显示 -->
     <item
         android:id="@+id/agendaBookFragment"
         android:icon="@drawable/ic_collections_bookmark"
         android:title="日程本"
-        android:visible="false" /> <!-- 默认不可见 -->
+        android:visible="true" />
 
     <item
         android:id="@+id/settingsFragment"

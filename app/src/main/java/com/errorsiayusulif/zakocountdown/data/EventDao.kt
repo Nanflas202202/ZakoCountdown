@@ -7,7 +7,7 @@ import androidx.room.*
 @Dao
 interface EventDao {
 
-    // --- Events (原有) ---
+    // --- Events ---
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvent(event: CountdownEvent)
 
@@ -44,33 +44,50 @@ interface EventDao {
     @Query("SELECT * FROM countdown_events WHERE id IN (:ids)")
     suspend fun getEventsByIds(ids: List<Long>): List<CountdownEvent>
 
-    // --- 【新增】日程本相关查询 ---
-
-    // 获取某个日程本下的所有日程
+    // --- 日程本关联查询 ---
     @Query("SELECT * FROM countdown_events WHERE bookId = :bookId ORDER BY targetDate ASC")
     fun getEventsByBookId(bookId: Long): LiveData<List<CountdownEvent>>
 
-    // --- Agenda Books (新增) ---
+    // --- 【补全】批量操作 ---
+
+    // 将指定 IDs 的日程移动到 bookId
+    @Query("UPDATE countdown_events SET bookId = :bookId WHERE id IN (:eventIds)")
+    suspend fun updateEventsBookId(bookId: Long, eventIds: List<Long>)
+
+    // 将指定 IDs 的日程移出 (设为默认)
+    @Query("UPDATE countdown_events SET bookId = NULL WHERE id IN (:eventIds)")
+    suspend fun clearBookIdForEvents(eventIds: List<Long>)
+
+    // 当删除日程本时，将其下的日程重置为默认
+    @Query("UPDATE countdown_events SET bookId = NULL WHERE bookId = :bookId")
+    suspend fun detachEventsFromBook(bookId: Long)
+
+    // --- Agenda Books ---
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBook(book: AgendaBook)
 
+    // 【补全】插入并返回 ID
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertBookAndGetId(book: AgendaBook): Long
+
     @Update
     suspend fun updateBook(book: AgendaBook)
+
+    // 【补全】批量更新日程本 (用于排序)
+    @Update
+    suspend fun updateBooks(books: List<AgendaBook>)
 
     @Delete
     suspend fun deleteBook(book: AgendaBook)
 
-    @Query("SELECT * FROM agenda_books ORDER BY createTime DESC")
+    // 【修改】改为按 sortOrder 排序，其次按创建时间
+    @Query("SELECT * FROM agenda_books ORDER BY sortOrder ASC, createTime DESC")
     fun getAllBooks(): LiveData<List<AgendaBook>>
 
-    @Query("SELECT * FROM agenda_books ORDER BY createTime DESC")
+    @Query("SELECT * FROM agenda_books ORDER BY sortOrder ASC, createTime DESC")
     suspend fun getAllBooksSuspend(): List<AgendaBook>
 
     @Query("SELECT * FROM agenda_books WHERE id = :id")
     suspend fun getBookById(id: Long): AgendaBook?
-
-    // 当删除一个日程本时，将该本子下的所有日程移回“默认”（bookId = null）
-    @Query("UPDATE countdown_events SET bookId = NULL WHERE bookId = :bookId")
-    suspend fun detachEventsFromBook(bookId: Long)
 }

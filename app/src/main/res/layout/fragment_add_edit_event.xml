@@ -70,7 +70,25 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_view_time_label" />
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/input_layout_agenda"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:hint="所属日程本"
+        app:layout_constraintTop_toBottomOf="@id/button_time_picker"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
+        <AutoCompleteTextView
+            android:id="@+id/auto_complete_agenda"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="none"
+            android:text="默认 / 全部" />
+
+    </com.google.android.material.textfield.TextInputLayout>
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_save_event"
         android:layout_width="wrap_content"

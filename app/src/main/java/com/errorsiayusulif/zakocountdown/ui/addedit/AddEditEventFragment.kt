@@ -1,17 +1,21 @@
-// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/addedit/AddEditEventFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.addedit
 
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAddEditEventBinding
+import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -23,30 +27,34 @@ class AddEditEventFragment : Fragment() {
     private var _binding: FragmentAddEditEventBinding? = null
     private val binding get() = _binding!!
 
+    // 这里的 Factory 依赖于上面文件中的类定义
     private val viewModel: AddEditEventViewModel by viewModels {
         AddEditEventViewModelFactory(
             (requireActivity().application as ZakoCountdownApplication).repository,
-            requireActivity().application // 传入 application
+            requireActivity().application
         )
     }
 
+    private val agendaViewModel: AgendaViewModel by viewModels({ requireActivity() })
     private val args: AddEditEventFragmentArgs by navArgs()
 
-    // --- 【核心修复】恢复为标准写法 ---
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    private var selectedBookId: Long? = null
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAddEditEventBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    // ... 其他所有代码保持不变 ...
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        viewModel.start(if (args.eventId == -1L) null else args.eventId)
+
+        viewModel.start(
+            if (args.eventId == -1L) null else args.eventId,
+            args.defaultBookId
+        )
+
         setupObservers()
+        setupAgendaSelector()
         setupClickListeners()
     }
 
@@ -60,14 +68,57 @@ class AddEditEventFragment : Fragment() {
             binding.buttonDatePicker.text = dateFormat.format(calendar.time)
             binding.buttonTimePicker.text = timeFormat.format(calendar.time)
         }
+
+        viewModel.eventBookId.observe(viewLifecycleOwner) { bookId ->
+            selectedBookId = bookId
+            // 回显逻辑在 setupAgendaSelector 的 Observer 中统一处理
+        }
+    }
+
+    private fun setupAgendaSelector() {
+        if (!PreferenceManager(requireContext()).isAgendaBookEnabled()) {
+            binding.inputLayoutAgenda.visibility = View.GONE
+            return
+        }
+
+        binding.inputLayoutAgenda.visibility = View.VISIBLE
+
+        agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
+            val displayList = mutableListOf("默认 / 全部")
+            val idList = mutableListOf<Long?>(null)
+
+            books.forEach {
+                displayList.add(it.name)
+                idList.add(it.id)
+            }
+
+            val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, displayList)
+            (binding.inputLayoutAgenda.editText as? AutoCompleteTextView)?.setAdapter(adapter)
+
+            // 尝试回显
+            val currentId = selectedBookId
+            val index = idList.indexOf(currentId)
+
+            // 使用 setText(..., false) 防止触发过滤
+            if (index != -1) {
+                (binding.inputLayoutAgenda.editText as? AutoCompleteTextView)?.setText(displayList[index], false)
+            } else {
+                (binding.inputLayoutAgenda.editText as? AutoCompleteTextView)?.setText(displayList[0], false)
+            }
+
+            (binding.inputLayoutAgenda.editText as? AutoCompleteTextView)?.setOnItemClickListener { _, _, position, _ ->
+                selectedBookId = idList[position]
+            }
+        }
     }
 
     private fun setupClickListeners() {
         binding.buttonDatePicker.setOnClickListener { showDatePicker() }
         binding.buttonTimePicker.setOnClickListener { showTimePicker() }
+
         binding.fabSaveEvent.setOnClickListener {
             val title = binding.editTextTitle.text.toString()
-            if (viewModel.saveEvent(title)) {
+            if (viewModel.saveEvent(title, selectedBookId)) {
                 findNavController().navigateUp()
             } else {
                 Toast.makeText(context, "标题不能为空哦～", Toast.LENGTH_SHORT).show()

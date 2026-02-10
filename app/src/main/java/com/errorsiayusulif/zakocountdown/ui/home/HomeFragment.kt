@@ -1,6 +1,6 @@
+// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/home/HomeFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.home
 
-import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
@@ -8,13 +8,19 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.CalendarContract // 核心导入：日历契约
+import android.provider.CalendarContract
 import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.ColorUtils
+import androidx.core.view.GravityCompat
+import androidx.core.view.MenuProvider
+import androidx.drawerlayout.widget.DrawerLayout
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -27,8 +33,10 @@ import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentHomeBinding
+import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
+import java.util.*
 
 class HomeFragment : Fragment() {
 
@@ -40,6 +48,12 @@ class HomeFragment : Fragment() {
         HomeViewModelFactory(app.repository, app)
     }
 
+    // 共享 ViewModel 负责获取日程本颜色和筛选状态
+    private val agendaViewModel: AgendaViewModel by viewModels({ requireActivity() })
+
+    private var currentAllEvents: List<CountdownEvent> = emptyList()
+    private var currentBookColors: Map<Long, String> = emptyMap()
+
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
         return binding.root
@@ -48,6 +62,30 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // 1. 设置 Toolbar 菜单
+        val menuHost = requireActivity()
+        menuHost.addMenuProvider(object : MenuProvider {
+            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // 仅当功能开启时才加载菜单
+                if (PreferenceManager(requireContext()).isAgendaBookEnabled()) {
+                    menuInflater.inflate(R.menu.home_menu, menu)
+                }
+            }
+
+            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                return when (menuItem.itemId) {
+                    R.id.action_filter -> {
+                        // 打开右侧抽屉进行筛选
+                        val drawer = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
+                        drawer.openDrawer(GravityCompat.END)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        }, viewLifecycleOwner)
+
+        // 2. 初始化 Adapter
         val adapter = CountdownAdapter(
             onItemClicked = { event ->
                 val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(
@@ -63,10 +101,9 @@ class HomeFragment : Fragment() {
         )
         binding.recyclerViewEvents.adapter = adapter
         binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
-
-        // 禁用默认动画器，防止 item 刷新时透明度闪烁
         binding.recyclerViewEvents.itemAnimator = null
 
+        // 3. 滑动删除逻辑
         ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -80,17 +117,36 @@ class HomeFragment : Fragment() {
             }
         }).attachToRecyclerView(binding.recyclerViewEvents)
 
+        // 4. 数据观察
         homeViewModel.allEvents.observe(viewLifecycleOwner) { events ->
-            events?.let {
-                adapter.submitList(it)
-                checkDevModeActivation(it)
-            }
+            currentAllEvents = events ?: emptyList()
+            applyFilterAndSubmitList(adapter)
+            checkDevModeActivation(currentAllEvents)
+        }
+
+        agendaViewModel.currentFilterId.observe(viewLifecycleOwner) {
+            applyFilterAndSubmitList(adapter)
+        }
+
+        agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
+            currentBookColors = books.associate { it.id to it.colorHex }
+            adapter.setBookColorMap(currentBookColors)
         }
 
         binding.fabAddEvent.setOnClickListener {
             val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "添加日程")
             findNavController().navigate(action)
         }
+    }
+
+    private fun applyFilterAndSubmitList(adapter: CountdownAdapter) {
+        val filterId = agendaViewModel.currentFilterId.value ?: -1L
+        val filteredList = when (filterId) {
+            -1L -> currentAllEvents
+            -2L -> currentAllEvents.filter { it.isImportant }
+            else -> currentAllEvents.filter { it.bookId == filterId }
+        }
+        adapter.submitList(filteredList)
     }
 
     override fun onResume() {
@@ -102,12 +158,10 @@ class HomeFragment : Fragment() {
         val app = requireActivity().application as ZakoCountdownApplication
         val wallpaperUriString = app.preferenceManager.getHomepageWallpaperUri()
 
-        // 1. 获取遮罩配置
         val scrimMode = app.preferenceManager.getScrimColorMode()
         val scrimAlphaPercent = app.preferenceManager.getScrimAlpha()
         val scrimAlphaInt = (scrimAlphaPercent / 100f * 255).toInt()
 
-        // 2. 决定基础颜色
         val baseColor = when (scrimMode) {
             PreferenceManager.SCRIM_MODE_BLACK -> Color.BLACK
             PreferenceManager.SCRIM_MODE_WHITE -> Color.WHITE
@@ -118,15 +172,11 @@ class HomeFragment : Fragment() {
                     Color.DKGRAY
                 }
             }
-            else -> { // theme
-                MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
-            }
+            else -> MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
         }
 
-        // 3. 计算最终颜色
         val finalScrimColor = ColorUtils.setAlphaComponent(baseColor, scrimAlphaInt)
 
-        // 4. 应用背景和遮罩
         if (wallpaperUriString != null) {
             binding.wallpaperImage.load(Uri.parse(wallpaperUriString)) { crossfade(true) }
             binding.recyclerViewScrim.setBackgroundColor(finalScrimColor)
@@ -163,30 +213,23 @@ class HomeFragment : Fragment() {
             when (menuItem.itemId) {
                 R.id.action_pin -> { homeViewModel.update(event.copy(isPinned = !event.isPinned)); true }
                 R.id.action_mark_important -> { homeViewModel.update(event.copy(isImportant = !event.isImportant)); true }
-
-                // Task 1: 添加到系统日历
                 R.id.action_add_to_calendar -> {
                     addToSystemCalendar(event)
                     true
                 }
-
-                // Task 3: 分享
                 R.id.action_share_card -> {
-                    openShareSettings(event)
+                    val action = HomeFragmentDirections.actionHomeFragmentToSharePreviewFragment(event.id)
+                    findNavController().navigate(action)
                     true
                 }
-
                 R.id.action_card_settings -> {
                     val action = HomeFragmentDirections.actionHomeFragmentToCardSettingsFragment(event.id)
                     findNavController().navigate(action); true
                 }
-
-                // Fix: 修复后的添加微件逻辑
                 R.id.action_add_widget -> {
                     pinWidget(event)
                     true
                 }
-
                 R.id.action_delete -> {
                     homeViewModel.delete(event)
                     Snackbar.make(binding.root, "日程已删除", Snackbar.LENGTH_LONG)
@@ -202,49 +245,34 @@ class HomeFragment : Fragment() {
     private fun addToSystemCalendar(event: CountdownEvent) {
         try {
             val startMillis = event.targetDate.time
-            val endMillis = startMillis + 60 * 60 * 1000 // 默认1小时
-
             val intent = Intent(Intent.ACTION_INSERT).apply {
                 data = CalendarContract.Events.CONTENT_URI
                 putExtra(CalendarContract.Events.TITLE, event.title)
                 putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
-                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endMillis)
+                putExtra(CalendarContract.EXTRA_EVENT_END_TIME, startMillis + 3600000)
                 putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
-                putExtra(CalendarContract.Events.DESCRIPTION, "来自 ZakoCountdown 的日程提醒")
+                putExtra(CalendarContract.Events.DESCRIPTION, "来自 ZakoCountdown 的提醒")
             }
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "未找到可用的日历应用", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "未找到日历应用", Toast.LENGTH_SHORT).show()
         }
-    }
-
-    private fun openShareSettings(event: CountdownEvent) {
-        val action = HomeFragmentDirections.actionHomeFragmentToSharePreviewFragment(event.id)
-        findNavController().navigate(action)
     }
 
     private fun pinWidget(event: CountdownEvent) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val appWidgetManager = AppWidgetManager.getInstance(requireContext())
-            val myProvider = ComponentName(requireContext(), com.errorsiayusulif.zakocountdown.widget.ZakoWidgetProvider::class.java)
-
+            val myProvider = ComponentName(
+                requireContext(),
+                "com.errorsiayusulif.zakocountdown.widget.ZakoWidgetProvider"
+            )
             if (appWidgetManager.isRequestPinAppWidgetSupported) {
-                // 传递参数给系统，系统会在添加成功后，将这些参数传给 WidgetConfigureActivity
                 val extras = Bundle()
                 extras.putLong("preselected_event_id", event.id)
                 extras.putBoolean("is_shortcut_creation", true)
-
-                // 成功回调（可选，这里只是为了演示）
-                val successIntent = Intent(requireContext(), com.errorsiayusulif.zakocountdown.MainActivity::class.java)
-                val successCallback = PendingIntent.getActivity(requireContext(), 0, successIntent, PendingIntent.FLAG_IMMUTABLE)
-
-                appWidgetManager.requestPinAppWidget(myProvider, extras, successCallback)
-                Toast.makeText(requireContext(), "请求已发送，请在弹窗中确认", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(requireContext(), "当前启动器不支持自动添加微件", Toast.LENGTH_SHORT).show()
+                appWidgetManager.requestPinAppWidget(myProvider, extras, null)
+                Toast.makeText(requireContext(), "请求已发送", Toast.LENGTH_SHORT).show()
             }
-        } else {
-            Toast.makeText(requireContext(), "系统版本过低，请手动在桌面添加", Toast.LENGTH_SHORT).show()
         }
     }
 

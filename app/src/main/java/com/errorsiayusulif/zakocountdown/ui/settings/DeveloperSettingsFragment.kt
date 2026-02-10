@@ -50,5 +50,13 @@ class DeveloperSettingsFragment : PreferenceFragmentCompat() {
             preferenceManager.setPopupMode(newValue as String)
             true
         }
+        // --- 【修复】日程本功能开关 ---
+        // 务必确保 key 与 developer_preferences.xml 中的一致
+        findPreference<SwitchPreferenceCompat>("key_enable_agenda_book")?.setOnPreferenceChangeListener { _, newValue ->
+            preferenceManager.setAgendaBookEnabled(newValue as Boolean)
+            // 强制重启 Activity 以刷新导航菜单
+            activity?.recreate()
+            true
+        }
     }
 }

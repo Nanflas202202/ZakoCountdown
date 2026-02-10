@@ -5,7 +5,7 @@ import androidx.lifecycle.LiveData
 
 class EventRepository(private val eventDao: EventDao) {
 
-    // Events
+    // --- Events ---
     val allEvents: LiveData<List<CountdownEvent>> = eventDao.getAllEvents()
 
     suspend fun insert(event: CountdownEvent) = eventDao.insertEvent(event)
@@ -20,21 +20,25 @@ class EventRepository(private val eventDao: EventDao) {
     suspend fun getWidgetEvent() = eventDao.getWidgetEvent()
     suspend fun getEventsByIds(ids: List<Long>) = eventDao.getEventsByIds(ids)
 
-    // --- 【新增】日程本操作 ---
+    // --- 【补全】批量操作代理 ---
+    suspend fun updateEventsBookId(bookId: Long, eventIds: List<Long>) = eventDao.updateEventsBookId(bookId, eventIds)
+    suspend fun detachEventsFromBook(bookId: Long) = eventDao.detachEventsFromBook(bookId)
 
+    // --- Agenda Books ---
     val allBooks: LiveData<List<AgendaBook>> = eventDao.getAllBooks()
 
     suspend fun insertBook(book: AgendaBook) = eventDao.insertBook(book)
+    suspend fun insertBookAndGetId(book: AgendaBook): Long = eventDao.insertBookAndGetId(book) // 补全
     suspend fun updateBook(book: AgendaBook) = eventDao.updateBook(book)
+    suspend fun updateBooks(books: List<AgendaBook>) = eventDao.updateBooks(books) // 补全
 
-    // 删除日程本时，先解绑其下的日程
     suspend fun deleteBook(book: AgendaBook) {
+        // 删除前先解绑日程
         eventDao.detachEventsFromBook(book.id)
         eventDao.deleteBook(book)
     }
 
     suspend fun getAllBooksSuspend() = eventDao.getAllBooksSuspend()
     suspend fun getBookById(id: Long) = eventDao.getBookById(id)
-
     fun getEventsByBookId(bookId: Long) = eventDao.getEventsByBookId(bookId)
 }

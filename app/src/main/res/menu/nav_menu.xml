@@ -10,7 +10,7 @@
             android:id="@+id/agendaBookFragment"
             android:icon="@drawable/ic_collections_bookmark"
             android:title="日程本"
-            android:visible="false" />
+            android:visible="true" />
 
         <item
             android:id="@+id/settingsFragment"

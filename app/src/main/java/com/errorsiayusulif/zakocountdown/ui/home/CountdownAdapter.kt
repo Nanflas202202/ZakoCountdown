@@ -9,6 +9,7 @@ import android.os.Looper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.core.graphics.ColorUtils
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -32,6 +33,14 @@ class CountdownAdapter(
     private val onLongItemClicked: (CountdownEvent, View) -> Boolean
 ) : ListAdapter<CountdownEvent, CountdownAdapter.CountdownViewHolder>(EventsComparator()) {
 
+    // --- 新增：存储日程本 ID 到 颜色 Hex 的映射 ---
+    private var bookColorMap: Map<Long, String> = emptyMap()
+
+    fun setBookColorMap(map: Map<Long, String>) {
+        this.bookColorMap = map
+        notifyDataSetChanged() // 颜色变化需要刷新列表
+    }
+
     companion object {
         private const val VIEW_TYPE_HERO = 0
         private const val VIEW_TYPE_SIMPLE = 1
@@ -53,16 +62,16 @@ class CountdownAdapter(
         val inflater = LayoutInflater.from(parent.context)
         return when (viewType) {
             VIEW_TYPE_HERO -> CountdownViewHolder.HeroViewHolder(
-                ItemCountdownCardHeroBinding.inflate(inflater, parent, false)
+                ItemCountdownCardHeroBinding.inflate(inflater, parent, false), this
             )
             VIEW_TYPE_DETAILED -> CountdownViewHolder.DetailedViewHolder(
-                ItemCountdownCardDetailedBinding.inflate(inflater, parent, false)
+                ItemCountdownCardDetailedBinding.inflate(inflater, parent, false), this
             )
             VIEW_TYPE_FULL -> CountdownViewHolder.FullViewHolder(
-                ItemCountdownCardFullBinding.inflate(inflater, parent, false)
+                ItemCountdownCardFullBinding.inflate(inflater, parent, false), this
             )
             else -> CountdownViewHolder.SimpleViewHolder(
-                ItemCountdownCardSimpleBinding.inflate(inflater, parent, false)
+                ItemCountdownCardSimpleBinding.inflate(inflater, parent, false), this
             )
         }
     }
@@ -71,12 +80,7 @@ class CountdownAdapter(
         val current = getItem(position)
         holder.itemView.setOnClickListener { onItemClicked(current) }
         holder.itemView.setOnLongClickListener { view -> onLongItemClicked(current, view) }
-        when (holder) {
-            is CountdownViewHolder.SimpleViewHolder -> holder.bind(current)
-            is CountdownViewHolder.DetailedViewHolder -> holder.bind(current)
-            is CountdownViewHolder.FullViewHolder -> holder.bind(current)
-            is CountdownViewHolder.HeroViewHolder -> holder.bind(current)
-        }
+        holder.bind(current)
     }
 
     override fun onViewRecycled(holder: CountdownViewHolder) {
@@ -84,9 +88,46 @@ class CountdownAdapter(
         holder.stopTimer()
     }
 
-    sealed class CountdownViewHolder(binding: ViewBinding) : RecyclerView.ViewHolder(binding.root) {
+    // --- 修改：ViewHolder 接收 adapter 实例以访问 bookColorMap ---
+    sealed class CountdownViewHolder(
+        binding: ViewBinding,
+        private val adapter: CountdownAdapter
+    ) : RecyclerView.ViewHolder(binding.root) {
+
         abstract fun bind(event: CountdownEvent)
         abstract fun stopTimer()
+
+        // --- 核心逻辑：应用标题颜色 ---
+        protected fun applyTitleColor(textView: TextView, event: CountdownEvent) {
+            // 优先级 1: 重点日程 (红色)
+            if (event.isImportant) {
+                textView.setTextColor(itemView.context.getColor(R.color.m3_error)) // 使用错误色(红)
+                return
+            }
+
+            // 优先级 2: 自定义日程本颜色
+            val bookId = event.bookId
+            if (bookId != null) {
+                val colorHex = adapter.bookColorMap[bookId]
+                if (colorHex != null) {
+                    try {
+                        textView.setTextColor(Color.parseColor(colorHex))
+                        return
+                    } catch (e: Exception) {
+                        // 颜色解析失败，回退
+                    }
+                }
+            }
+
+            // 优先级 3: 默认 (跟随主题的主要文本色)
+            // 在 Hero 模式下有背景图时可能是白色，这里只处理普通模式
+            // 获取当前主题的 textColorPrimary
+            val attrs = intArrayOf(android.R.attr.textColorPrimary)
+            val typedArray = itemView.context.obtainStyledAttributes(attrs)
+            val defaultColor = typedArray.getColor(0, Color.BLACK)
+            typedArray.recycle()
+            textView.setTextColor(defaultColor)
+        }
 
         protected fun applyCardColor(event: CountdownEvent) {
             val card = itemView as MaterialCardView
@@ -105,34 +146,22 @@ class CountdownAdapter(
             itemView.alpha = event.cardAlpha ?: 1.0f
         }
 
-        protected fun applyTitleColor(textView: android.widget.TextView, event: CountdownEvent) {
-            if (event.isImportant) {
-                textView.setTextColor(itemView.context.getColor(R.color.m3_error))
-            } else {
-                val attrs = intArrayOf(android.R.attr.textColorPrimary)
-                val typedArray = itemView.context.obtainStyledAttributes(attrs)
-                val defaultColor = typedArray.getColor(0, 0)
-                typedArray.recycle()
-                textView.setTextColor(defaultColor)
-            }
-        }
-
-        class SimpleViewHolder(private val binding: ItemCountdownCardSimpleBinding) : CountdownViewHolder(binding) {
+        class SimpleViewHolder(private val binding: ItemCountdownCardSimpleBinding, adapter: CountdownAdapter)
+            : CountdownViewHolder(binding, adapter) {
             override fun stopTimer() {}
             override fun bind(event: CountdownEvent) {
                 applyCardColor(event)
-                applyTitleColor(binding.textViewTitle, event)
+                applyTitleColor(binding.textViewTitle, event) // 应用颜色
                 binding.textViewTitle.text = event.title
                 val diff = TimeCalculator.calculateDifference(event.targetDate)
                 binding.textViewLabel.text = if (diff.isPast) "已过" else "还有"
                 binding.textViewDays.text = diff.totalDays.toString()
-
-                // 【核心修复】最后应用透明度
                 applyCardAlpha(event)
             }
         }
 
-        class DetailedViewHolder(private val binding: ItemCountdownCardDetailedBinding) : CountdownViewHolder(binding) {
+        class DetailedViewHolder(private val binding: ItemCountdownCardDetailedBinding, adapter: CountdownAdapter)
+            : CountdownViewHolder(binding, adapter) {
             private var timerHandler: Handler? = null
             private var timerRunnable: Runnable? = null
             override fun stopTimer() {
@@ -142,11 +171,9 @@ class CountdownAdapter(
             }
             override fun bind(event: CountdownEvent) {
                 applyCardColor(event)
-                applyTitleColor(binding.textViewTitle, event)
+                applyTitleColor(binding.textViewTitle, event) // 应用颜色
                 binding.textViewTitle.text = event.title
                 startTimer(event.targetDate)
-
-                // 【核心修复】最后应用透明度
                 applyCardAlpha(event)
             }
             private fun startTimer(targetDate: Date) {
@@ -167,7 +194,8 @@ class CountdownAdapter(
             }
         }
 
-        class FullViewHolder(private val binding: ItemCountdownCardFullBinding) : CountdownViewHolder(binding) {
+        class FullViewHolder(private val binding: ItemCountdownCardFullBinding, adapter: CountdownAdapter)
+            : CountdownViewHolder(binding, adapter) {
             private var timerHandler: Handler? = null
             private var timerRunnable: Runnable? = null
             override fun stopTimer() {
@@ -177,11 +205,9 @@ class CountdownAdapter(
             }
             override fun bind(event: CountdownEvent) {
                 applyCardColor(event)
-                applyTitleColor(binding.textViewTitle, event)
+                applyTitleColor(binding.textViewTitle, event) // 应用颜色
                 binding.textViewTitle.text = event.title
                 startTimer(event.targetDate)
-
-                // 【核心修复】最后应用透明度
                 applyCardAlpha(event)
             }
             private fun startTimer(targetDate: Date) {
@@ -194,7 +220,7 @@ class CountdownAdapter(
                         binding.timeYearsValue.text = diff.years.toString()
                         binding.timeMonthsValue.text = diff.months.toString()
                         binding.timeWeeksValue.text = diff.weeks.toString()
-                        binding.timeDaysInWeekValue.text = diff.daysInWeek.toString() // Use daysInMonth if needed
+                        binding.timeDaysInWeekValue.text = diff.daysInWeek.toString()
                         binding.timeMinutesValueFull.text = String.format("%02d", diff.minutes)
                         binding.timeSecondsValueFull.text = String.format("%02d", diff.seconds)
                         timerHandler?.postDelayed(this, 1000)
@@ -204,11 +230,12 @@ class CountdownAdapter(
             }
         }
 
-        class HeroViewHolder(private val binding: ItemCountdownCardHeroBinding) : CountdownViewHolder(binding) {
+        class HeroViewHolder(private val binding: ItemCountdownCardHeroBinding, adapter: CountdownAdapter)
+            : CountdownViewHolder(binding, adapter) {
             override fun stopTimer() {}
             override fun bind(event: CountdownEvent) {
-                applyTitleColor(binding.heroTitle, event)
 
+                // Hero 模式特殊处理：如果有背景图，文字强制白色；没有背景图，应用逻辑颜色
                 if (event.backgroundUri != null) {
                     binding.heroBackgroundImage.load(Uri.parse(event.backgroundUri))
                     binding.heroScrim.visibility = View.VISIBLE
@@ -225,9 +252,10 @@ class CountdownAdapter(
                     binding.heroScrim.visibility = View.GONE
                     applyCardColor(event)
 
-                    // 无背景图时，文字颜色恢复默认（或者保持白色，如果这是设计意图）
+                    applyTitleColor(binding.heroTitle, event) // 应用颜色
+
+                    // 数字颜色通常跟随主题 Primary
                     val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
-                    binding.heroTitle.setTextColor(colorPrimary)
                     binding.heroDays.setTextColor(colorPrimary)
 
                     val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
@@ -239,8 +267,6 @@ class CountdownAdapter(
                 binding.heroTitle.text = "距离 ${event.title}"
                 binding.heroDays.text = diff.totalDays.toString()
                 binding.heroLabelPrefix.text = if (diff.isPast) "已过" else "还有"
-
-                // 【核心修复】最后应用透明度
                 applyCardAlpha(event)
             }
         }

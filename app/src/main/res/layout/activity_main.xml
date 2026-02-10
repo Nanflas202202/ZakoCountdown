@@ -32,7 +32,7 @@
             app:defaultNavHost="true"
             app:navGraph="@navigation/nav_graph" />
 
-        <!-- 底部导航栏 (默认隐藏) -->
+        <!-- 底部导航栏 -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_nav_view"
             android:layout_width="match_parent"
@@ -43,7 +43,7 @@
 
     </LinearLayout>
 
-    <!-- 侧滑栏视图 -->
+    <!-- 左侧侧滑栏 -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -51,5 +51,27 @@
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/nav_menu" />
+
+    <!-- 新增：右侧侧滑栏 (日程本筛选) -->
+    <!-- 使用 LinearLayout 作为容器，里面放 Header 和 RecyclerView -->
+    <!-- 右侧侧滑栏 (日程本筛选) -->
+    <LinearLayout
+        android:id="@+id/right_drawer_container"
+        style="@style/Widget.Zako.RightDrawer"
+        android:orientation="vertical">
+
+        <!-- Header -->
+        <include
+            android:id="@+id/right_header"
+            layout="@layout/nav_header_right" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view_agenda"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingTop="8dp"
+            android:scrollbars="vertical"/>
+
+    </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -17,5 +17,8 @@ data class AgendaBook(
     val id: Long = 0,
     var name: String,
     var colorHex: String,
-    val createTime: Long = System.currentTimeMillis()
+    val createTime: Long = System.currentTimeMillis(),
+    var coverImageUri: String? = null,
+    var cardAlpha: Float = 1.0f,  // 透明度 0.0 - 1.0
+    var sortOrder: Int = 0        // 排序顺序
 )

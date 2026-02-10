@@ -230,7 +230,7 @@ class PreferenceManager(context: Context) {
     }
 
     fun isAgendaBookEnabled(): Boolean {
-        return prefs.getBoolean("key_enable_agenda_book", false)
+        return prefs.getBoolean("key_enable_agenda_book", true)
     }
 
     companion object {

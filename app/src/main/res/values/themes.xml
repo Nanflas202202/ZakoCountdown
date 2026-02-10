@@ -202,4 +202,35 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+    <!-- ============================================= -->
+    <!-- =====   右侧抽屉容器及头部基础样式      ====== -->
+    <!-- ============================================= -->
+
+    <!-- 1. 抽屉容器基类 -->
+    <style name="Widget.Zako.RightDrawer" parent="">
+        <item name="android:layout_width">300dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_gravity">end</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- 2. 抽屉头部基类 (解决报错) -->
+    <style name="Widget.Zako.RightHeader" parent="">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:padding">16dp</item>
+    </style>
+
+    <!-- MD3 抽屉容器变体: 悬浮、左侧圆角 -->
+    <style name="Widget.Zako.RightDrawer.M3" parent="Widget.Zako.RightDrawer">
+        <item name="android:background">@drawable/bg_drawer_right_m3</item>
+    </style>
+
+    <!-- MD1/2 抽屉容器变体: 贴边、直角 -->
+    <style name="Widget.Zako.RightDrawer.Legacy" parent="Widget.Zako.RightDrawer">
+        <item name="android:background">?attr/colorSurface</item>
+    </style>
 </resources>
