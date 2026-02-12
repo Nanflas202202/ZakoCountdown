@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="0dp"
+    app:cardElevation="0dp"
+    app:cardCornerRadius="0dp"
+    app:strokeWidth="0dp"
+    app:cardBackgroundColor="?attr/colorSurface">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <!-- 左侧封面图 -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="80dp"
+            android:layout_height="110dp"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="?attr/colorSurfaceVariant">
+
+            <ImageView
+                android:id="@+id/iv_compact_cover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
+
+            <!-- 遮罩 -->
+            <View
+                android:id="@+id/v_compact_scrim"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#1A000000"
+                android:visibility="gone"/>
+        </androidx.cardview.widget.CardView>
+
+        <!-- 右侧信息区 -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:paddingStart="12dp"
+            android:paddingEnd="4dp">
+
+            <!-- 1. 标题 -->
+            <TextView
+                android:id="@+id/tv_compact_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                tools:text="日程标题"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorOnSurface"
+                android:maxLines="2"
+                android:ellipsize="end"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- 2. 标签容器 (双标签支持) -->
+            <LinearLayout
+                android:id="@+id/ll_tags_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_compact_title">
+
+                <!-- 重点标签 -->
+                <TextView
+                    android:id="@+id/tv_important_tag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="重点"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="1dp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    android:layout_marginEnd="6dp"/>
+
+                <!-- 日程本标签 -->
+                <TextView
+                    android:id="@+id/tv_agenda_tag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="默认日程"
+                    android:textSize="10sp"
+                    android:textColor="#FFFFFF"
+                    android:paddingHorizontal="6dp"
+                    android:paddingVertical="1dp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <!-- 3. 倒数时间 (调大字号 34sp -> 42sp) -->
+            <TextView
+                android:id="@+id/tv_compact_time_main"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="123 天"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:textColor="?attr/colorPrimary"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ll_tags_container"
+                app:layout_constraintBottom_toTopOf="@id/tv_compact_date"
+                app:layout_constraintVertical_bias="0.6"/>
+
+            <!-- 4. 右下角：目标日期 -->
+            <TextView
+                android:id="@+id/tv_compact_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="2026-02-12 10:00"
+                android:textSize="12sp"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+    <!-- 移除了底部分隔线 View，实现完全无缝 -->
+
+</com.google.android.material.card.MaterialCardView>

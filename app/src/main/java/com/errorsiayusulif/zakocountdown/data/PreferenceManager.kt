@@ -232,6 +232,53 @@ class PreferenceManager(context: Context) {
     fun isAgendaBookEnabled(): Boolean {
         return prefs.getBoolean("key_enable_agenda_book", true)
     }
+    // --- 日程本视图记忆 ---
+    fun setAgendaViewMode(isGrid: Boolean) {
+        prefs.edit().putBoolean(KEY_AGENDA_VIEW_MODE, isGrid).apply()
+    }
+
+    fun isAgendaViewModeGrid(): Boolean {
+        // 默认 true (网格)
+        return prefs.getBoolean(KEY_AGENDA_VIEW_MODE, true)
+    }
+
+    // --- 开屏弹窗高级设置 ---
+    fun setPopupDuration(seconds: Int) {
+        prefs.edit().putInt(KEY_POPUP_DURATION, seconds).apply()
+    }
+
+    fun getPopupDuration(): Int {
+        // 默认 5 秒
+        return prefs.getInt(KEY_POPUP_DURATION, 5)
+    }
+
+    fun setPopupSkippable(skippable: Boolean) {
+        prefs.edit().putBoolean(KEY_POPUP_SKIPPABLE, skippable).apply()
+    }
+
+    fun isPopupSkippable(): Boolean {
+        // 默认允许跳过
+        return prefs.getBoolean(KEY_POPUP_SKIPPABLE, true)
+    }
+
+    fun setPopupSkipDelay(seconds: Int) {
+        prefs.edit().putInt(KEY_POPUP_SKIP_DELAY, seconds).apply()
+    }
+
+    fun getPopupSkipDelay(): Int {
+        // 默认延迟 0 秒 (立即出现关闭按钮)
+        return prefs.getInt(KEY_POPUP_SKIP_DELAY, 0)
+    }
+    fun setHomeLayoutMode(mode: String) {
+        prefs.edit().putString(KEY_HOME_LAYOUT_MODE, mode).apply()
+    }
+
+    fun getHomeLayoutMode(): String {
+        return prefs.getString(KEY_HOME_LAYOUT_MODE, HOME_LAYOUT_STANDARD) ?: HOME_LAYOUT_STANDARD
+    }
+    fun isLegacyThemeUnlockedInCompact(): Boolean {
+        return prefs.getBoolean("key_unlock_legacy_theme_compact", false)
+    }
 
     companion object {
         private const val PREFS_NAME = "zako_prefs"
@@ -281,5 +328,12 @@ class PreferenceManager(context: Context) {
         private const val KEY_NAV_MODE = "key_nav_mode"
         const val NAV_MODE_DRAWER = "drawer"
         const val NAV_MODE_BOTTOM = "bottom"
+        private const val KEY_AGENDA_VIEW_MODE = "key_agenda_view_mode"
+        private const val KEY_POPUP_DURATION = "key_popup_duration"
+        private const val KEY_POPUP_SKIPPABLE = "key_popup_skippable"
+        private const val KEY_POPUP_SKIP_DELAY = "key_popup_skip_delay"
+        private const val KEY_HOME_LAYOUT_MODE = "key_home_layout_mode"
+        const val HOME_LAYOUT_STANDARD = "standard"
+        const val HOME_LAYOUT_COMPACT = "compact"
     }
 }

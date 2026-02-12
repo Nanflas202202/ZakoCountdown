@@ -1,19 +1,17 @@
-// file: app/src/main/java/com/errorsiayusulif/zakocountdown/MainActivity.kt
 package com.errorsiayusulif.zakocountdown
 
 import android.content.Intent
 import android.content.res.ColorStateList
-import android.graphics.Color // 导入修复
+import android.graphics.Color
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.LayoutInflater // 导入修复
+import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup // 导入修复
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -41,13 +39,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var preferenceManager: PreferenceManager
+    private var destinationListener: NavController.OnDestinationChangedListener? = null
 
-    // 共享 ViewModel 用于日程本筛选
     private val agendaViewModel: AgendaViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         preferenceManager = PreferenceManager(this)
-        // 1. 在布局填充前应用主题
         applySelectedTheme()
 
         super.onCreate(savedInstanceState)
@@ -60,84 +57,102 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        // 初始化
         setupRightDrawer()
         handleIntent(intent)
-    }
 
-    /**
-     * 每次回到 Activity 刷新导航状态，确保开发者设置立即生效
-     */
-    override fun onResume() {
-        super.onResume()
+        // 冷启动立即初始化导航模式
         setupNavigationMode()
     }
 
-    /**
-     * 设置导航模式 (底部导航 vs 侧滑抽屉)
-     */
+    override fun onResume() {
+        super.onResume()
+        // 确保从设置返回时刷新
+        setupNavigationMode()
+    }
+
     private fun setupNavigationMode() {
+        // 清除旧监听器防止冲突
+        destinationListener?.let { navController.removeOnDestinationChangedListener(it) }
+
         val navMode = preferenceManager.getNavMode()
+        val layoutMode = preferenceManager.getHomeLayoutMode()
         val isAgendaEnabled = preferenceManager.isAgendaBookEnabled()
+        val isCompactMode = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
 
-        if (navMode == PreferenceManager.NAV_MODE_BOTTOM) {
-            // --- 底部导航模式 ---
-            // 1. 彻底禁用并隐藏左侧抽屉
-            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
+        // 默认显示标题栏
+        supportActionBar?.show()
+
+        val topLevelDestinations = mutableSetOf<Int>()
+
+        if (isCompactMode) {
+            // 紧凑模式：主页是唯一顶级
+            topLevelDestinations.add(R.id.homeFragment)
+            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             binding.navView.visibility = View.GONE
+            binding.bottomNavView.visibility = View.GONE
+            // 紧凑模式强制显示 Toolbar 菜单
+            invalidateOptionsMenu()
+        } else if (navMode == PreferenceManager.NAV_MODE_BOTTOM) {
+            // 底部导航模式
+            topLevelDestinations.add(R.id.homeFragment)
+            topLevelDestinations.add(R.id.settingsFragment)
+            if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
 
-            // 2. 启用右侧抽屉 (筛选)
+            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
             binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
-
-            // 3. 显示底部导航栏
+            binding.navView.visibility = View.GONE
             binding.bottomNavView.visibility = View.VISIBLE
             binding.bottomNavView.setupWithNavController(navController)
-
-            // 4. 控制“日程本”入口可见性
             binding.bottomNavView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
+        } else {
+            // 侧滑模式
+            topLevelDestinations.add(R.id.homeFragment)
+            topLevelDestinations.add(R.id.settingsFragment)
+            if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
 
-            // 5. 核心修复：高亮联动逻辑
-            navController.addOnDestinationChangedListener { _, destination, _ ->
-                if (binding.bottomNavView.visibility == View.VISIBLE) {
-                    when (destination.id) {
-                        R.id.homeFragment, R.id.addEditEventFragment, R.id.cardSettingsFragment, R.id.sharePreviewFragment -> {
-                            binding.bottomNavView.menu.findItem(R.id.homeFragment)?.isChecked = true
-                        }
-                        R.id.settingsFragment, R.id.personalizationFragment, R.id.advancedSettingsFragment,
-                        R.id.aboutFragment, R.id.developerSettingsFragment, R.id.permissionsFragment -> {
-                            binding.bottomNavView.menu.findItem(R.id.settingsFragment)?.isChecked = true
-                        }
-                        R.id.agendaBookFragment, R.id.addEditAgendaBookFragment -> {
-                            binding.bottomNavView.menu.findItem(R.id.agendaBookFragment)?.isChecked = true
-                        }
+            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+            binding.navView.visibility = View.VISIBLE
+            binding.bottomNavView.visibility = View.GONE
+            binding.navView.setupWithNavController(navController)
+            binding.navView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
+        }
+
+        appBarConfiguration = if (isCompactMode || navMode == PreferenceManager.NAV_MODE_BOTTOM) {
+            AppBarConfiguration(topLevelDestinations)
+        } else {
+            AppBarConfiguration(topLevelDestinations, binding.drawerLayout)
+        }
+        setupActionBarWithNavController(navController, appBarConfiguration)
+
+        destinationListener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            // 处理详情页特殊情况
+            if (destination.id == R.id.agendaDetailFragment) {
+                supportActionBar?.hide()
+            } else {
+                // 在紧凑模式下主页也保持显示标题栏（因为我们要放菜单）
+                supportActionBar?.show()
+            }
+
+            // 底部栏高亮修复
+            if (binding.bottomNavView.visibility == View.VISIBLE) {
+                val menu = binding.bottomNavView.menu
+                when (destination.id) {
+                    R.id.homeFragment, R.id.addEditEventFragment, R.id.cardSettingsFragment, R.id.sharePreviewFragment -> {
+                        menu.findItem(R.id.homeFragment)?.isChecked = true
+                    }
+                    R.id.settingsFragment, R.id.personalizationFragment, R.id.advancedSettingsFragment,
+                    R.id.aboutFragment, R.id.developerSettingsFragment, R.id.permissionsFragment -> {
+                        menu.findItem(R.id.settingsFragment)?.isChecked = true
+                    }
+                    R.id.agendaBookFragment -> {
+                        menu.findItem(R.id.agendaBookFragment)?.isChecked = true
                     }
                 }
             }
-
-            // 6. 配置 AppBar (不传 drawerLayout，这样左侧是返回箭头)
-            val topLevelDestinations = mutableSetOf(R.id.homeFragment, R.id.settingsFragment)
-            if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
-            appBarConfiguration = AppBarConfiguration(topLevelDestinations)
-
-        } else {
-            // --- 侧滑抽屉模式 ---
-            binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.START)
-            binding.navView.visibility = View.VISIBLE
-            binding.bottomNavView.visibility = View.GONE
-
-            binding.navView.setupWithNavController(navController)
-            binding.navView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
-
-            val topLevelDestinations = mutableSetOf(R.id.homeFragment, R.id.settingsFragment)
-            if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
-            appBarConfiguration = AppBarConfiguration(topLevelDestinations, binding.drawerLayout)
         }
-        setupActionBarWithNavController(navController, appBarConfiguration)
+        navController.addOnDestinationChangedListener(destinationListener!!)
     }
 
-    /**
-     * 设置右侧日程本筛选抽屉的视觉样式和数据
-     */
     private fun setupRightDrawer() {
         val themeKey = preferenceManager.getTheme()
         val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
@@ -152,33 +167,28 @@ class MainActivity : AppCompatActivity() {
                 val margin = (16 * resources.displayMetrics.density).toInt()
                 params.setMargins(0, margin, margin, margin)
                 binding.rightDrawerContainer.layoutParams = params
-
                 findViewById<View>(R.id.right_drawer_header)?.background = null
                 setRightHeaderContentColor(colorOnSurface)
             }
             PreferenceManager.THEME_M2 -> {
-                // MD2: 头部无颜色 (白色/Surface)
                 binding.rightDrawerContainer.setBackgroundColor(colorSurface)
                 findViewById<View>(R.id.right_drawer_header)?.setBackgroundColor(colorSurface)
                 setRightHeaderContentColor(colorOnSurface)
             }
             else -> {
-                // MD1: 头部有主色
                 binding.rightDrawerContainer.setBackgroundColor(colorSurface)
                 findViewById<View>(R.id.right_drawer_header)?.setBackgroundColor(colorPrimary)
                 setRightHeaderContentColor(colorOnPrimary)
             }
         }
-
         binding.recyclerViewAgenda.layoutManager = LinearLayoutManager(this)
         agendaViewModel.allBooks.observe(this) { books -> updateRightDrawerList(books) }
         agendaViewModel.currentFilterId.observe(this) { binding.recyclerViewAgenda.adapter?.notifyDataSetChanged() }
-
         findViewById<View>(R.id.btn_add_book)?.setOnClickListener { showAddBookDialog() }
     }
 
     private fun setRightHeaderContentColor(color: Int) {
-        val container = findViewById<android.widget.LinearLayout>(R.id.right_drawer_header) ?: return
+        val container = findViewById<ViewGroup>(R.id.right_drawer_header) ?: return
         for (i in 0 until container.childCount) {
             val v = container.getChildAt(i)
             if (v is TextView) v.setTextColor(color)
@@ -191,7 +201,6 @@ class MainActivity : AppCompatActivity() {
         listItems.add(AgendaItem(-1, "全部日程", "#9E9E9E"))
         listItems.add(AgendaItem(-2, "重点日程", "#F44336"))
         books.forEach { listItems.add(AgendaItem(it.id, it.name, it.colorHex)) }
-
         binding.recyclerViewAgenda.adapter = AgendaAdapter(listItems) { id ->
             agendaViewModel.setFilter(id)
             binding.drawerLayout.closeDrawer(GravityCompat.END)
@@ -215,8 +224,16 @@ class MainActivity : AppCompatActivity() {
     private fun applySelectedTheme() {
         val themeKey = preferenceManager.getTheme()
         val colorKey = preferenceManager.getAccentColor()
+        val layoutMode = preferenceManager.getHomeLayoutMode()
+        val isCompact = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
+        val isLegacyUnlocked = preferenceManager.isLegacyThemeUnlockedInCompact()
 
-        val themeResId = when (themeKey) {
+        var finalThemeKey = themeKey
+        if (isCompact && !isLegacyUnlocked) {
+            finalThemeKey = PreferenceManager.THEME_M3
+        }
+
+        val themeResId = when (finalThemeKey) {
             PreferenceManager.THEME_M1 -> when (colorKey) {
                 PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD1_Pink
                 PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD1_Blue
@@ -233,70 +250,46 @@ class MainActivity : AppCompatActivity() {
                 else -> R.style.Theme_ZakoCountdown_M3
             }
         }
-
         setTheme(themeResId)
-
-        if (themeKey == PreferenceManager.THEME_M3 && colorKey == PreferenceManager.ACCENT_MONET) {
-            if (DynamicColors.isDynamicColorAvailable()) {
-                DynamicColors.applyToActivityIfAvailable(this)
-            }
+        if (finalThemeKey == PreferenceManager.THEME_M3 && colorKey == PreferenceManager.ACCENT_MONET) {
+            if (DynamicColors.isDynamicColorAvailable()) DynamicColors.applyToActivityIfAvailable(this)
         }
     }
 
     private fun handleIntent(intent: Intent?) {
         if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS, false) == true) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                navController.navigate(R.id.action_global_deepDeveloperFragment)
-            }, 100)
+            Handler(Looper.getMainLooper()).postDelayed({ navController.navigate(R.id.action_global_deepDeveloperFragment) }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS)
         }
         if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER, false) == true) {
-            Handler(Looper.getMainLooper()).postDelayed({
-                navController.navigate(R.id.action_global_logReaderFragment)
-            }, 100)
+            Handler(Looper.getMainLooper()).postDelayed({ navController.navigate(R.id.action_global_logReaderFragment) }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER)
         }
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        return NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp()
-    }
+    override fun onSupportNavigateUp(): Boolean = NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp()
 
     override fun onBackPressed() {
-        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) {
-            binding.drawerLayout.closeDrawer(GravityCompat.START)
-        } else if (binding.drawerLayout.isDrawerOpen(GravityCompat.END)) {
-            binding.drawerLayout.closeDrawer(GravityCompat.END)
-        } else {
-            super.onBackPressed()
-        }
+        if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) binding.drawerLayout.closeDrawer(GravityCompat.START)
+        else if (binding.drawerLayout.isDrawerOpen(GravityCompat.END)) binding.drawerLayout.closeDrawer(GravityCompat.END)
+        else super.onBackPressed()
     }
 
-    // --- 适配器内部类 ---
-
     data class AgendaItem(val id: Long, val name: String, val colorHex: String)
-
-    inner class AgendaAdapter(
-        private val items: List<AgendaItem>,
-        private val onClick: (Long) -> Unit
-    ) : RecyclerView.Adapter<AgendaAdapter.ViewHolder>() {
-
+    inner class AgendaAdapter(private val items: List<AgendaItem>, private val onClick: (Long) -> Unit) : RecyclerView.Adapter<AgendaAdapter.ViewHolder>() {
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val name: TextView = view.findViewById(R.id.book_name)
             val color: View = view.findViewById(R.id.book_color_indicator)
             val check: View = view.findViewById(R.id.check_mark)
         }
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val v = LayoutInflater.from(parent.context).inflate(R.layout.item_agenda_book, parent, false)
             return ViewHolder(v)
         }
-
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val item = items[position]
             holder.name.text = item.name
             try { holder.color.setBackgroundColor(Color.parseColor(item.colorHex)) } catch (e: Exception) { holder.color.setBackgroundColor(Color.GRAY) }
-
             val currentId = agendaViewModel.currentFilterId.value
             if (currentId == item.id) {
                 holder.check.visibility = View.VISIBLE

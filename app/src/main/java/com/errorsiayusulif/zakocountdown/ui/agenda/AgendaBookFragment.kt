@@ -1,3 +1,4 @@
+// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/agenda/AgendaBookFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.agenda
 
 import android.graphics.Color
@@ -19,6 +20,7 @@ import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.AgendaBook
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAgendaBookBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemAgendaBookCardBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemAgendaBookListBinding
@@ -29,6 +31,10 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import java.util.Collections
 
+/**
+ * 日程本列表/管理页面
+ * 支持网格/列表切换，拖拽排序，长按管理
+ */
 class AgendaBookFragment : Fragment() {
 
     private var _binding: FragmentAgendaBookBinding? = null
@@ -40,22 +46,29 @@ class AgendaBookFragment : Fragment() {
         HomeViewModelFactory(app.repository, app)
     }
 
+    private lateinit var preferenceManager: PreferenceManager
+
     private var currentEvents: List<CountdownEvent> = emptyList()
     private var isGridView = true
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAgendaBookBinding.inflate(inflater, container, false)
+        preferenceManager = PreferenceManager(requireContext())
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // --- 修复 Bug 3: 从 Preference 读取布局偏好 ---
+        isGridView = preferenceManager.isAgendaViewModeGrid()
+
         setupMenu()
         setupRecyclerView()
 
         homeViewModel.allEvents.observe(viewLifecycleOwner) { events ->
             currentEvents = events ?: emptyList()
+            // 数据变化时刷新列表 (更新计数)
             binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
         }
 
@@ -72,6 +85,7 @@ class AgendaBookFragment : Fragment() {
     private fun setupMenu() {
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                // 根据当前状态显示对应图标
                 val iconRes = if (isGridView) R.drawable.ic_list else R.drawable.ic_grid_view
                 val item = menu.add(0, 1001, 0, "切换视图")
                 item.setIcon(iconRes)
@@ -81,8 +95,15 @@ class AgendaBookFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 if (menuItem.itemId == 1001) {
                     isGridView = !isGridView
+
+                    // --- 修复 Bug 3: 保存布局偏好 ---
+                    preferenceManager.setAgendaViewMode(isGridView)
+
+                    // 更新图标
                     val iconRes = if (isGridView) R.drawable.ic_list else R.drawable.ic_grid_view
                     menuItem.setIcon(iconRes)
+
+                    // 重新应用布局管理器并刷新适配器
                     setupRecyclerView()
                     val books = agendaViewModel.allBooks.value ?: emptyList()
                     (binding.recyclerViewBooks.adapter as? BookAdapter)?.setBooks(books)
@@ -100,6 +121,7 @@ class AgendaBookFragment : Fragment() {
         val adapter = BookAdapter()
         binding.recyclerViewBooks.adapter = adapter
 
+        // 拖拽排序
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT, 0
         ) {
@@ -110,7 +132,9 @@ class AgendaBookFragment : Fragment() {
             ): Boolean {
                 val fromPos = viewHolder.adapterPosition
                 val toPos = target.adapterPosition
+                // 锁定前两项 (全部/重点) 不可移动
                 if (fromPos < 2 || toPos < 2) return false
+
                 adapter.onItemMove(fromPos, toPos)
                 return true
             }
@@ -119,6 +143,7 @@ class AgendaBookFragment : Fragment() {
 
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 super.clearView(recyclerView, viewHolder)
+                // 拖拽结束后保存顺序
                 adapter.saveOrder()
             }
         })
@@ -136,6 +161,7 @@ class AgendaBookFragment : Fragment() {
 
         fun onItemMove(fromPosition: Int, toPosition: Int) {
             if (fromPosition < 2 || toPosition < 2) return
+            // Adapter索引 -> List索引 (减去2个header)
             Collections.swap(books, fromPosition - 2, toPosition - 2)
             notifyItemMoved(fromPosition, toPosition)
         }
@@ -163,6 +189,7 @@ class AgendaBookFragment : Fragment() {
         }
 
         private fun bindGrid(holder: GridViewHolder, position: Int) {
+            // ... (Grid 数据绑定逻辑)
             val bookId: Long
             val name: String
             val colorHex: String
@@ -220,6 +247,7 @@ class AgendaBookFragment : Fragment() {
         }
 
         private fun bindList(holder: ListViewHolder, position: Int) {
+            // ... (List 数据绑定逻辑)
             val bookId: Long
             val name: String
             val colorHex: String
@@ -240,6 +268,7 @@ class AgendaBookFragment : Fragment() {
             holder.binding.tvBookName.text = name
             try { holder.binding.indicatorBar.setBackgroundColor(Color.parseColor(colorHex)) } catch(e:Exception){}
 
+            // 统计信息：显示最近的一个日程
             val eventsInBook = if (position == 0) currentEvents
             else if (position == 1) currentEvents.filter { it.isImportant }
             else currentEvents.filter { it.bookId == bookId }
@@ -250,7 +279,7 @@ class AgendaBookFragment : Fragment() {
             val statsText = StringBuilder("$count 项")
             if (nextEvent != null) {
                 val diff = TimeCalculator.calculateDifference(nextEvent.targetDate)
-                statsText.append(" · 最近: ${nextEvent.title} (还有${diff.totalDays}天)")
+                statsText.append(" · 最近: ${nextEvent.title} (${diff.totalDays}天)")
             } else if (count > 0 && eventsInBook.isNotEmpty()) {
                 statsText.append(" · 全部已过期")
             } else {

@@ -1,12 +1,9 @@
-// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/settings/AppSelectorFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.settings
 
 import android.annotation.SuppressLint
-import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -35,32 +32,26 @@ class AppSelectorFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.recyclerViewApps.layoutManager = LinearLayoutManager(context)
-        // 添加分割线，让列表更清晰
         binding.recyclerViewApps.addItemDecoration(
             DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
         )
     }
 
-    // --- 【核心修复】 ---
     override fun onResume() {
         super.onResume()
-        // 每次Fragment变为可见时，都重新加载应用列表
-        // 这确保了从开发者选项返回时，列表会根据新设置刷新
-        Log.d("AppSelectorFragment", "onResume called, reloading apps.")
         loadApps()
     }
 
     @SuppressLint("QueryPermissionsNeeded")
     private fun loadApps() {
-        // 显示一个加载指示器
-        // (需要先在 fragment_app_selector.xml 中添加 ProgressBar)
-        // binding.progressBar.visibility = View.VISIBLE
+        // 现在 XML 中有了 progressBar，这行代码就不会报错了
+        binding.progressBar.visibility = View.VISIBLE
 
         lifecycleScope.launch(Dispatchers.IO) {
             val pm = requireActivity().packageManager
             val showSystemApps = preferenceManager.getShowSystemApps()
-            Log.d("AppSelectorFragment", "Loading apps with showSystemApps = $showSystemApps")
 
+            // 获取应用列表可能耗时，放在 IO 线程
             val allAppsRaw = pm.getInstalledApplications(PackageManager.GET_META_DATA)
 
             val appInfoList = allAppsRaw
@@ -79,7 +70,9 @@ class AppSelectorFragment : Fragment() {
             val selectedApps = preferenceManager.getImportantApps().toMutableSet()
 
             withContext(Dispatchers.Main) {
-                // binding.progressBar.visibility = View.GONE
+                // 隐藏进度条
+                binding.progressBar.visibility = View.GONE
+
                 binding.recyclerViewApps.adapter = AppSelectorAdapter(appInfoList, selectedApps) { packageName, isSelected ->
                     if (isSelected) {
                         selectedApps.add(packageName)

@@ -24,62 +24,59 @@ import java.util.Date
 class AppOpenDetectorService : AccessibilityService() {
 
     companion object {
-        const val TAG = "ZakoDetectorService"
-        private const val COOLDOWN_PERIOD_MS = 10000L // 10秒冷却
+        const val TAG = "ZakoDetector" // 缩短 Tag 方便查看
+        private const val COOLDOWN_PERIOD_MS = 10000L
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val appLaunchTimestamps = mutableMapOf<String, Long>()
-
-    // 核心变量：记录上一个可见的前台包名
     private var lastVisiblePackageName: String = ""
 
-    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // Log.v(TAG, ">>> [EVENT] Type: ${event?.eventType}, Pkg: ${event?.packageName}")
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        Log.i(TAG, "Accessibility Service Connected and Ready.")
+    }
 
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         if (event?.eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             val currentPackageName = event.packageName?.toString() ?: return
 
-            // 1. 过滤名单：忽略自身、系统UI（通知栏/锁屏）、输入法、Launcher
+            // 过滤逻辑
             if (currentPackageName == applicationContext.packageName ||
-                currentPackageName == "com.android.systemui" ||
-                event.className?.contains("InputMethod") == true ||
-                event.className?.contains("Launcher") == true) {
-                return
-            }
+                currentPackageName == "com.android.systemui") return
 
-            // 2. 状态机核心：如果当前包名与上一次记录的包名一致，说明是应用内部跳转
-            if (currentPackageName == lastVisiblePackageName) {
-                // 用户仍在同一个应用内操作，忽略
-                return
-            }
-
-            // 3. 确实发生了应用切换，更新状态
-            // Log.i(TAG, "App Switch Detected: $lastVisiblePackageName -> $currentPackageName")
+            // 状态机：防止应用内跳转触发
+            if (currentPackageName == lastVisiblePackageName) return
             lastVisiblePackageName = currentPackageName
 
-            // 4. 执行业务逻辑检查（冷却时间 + 白名单）
+            // 检查白名单与冷却
             val currentTime = System.currentTimeMillis()
             val lastLaunchTime = appLaunchTimestamps[currentPackageName] ?: 0L
 
             if ((currentTime - lastLaunchTime) > COOLDOWN_PERIOD_MS) {
                 serviceScope.launch {
-                    checkAndLaunchPopup(currentPackageName, currentTime)
+                    try {
+                        checkAndLaunchPopup(currentPackageName, currentTime)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "Error in checkAndLaunchPopup", e)
+                    }
                 }
             } else {
-                Log.v(TAG, "Cooldown active for $currentPackageName")
+                Log.d(TAG, "Cooldown active for $currentPackageName")
             }
         }
     }
 
     private suspend fun checkAndLaunchPopup(packageName: String, launchTime: Long) {
         val prefs = PreferenceManager(this)
-
-        if (!prefs.isPopupReminderEnabled()) return
+        if (!prefs.isPopupReminderEnabled()) {
+            Log.d(TAG, "Popup feature disabled in settings.")
+            return
+        }
 
         val monitoredApps = prefs.getImportantApps()
         if (monitoredApps.contains(packageName)) {
-            Log.i(TAG, "Target App Detected: $packageName")
+            Log.i(TAG, ">>> MATCHED TARGET APP: $packageName <<<")
 
             val repository = (application as ZakoCountdownApplication).repository
             val importantEvents = repository.getImportantEvents()
@@ -90,52 +87,67 @@ class AppOpenDetectorService : AccessibilityService() {
                     .map { it.id }
                     .toLongArray()
 
-                if (eventIds.isEmpty()) return
+                if (eventIds.isEmpty()) {
+                    Log.d(TAG, "No future important events found.")
+                    return
+                }
 
-                // 确认弹窗，更新时间戳
+                // 更新时间戳，防止连击
                 appLaunchTimestamps[packageName] = launchTime
 
                 val popupMode = prefs.getPopupMode()
-                val useWindowMode = when (popupMode) {
-                    PreferenceManager.POPUP_MODE_WINDOW -> true
-                    else -> false
-                }
+                Log.d(TAG, "Preparing to launch. Mode: $popupMode, Event Count: ${eventIds.size}")
 
-                if (useWindowMode) {
+                if (popupMode == PreferenceManager.POPUP_MODE_WINDOW) {
                     launchWindowPopup(eventIds)
                 } else {
                     launchActivityPopup(eventIds)
                 }
+            } else {
+                Log.d(TAG, "No important events configured in database.")
             }
         }
     }
 
     private suspend fun launchActivityPopup(eventIds: LongArray) {
         withContext(Dispatchers.Main) {
-            val intent = Intent(this@AppOpenDetectorService, PopupReminderActivity::class.java).apply {
-                putExtra(PopupReminderActivity.EXTRA_EVENT_IDS, eventIds)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            try {
+                Log.i(TAG, "Launching PopupReminderActivity...")
+                val intent = Intent(this@AppOpenDetectorService, PopupReminderActivity::class.java).apply {
+                    putExtra(PopupReminderActivity.EXTRA_EVENT_IDS, eventIds)
+                    // 关键 Flags：从 Service 启动 Activity 必须加
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                    addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    // 尝试规避部分后台启动限制
+                    addFlags(Intent.FLAG_ACTIVITY_NO_USER_ACTION)
+                }
+                startActivity(intent)
+                Log.i(TAG, "startActivity called successfully.")
+            } catch (e: Exception) {
+                Log.e(TAG, "FATAL: Failed to start Activity.", e)
+                Toast.makeText(applicationContext, "Zako: 无法弹出提示，请检查后台弹出权限", Toast.LENGTH_LONG).show()
             }
-            startActivity(intent)
         }
     }
 
     private suspend fun launchWindowPopup(eventIds: LongArray) {
+        // 严格检查悬浮窗权限
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(this)) {
+            Log.e(TAG, "Permission DENIED: SYSTEM_ALERT_WINDOW")
             postPermissionRequestNotification()
             return
         }
 
         withContext(Dispatchers.Main) {
             try {
+                Log.i(TAG, "Starting PopupViewService...")
                 val intent = Intent(this@AppOpenDetectorService, PopupViewService::class.java).apply {
                     putExtra("extra_event_ids", eventIds)
                 }
                 startService(intent)
             } catch (e: Exception) {
-                Log.e(TAG, "Failed to start PopupViewService", e)
+                Log.e(TAG, "FATAL: Failed to start Service.", e)
             }
         }
     }
@@ -153,9 +165,9 @@ class AppOpenDetectorService : AccessibilityService() {
         val pendingIntent = PendingIntent.getActivity(this, 123, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
         val notification = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_settings) // 确保你有这个图标，或者换成 ic_launcher_foreground
-            .setContentTitle("ZakoCountdown 需要权限")
-            .setContentText("为了显示悬浮窗提醒，请授予“悬浮窗”权限。")
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("权限缺失")
+            .setContentText("请授予悬浮窗权限以显示倒数日提醒")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
@@ -165,11 +177,13 @@ class AppOpenDetectorService : AccessibilityService() {
     }
 
     override fun onInterrupt() {
+        Log.w(TAG, "Service Interrupted")
         serviceScope.cancel()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        Log.w(TAG, "Service Destroyed")
         serviceScope.cancel()
     }
 }

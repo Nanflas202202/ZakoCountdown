@@ -4,10 +4,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".ui.home.HomeFragment">
+    android:layout_height="match_parent">
 
-    <!-- 背景图层 -->
     <ImageView
         android:id="@+id/wallpaper_image"
         android:layout_width="0dp"
@@ -18,29 +16,44 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 列表的半透明背景/遮罩 -->
-    <!-- ↓↓↓ 为这个 View 添加 ID ↓↓↓ -->
     <View
         android:id="@+id/recycler_view_scrim"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#40000000"
-        app:layout_constraintTop_toTopOf="@id/recycler_view_events"
-        app:layout_constraintBottom_toBottomOf="@id/recycler_view_events"
-        app:layout_constraintStart_toStartOf="@id/recycler_view_events"
-        app:layout_constraintEnd_toEndOf="@id/recycler_view_events"/>
-    <!-- ↑↑↑ 为这个 View 添加 ID ↑↑↑ -->
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- 紧凑模式：顶部标签栏 -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout_agenda"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="?attr/colorSurface"
+        app:tabMode="scrollable"
+        app:tabGravity="start"
+        app:tabIndicatorColor="?attr/colorPrimary"
+        app:tabSelectedTextColor="?attr/colorPrimary"
+        app:tabTextAppearance="@style/TextAppearance.Material3.BodyMedium"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 列表：paddingVertical 改为 0dp 以消除顶部空隙 -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recycler_view_events"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:clipToPadding="false"
-        android:paddingVertical="8dp"
+        android:paddingVertical="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:listitem="@layout/item_countdown_card_simple" />
+        app:layout_constraintTop_toBottomOf="@id/tab_layout_agenda"
+        tools:listitem="@layout/item_countdown_card_compact" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_add_event"
@@ -49,7 +62,6 @@
         android:layout_margin="16dp"
         app:srcCompat="@drawable/ic_add"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:contentDescription="@string/add_new_event" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

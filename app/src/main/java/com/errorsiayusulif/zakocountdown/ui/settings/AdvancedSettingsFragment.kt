@@ -38,6 +38,11 @@ class AdvancedSettingsFragment : PreferenceFragmentCompat() {
             findNavController().navigate(R.id.action_global_permissionsFragment)
             true
         }
+        findPreference<ListPreference>("key_home_layout_mode")?.setOnPreferenceChangeListener { _, _ ->
+            // 切换布局模式后，必须重启 Activity 才能重新应用 Drawer/BottomNav 的显隐状态
+            activity?.recreate()
+            true
+        }
     }
 
     override fun onResume() {

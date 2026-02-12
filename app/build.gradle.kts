@@ -16,8 +16,8 @@ android {
         applicationId = "com.errorsiayusulif.zakocountdown"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "0.8.1-debug"
+        versionCode = 1919810
+        versionName = "0.8.7-debug"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
     }

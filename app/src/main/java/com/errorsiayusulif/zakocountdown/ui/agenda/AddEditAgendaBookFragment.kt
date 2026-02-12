@@ -1,11 +1,12 @@
-// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/agenda/AddEditAgendaBookFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.agenda
 
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.*
+import android.widget.CheckedTextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.children
@@ -14,12 +15,16 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.AgendaBook
+import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAddEditAgendaBookBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
+import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -31,24 +36,52 @@ class AddEditAgendaBookFragment : Fragment() {
     private val args: AddEditAgendaBookFragmentArgs by navArgs()
     private val agendaViewModel: AgendaViewModel by viewModels({ requireActivity() })
 
-    private var selectedColor = "#2196F3"
+    private var selectedColor = "#6750A4" // MD3 默认紫
     private var selectedCoverUri: String? = null
     private var currentAlpha: Float = 1.0f
+
+    private val checkedEventIds = mutableSetOf<Long>()
+    private var allEvents: List<CountdownEvent> = emptyList()
     private var editingBook: AgendaBook? = null
 
-    // --- 扩展的 Material Design 色板 ---
-    private val materialColors = listOf(
-        // Red, Pink, Purple, Deep Purple
-        "#F44336", "#E91E63", "#9C27B0", "#673AB7",
-        // Indigo, Blue, Light Blue, Cyan
-        "#3F51B5", "#2196F3", "#03A9F4", "#00BCD4",
-        // Teal, Green, Light Green, Lime
-        "#009688", "#4CAF50", "#8BC34A", "#CDDC39",
-        // Yellow, Amber, Orange, Deep Orange
-        "#FFEB3B", "#FFC107", "#FF9800", "#FF5722",
-        // Brown, Grey, Blue Grey, Black
-        "#795548", "#9E9E9E", "#607D8B", "#000000"
+    // --- Material Design 3 扩展色板 ---
+    private val baseMaterialColors = listOf(
+        // MD3 Primary / Secondary Tones
+        "#6750A4", // Purple 40 (M3 Default)
+        "#9C27B0", // Purple
+        "#E91E63", // Pink
+        "#B58392", // M3 Pink-ish
+        "#B3261E", // M3 Error/Red
+        "#F44336", // Red
+        "#9C4146", // M3 Brick Red
+        "#7D5260", // M3 Rose
+
+        // Warm Tones
+        "#9A4058", // M3 Maroon
+        "#FF9800", // Orange
+        "#FFB300", // Amber
+        "#E65100", // Deep Orange
+        "#825500", // M3 Gold/Olive
+
+        // Cool Tones
+        "#0061A4", // M3 Blue
+        "#2196F3", // Blue
+        "#03A9F4", // Light Blue
+        "#006493", // M3 Deep Blue
+        "#386A20", // M3 Green
+        "#4CAF50", // Green
+        "#006D42", // M3 Teal-Green
+        "#009688", // Teal
+        "#006064", // Deep Teal
+
+        // Neutral / Earthy Tones
+        "#795548", // Brown
+        "#605D62", // M3 Neutral
+        "#424242", // Grey
+        "#000000"  // Black
     )
+
+    private val displayColors = mutableListOf<String>()
 
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         uri?.let { sourceUri ->
@@ -76,6 +109,15 @@ class AddEditAgendaBookFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initColors()
+
+        binding.recyclerViewEventSelection.layoutManager = LinearLayoutManager(context)
+
+        agendaViewModel.allEvents.observe(viewLifecycleOwner) { events ->
+            allEvents = events
+            updateEventSelectionList()
+        }
+
         if (args.bookId != -1L) {
             lifecycleScope.launch {
                 val repo = (requireActivity().application as ZakoCountdownApplication).repository
@@ -89,7 +131,13 @@ class AddEditAgendaBookFragment : Fragment() {
                     binding.ivCoverPreview.load(selectedCoverUri)
                     binding.ivCoverPreview.alpha = currentAlpha
                     binding.sliderAlpha.value = currentAlpha * 100f
+
                     setupColorPalette()
+
+                    allEvents.filter { event -> event.bookId == it.id }.forEach { event ->
+                        checkedEventIds.add(event.id)
+                    }
+                    updateEventSelectionList()
                 }
             }
         } else {
@@ -114,28 +162,52 @@ class AddEditAgendaBookFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            if (args.bookId == -1L) {
-                agendaViewModel.createBook(name, selectedColor, selectedCoverUri)
-            } else {
-                editingBook?.let {
-                    it.name = name
-                    it.colorHex = selectedColor
-                    it.coverImageUri = selectedCoverUri
-                    it.cardAlpha = currentAlpha
-                    agendaViewModel.updateBook(it)
-                }
-            }
+            agendaViewModel.saveBookWithEvents(
+                id = args.bookId,
+                name = name,
+                colorHex = selectedColor,
+                coverUri = selectedCoverUri,
+                cardAlpha = currentAlpha,
+                checkedEventIds = checkedEventIds.toList()
+            )
             findNavController().navigateUp()
         }
+    }
+
+    private fun initColors() {
+        displayColors.clear()
+        // 获取系统 Monet 颜色
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val context = requireContext()
+            val monetColors = listOf(
+                android.R.color.system_accent1_500,
+                android.R.color.system_accent2_500,
+                android.R.color.system_accent3_500,
+                android.R.color.system_neutral1_500,
+                android.R.color.system_accent1_200
+            )
+            monetColors.forEach { resId ->
+                try {
+                    val colorInt = context.getColor(resId)
+                    val hex = String.format("#%06X", (0xFFFFFF and colorInt))
+                    displayColors.add(hex)
+                } catch (e: Exception) { /* Ignore */ }
+            }
+        }
+        // 追加 M3 扩展色板
+        displayColors.addAll(baseMaterialColors)
     }
 
     private fun setupColorPalette() {
         val inflater = LayoutInflater.from(context)
         binding.paletteContainer.removeAllViews()
-        for (colorHex in materialColors) {
+
+        for (colorHex in displayColors) {
             val swatch = ItemColorSwatchBinding.inflate(inflater, binding.paletteContainer, false)
             val color = Color.parseColor(colorHex)
             (swatch.colorView.background as GradientDrawable).setColor(color)
+
+            swatch.colorView.clipToOutline = true
 
             swatch.checkMark.visibility = if (colorHex.equals(selectedColor, true)) View.VISIBLE else View.GONE
 
@@ -150,8 +222,43 @@ class AddEditAgendaBookFragment : Fragment() {
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+    private fun updateEventSelectionList() {
+        binding.recyclerViewEventSelection.adapter = EventSelectionAdapter()
+    }
+
+    inner class EventSelectionAdapter : RecyclerView.Adapter<EventSelectionAdapter.SelectionViewHolder>() {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SelectionViewHolder {
+            val view = LayoutInflater.from(parent.context).inflate(android.R.layout.simple_list_item_multiple_choice, parent, false)
+            return SelectionViewHolder(view)
+        }
+
+        override fun onBindViewHolder(holder: SelectionViewHolder, position: Int) {
+            val event = allEvents[position]
+            val textView = holder.itemView.findViewById<CheckedTextView>(android.R.id.text1)
+
+            textView.text = event.title
+            textView.isChecked = checkedEventIds.contains(event.id)
+
+            if (event.bookId != null && event.bookId != args.bookId) {
+                textView.text = "${event.title} (将从其他本移入)"
+                textView.setTextColor(Color.GRAY)
+            } else {
+                textView.setTextColor(Color.parseColor("#212121"))
+            }
+
+            holder.itemView.setOnClickListener {
+                if (checkedEventIds.contains(event.id)) {
+                    checkedEventIds.remove(event.id)
+                    textView.isChecked = false
+                } else {
+                    checkedEventIds.add(event.id)
+                    textView.isChecked = true
+                }
+            }
+        }
+
+        override fun getItemCount() = allEvents.size
+
+        inner class SelectionViewHolder(v: View) : RecyclerView.ViewHolder(v)
     }
 }

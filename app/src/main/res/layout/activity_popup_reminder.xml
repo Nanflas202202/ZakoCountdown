@@ -8,7 +8,6 @@
     android:background="?attr/colorSurface"
     tools:context=".ui.popup.PopupReminderActivity">
 
-    <!-- 用 Guideline 将内容垂直居中 -->
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline_center"
         android:layout_width="wrap_content"
@@ -26,7 +25,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
-    <!-- 【核心】使用新的、正确的 ID -->
     <TextView
         android:id="@+id/popup_details_text"
         android:layout_width="0dp"
@@ -40,6 +38,34 @@
         app:layout_constraintTop_toBottomOf="@id/guideline_center"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:text="距离 高中被撤并 还有 99 天\n距离 世界第一可爱的时雨初风的生日 还有 120 天" />
+        tools:text="距离 高中被撤并 还有 99 天" />
+
+    <!-- 新增：倒计时提示 -->
+    <TextView
+        android:id="@+id/tv_countdown"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="8dp"
+        android:background="@drawable/widget_background_base"
+        android:backgroundTint="?attr/colorSurfaceVariant"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:text="5s 后关闭"
+        android:alpha="0.8"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- 关闭按钮 (如果允许跳过) -->
+    <Button
+        android:id="@+id/btn_close"
+        style="?attr/materialButtonOutlinedStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="24dp"
+        android:text="关闭"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

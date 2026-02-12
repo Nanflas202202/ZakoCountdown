@@ -1,5 +1,12 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory app:title="调试">
+    <PreferenceCategory app:title="主题与显示">
+        <!-- 新增开关 -->
+        <SwitchPreferenceCompat
+            app:key="key_unlock_legacy_theme_compact"
+            app:title="紧凑模式下解锁旧版主题"
+            app:summary="允许在紧凑模式下使用 MD1/MD2 主题 (默认强制 MD3)"
+            app:defaultValue="false" />
+
         <SwitchPreferenceCompat
             app:key="key_show_system_apps"
             app:title="在应用列表中显示系统应用"
@@ -45,4 +52,5 @@
             app:summary="在导航栏显示日程本入口 (Alpha)"
             app:defaultValue="false" />
     </PreferenceCategory>
+
 </PreferenceScreen>

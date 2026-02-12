@@ -5,8 +5,10 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.*
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.drawable.DrawableCompat // 导入修复
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -18,6 +20,7 @@ import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.AgendaBook
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAgendaDetailBinding
 import com.errorsiayusulif.zakocountdown.ui.home.CountdownAdapter
 import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModel
@@ -38,7 +41,6 @@ class AgendaDetailFragment : Fragment() {
     }
 
     private val agendaViewModel: AgendaViewModel by viewModels({ requireActivity() })
-
     private var currentBook: AgendaBook? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -64,6 +66,8 @@ class AgendaDetailFragment : Fragment() {
                 true
             }
         )
+        adapter.setCompactMode(false)
+
         binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
         binding.recyclerViewEvents.adapter = adapter
         binding.recyclerViewEvents.itemAnimator = null
@@ -72,9 +76,9 @@ class AgendaDetailFragment : Fragment() {
 
         homeViewModel.allEvents.observe(viewLifecycleOwner) { events ->
             val filtered = when (args.bookId) {
-                -1L -> events // 全部
-                -2L -> events.filter { it.isImportant } // 重点
-                else -> events.filter { it.bookId == args.bookId } // 自定义
+                -1L -> events
+                -2L -> events.filter { it.isImportant }
+                else -> events.filter { it.bookId == args.bookId }
             }
             adapter.submitList(filtered)
         }
@@ -108,6 +112,16 @@ class AgendaDetailFragment : Fragment() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        (requireActivity() as? AppCompatActivity)?.supportActionBar?.hide()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // 恢复逻辑交给 MainActivity
+    }
+
     private fun loadPageDetails() {
         if (args.bookId > 0) {
             lifecycleScope.launch {
@@ -116,11 +130,13 @@ class AgendaDetailFragment : Fragment() {
 
                 currentBook?.let { book ->
                     binding.collapsingToolbar.title = book.name
+                    binding.toolbar.title = book.name
 
                     try {
                         val color = Color.parseColor(book.colorHex)
                         binding.collapsingToolbar.setContentScrimColor(color)
                         binding.collapsingToolbar.setStatusBarScrimColor(color)
+                        updateTitleTextColor(color)
 
                         if (book.coverImageUri == null) {
                             binding.ivHeaderImage.setImageDrawable(null)
@@ -134,23 +150,52 @@ class AgendaDetailFragment : Fragment() {
                             crossfade(true)
                         }
                         binding.ivHeaderImage.alpha = book.cardAlpha
+                        updateTitleTextColor(Color.BLACK)
                     }
                 }
             }
         } else if (args.bookId == -1L) {
             binding.collapsingToolbar.title = "全部日程"
-            val gray = Color.DKGRAY
-            binding.collapsingToolbar.setContentScrimColor(gray)
-            binding.collapsingToolbar.setStatusBarScrimColor(gray)
-            binding.ivHeaderImage.setBackgroundColor(gray)
-            binding.ivHeaderImage.setImageDrawable(null)
+            binding.toolbar.title = "全部日程"
+            setupStaticHeader(Color.DKGRAY)
         } else if (args.bookId == -2L) {
             binding.collapsingToolbar.title = "重点日程"
-            val red = Color.parseColor("#F44336")
-            binding.collapsingToolbar.setContentScrimColor(red)
-            binding.collapsingToolbar.setStatusBarScrimColor(red)
-            binding.ivHeaderImage.setBackgroundColor(red)
-            binding.ivHeaderImage.setImageDrawable(null)
+            binding.toolbar.title = "重点日程"
+            setupStaticHeader(Color.parseColor("#F44336"))
+        }
+    }
+
+    private fun setupStaticHeader(color: Int) {
+        binding.collapsingToolbar.setContentScrimColor(color)
+        binding.collapsingToolbar.setStatusBarScrimColor(color)
+        binding.ivHeaderImage.setBackgroundColor(color)
+        binding.ivHeaderImage.setImageDrawable(null)
+        updateTitleTextColor(color)
+    }
+
+    private fun updateTitleTextColor(backgroundColor: Int) {
+        val luminance = ColorUtils.calculateLuminance(backgroundColor)
+        val isDark = luminance < 0.5
+        val textColor = if (isDark) Color.WHITE else Color.BLACK
+
+        binding.collapsingToolbar.setExpandedTitleColor(textColor)
+        binding.collapsingToolbar.setCollapsedTitleTextColor(textColor)
+        binding.toolbar.setTitleTextColor(textColor)
+
+        // --- 修复：使用 DrawableCompat 设置图标颜色 ---
+        binding.toolbar.navigationIcon?.let { icon ->
+            val wrapped = DrawableCompat.wrap(icon)
+            DrawableCompat.setTint(wrapped, textColor)
+            binding.toolbar.navigationIcon = wrapped
+        }
+
+        val menu = binding.toolbar.menu
+        if (menu.size() > 0) {
+            menu.getItem(0).icon?.let { icon ->
+                val wrapped = DrawableCompat.wrap(icon)
+                DrawableCompat.setTint(wrapped, textColor)
+                menu.getItem(0).icon = wrapped
+            }
         }
     }
 

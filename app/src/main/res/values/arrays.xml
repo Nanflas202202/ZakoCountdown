@@ -81,4 +81,12 @@
         <item>drawer</item>
         <item>bottom</item>
     </string-array>
+    <string-array name="home_layout_entries">
+        <item>标准模式 (默认)</item>
+        <item>紧凑模式 (单页)</item>
+    </string-array>
+    <string-array name="home_layout_values">
+        <item>standard</item>
+        <item>compact</item>
+    </string-array>
 </resources>

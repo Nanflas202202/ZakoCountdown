@@ -1,10 +1,12 @@
-// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/settings/AppSelectorAdapter.kt
 package com.errorsiayusulif.zakocountdown.ui.settings
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.errorsiayusulif.zakocountdown.databinding.ItemAppSelectorBinding
+import com.google.android.material.color.MaterialColors
 
 class AppSelectorAdapter(
     private var apps: List<AppInfo>,
@@ -33,21 +35,52 @@ class AppSelectorAdapter(
             binding.appName.text = appInfo.appName
             binding.appPackageName.text = appInfo.packageName
 
-            // 移除旧的监听器，防止复用时出错
+            // --- 修复 Bug 1: 动态设置 Switch 颜色 ---
+            // 获取当前主题的主色 (Primary)
+            val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+            val colorSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurfaceVariant)
+            val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
+
+            // 定义状态：选中 vs 未选中
+            val states = arrayOf(
+                intArrayOf(android.R.attr.state_checked), // 选中
+                intArrayOf(-android.R.attr.state_checked) // 未选中
+            )
+
+            // Thumb (滑块) 颜色：选中->Primary, 未选中->灰色
+            val thumbColors = intArrayOf(
+                colorPrimary,
+                Color.LTGRAY // 或 colorOnSurface 的半透明
+            )
+
+            // Track (轨道) 颜色：选中->Primary(半透明), 未选中->灰色(半透明)
+            val trackColors = intArrayOf(
+                androidx.core.graphics.ColorUtils.setAlphaComponent(colorPrimary, 128),
+                androidx.core.graphics.ColorUtils.setAlphaComponent(Color.GRAY, 80)
+            )
+
+            binding.appSwitch.thumbTintList = ColorStateList(states, thumbColors)
+            binding.appSwitch.trackTintList = ColorStateList(states, trackColors)
+            // ----------------------------------------
+
+            // 必须先移除监听器，防止复用时触发逻辑
             binding.appSwitch.setOnCheckedChangeListener(null)
 
-            // 设置开关的当前状态
-            binding.appSwitch.isChecked = selectedApps.contains(appInfo.packageName)
+            val isSelected = selectedApps.contains(appInfo.packageName)
+            binding.appSwitch.isChecked = isSelected
 
-            // 设置新的监听器
             binding.appSwitch.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
                     selectedApps.add(appInfo.packageName)
                 } else {
                     selectedApps.remove(appInfo.packageName)
                 }
-                // 通知外部（Fragment），用户的选择发生了变化
                 onAppSelectionChanged(appInfo.packageName, isChecked)
+            }
+
+            // 点击整行也能触发开关
+            binding.root.setOnClickListener {
+                binding.appSwitch.toggle()
             }
         }
     }

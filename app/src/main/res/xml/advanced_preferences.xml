@@ -1,5 +1,6 @@
 <!-- file: res/xml/advanced_preferences.xml -->
-<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory app:title="开屏弹窗">
         <SwitchPreferenceCompat
@@ -7,12 +8,43 @@
             app:title="开启开屏弹窗"
             app:summary="在启动指定应用时，弹出重点日程提醒"
             app:defaultValue="true" />
+
         <Preference
             app:key="select_important_apps"
             app:title="选择应用"
             app:summary="选择要触发弹窗的应用"
             app:dependency="enable_popup_reminder"/>
+
+        <!-- 新增设置项 -->
+        <SeekBarPreference
+            app:key="key_popup_duration"
+            app:title="弹窗显示时长 (秒)"
+            app:summary="倒计时结束后自动关闭"
+            app:defaultValue="5"
+            app:min="1"
+            android:max="30"
+            app:showSeekBarValue="true"
+            app:dependency="enable_popup_reminder"/>
+
+        <SwitchPreferenceCompat
+            app:key="key_popup_skippable"
+            app:title="允许手动关闭"
+            app:summary="显示关闭按钮"
+            app:defaultValue="true"
+            app:dependency="enable_popup_reminder"/>
+
+        <SeekBarPreference
+            app:key="key_popup_skip_delay"
+            app:title="关闭按钮延迟 (秒)"
+            app:summary="强制观看一段时间后才显示关闭按钮"
+            app:defaultValue="0"
+            app:min="0"
+            android:max="10"
+            app:showSeekBarValue="true"
+            app:dependency="key_popup_skippable"/>
+
     </PreferenceCategory>
+
 
     <PreferenceCategory app:title="相关权限">
         <Preference
@@ -38,4 +70,11 @@
             app:entryValues="@array/nav_mode_values"
             app:defaultValue="drawer" />
     </PreferenceCategory>
+    <ListPreference
+        app:key="key_home_layout_mode"
+        app:title="主页布局风格"
+        app:summary="切换标准视图或紧凑视图"
+        app:entries="@array/home_layout_entries"
+        app:entryValues="@array/home_layout_values"
+        app:defaultValue="standard" />
 </PreferenceScreen>
