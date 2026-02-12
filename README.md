@@ -3,7 +3,9 @@
 Your worst time manager, go and use calender instead.
 
 ---
+功能
 
+---
 ### 版本命名规则
 以GenVer.BigVersion.SmallVersion-VersionCode的格式命名。规则如下
 
