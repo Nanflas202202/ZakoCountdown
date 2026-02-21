@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="/ZCLogoFogo.png">
+    <img src="ZCLogoFull.png">
 </div>
 
 
