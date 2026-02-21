@@ -9,9 +9,7 @@
 <div align="center">
 	
 ![GitHub repo size](https://img.shields.io/github/repo-size/nanflas202202/ZakoCountdown) 
-	
-![GitHub Repo stars](https://img.shields.io/github/stars/nanflas202202/ZakoCountdown) 
-
+	![GitHub Repo stars](https://img.shields.io/github/stars/nanflas202202/ZakoCountdown) 
 ![GitHub all releases](https://img.shields.io/github/downloads/nanflas202202/ZakoCountdown/total) 
 
 </div>
