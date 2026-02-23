@@ -161,33 +161,29 @@ class CountdownAdapter(
             override fun bind(event: CountdownEvent) {
                 stopTimer()
 
-                // 1. 标题
                 binding.tvCompactTitle.text = event.title
-                // 在紧凑模式，标题颜色一般保持黑/白，依靠 Tag 区分，但也可以应用
-                // binding.tvCompactTitle.setTextColor(MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface))
 
-                // 2. 左侧封面图 (优先使用 event 自定义背景)
+                // 封面图处理
                 if (event.backgroundUri != null) {
                     binding.ivCompactCover.load(Uri.parse(event.backgroundUri)) { crossfade(true) }
                     binding.vCompactScrim.visibility = View.VISIBLE
                 } else {
                     binding.ivCompactCover.setImageDrawable(null)
-                    // 没有自定义图时，使用日程本颜色
                     val bookColor = getBookColor(event.bookId)
                     binding.ivCompactCover.setBackgroundColor(bookColor ?: Color.LTGRAY)
                     binding.vCompactScrim.visibility = View.GONE
                 }
 
-                // 3. 双标签系统 (Tag)
-                val bookName = getBookName(event.bookId) ?: "默认日程"
-                val bookColor = getBookColor(event.bookId) ?: Color.DKGRAY
+                // --- 修复：双标签系统 (Tag) 逻辑重构 ---
+                val isImportant = event.isImportant
+                // 只有当 bookId 存在，且不为 -1L (全部) 和 -2L (重点) 时，才认为是自定义的日程本
+                val isCustomBook = event.bookId != null && event.bookId!! > 0L
 
                 // A. 重点标签
-                if (event.isImportant) {
+                if (isImportant) {
                     binding.tvImportantTag.visibility = View.VISIBLE
-                    // 红色圆角背景
-                    val shape = GradientDrawable()
-                    shape.shape = GradientDrawable.RECTANGLE
+                    val shape = android.graphics.drawable.GradientDrawable()
+                    shape.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
                     shape.cornerRadius = 8f
                     shape.setColor(itemView.context.getColor(R.color.m3_error))
                     binding.tvImportantTag.background = shape
@@ -195,26 +191,35 @@ class CountdownAdapter(
                     binding.tvImportantTag.visibility = View.GONE
                 }
 
-                // B. 日程本标签 (如果是默认日程且未标记重点，也显示“默认日程”；或者你想隐藏默认Tag?)
-                // 这里我们始终显示日程本 Tag
-                binding.tvAgendaTag.visibility = View.VISIBLE
-                binding.tvAgendaTag.text = bookName
+                // B. 日程本标签
+                if (isCustomBook) {
+                    binding.tvAgendaTag.visibility = View.VISIBLE
+                    binding.tvAgendaTag.text = getBookName(event.bookId) ?: "未知"
+                    val bookColor = getBookColor(event.bookId) ?: Color.DKGRAY
 
-                val tagShape = GradientDrawable()
-                tagShape.shape = GradientDrawable.RECTANGLE
-                tagShape.cornerRadius = 8f
-                tagShape.setColor(bookColor)
-                binding.tvAgendaTag.background = tagShape
+                    val tagShape = android.graphics.drawable.GradientDrawable()
+                    tagShape.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    tagShape.cornerRadius = 8f
+                    tagShape.setColor(bookColor)
+                    binding.tvAgendaTag.background = tagShape
 
-                val isDark = ColorUtils.calculateLuminance(bookColor) < 0.5
-                binding.tvAgendaTag.setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+                    val isDark = androidx.core.graphics.ColorUtils.calculateLuminance(bookColor) < 0.5
+                    binding.tvAgendaTag.setTextColor(if (isDark) Color.WHITE else Color.BLACK)
+                } else {
+                    binding.tvAgendaTag.visibility = View.GONE
+                }
 
+                // C. 隐藏空白容器：如果既不是重点，也没有自定义日程本，彻底隐藏整个标签行
+                if (!isImportant && !isCustomBook) {
+                    binding.llTagsContainer.visibility = View.GONE
+                } else {
+                    binding.llTagsContainer.visibility = View.VISIBLE
+                }
 
-                // 4. 时间倒数 (调大字号)
+                // 时间倒数处理
                 startCompactTimer(event)
 
-                // 5. 目标日期
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
                 binding.tvCompactDate.text = sdf.format(event.targetDate)
             }
 

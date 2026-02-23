@@ -34,6 +34,7 @@ import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
+import kotlin.math.abs
 
 class HomeFragment : Fragment() {
 
@@ -49,9 +50,10 @@ class HomeFragment : Fragment() {
 
     private var currentAllEvents: List<CountdownEvent> = emptyList()
     private var currentBookColors: Map<Long, String> = emptyMap()
-
-    // 缓存当前的 Tab 状态，防止数据刷新时 Tab 重置
     private var isUpdatingTabs = false
+
+    // 用于保存滑动删除的引用，方便解绑
+    private var itemTouchHelper: ItemTouchHelper? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -65,28 +67,23 @@ class HomeFragment : Fragment() {
         val layoutMode = prefs.getHomeLayoutMode()
         val isCompact = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
 
-        // 1. 设置 Toolbar 菜单
+        // 1. 设置菜单
         val menuHost = requireActivity()
         menuHost.addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 if (isCompact) {
-                    // 紧凑模式：显示 Settings 和 AgendaManager 入口
                     menuInflater.inflate(R.menu.home_menu_compact, menu)
                 } else if (prefs.isAgendaBookEnabled()) {
-                    // 标准模式：显示筛选按钮
                     menuInflater.inflate(R.menu.home_menu, menu)
                 }
             }
-
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
-                    // 标准模式筛选
                     R.id.action_filter -> {
                         val drawer = requireActivity().findViewById<DrawerLayout>(R.id.drawer_layout)
                         drawer.openDrawer(GravityCompat.END)
                         true
                     }
-                    // 紧凑模式菜单
                     R.id.action_manage_agenda -> {
                         findNavController().navigate(R.id.agendaBookFragment)
                         true
@@ -103,10 +100,7 @@ class HomeFragment : Fragment() {
         // 2. 初始化 Adapter
         val adapter = CountdownAdapter(
             onItemClicked = { event ->
-                val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(
-                    title = "编辑日程",
-                    eventId = event.id
-                )
+                val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "编辑日程", eventId = event.id)
                 findNavController().navigate(action)
             },
             onLongItemClicked = { event, anchorView ->
@@ -120,25 +114,56 @@ class HomeFragment : Fragment() {
         binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
         binding.recyclerViewEvents.itemAnimator = null
 
-        // 3. 紧凑模式 Tab 逻辑
+        // 3. 紧凑模式 UI 与手势逻辑
         if (isCompact) {
-            // 在 MainActivity 中我们可能隐藏了 Toolbar，这里需要确保它显示
-            // 因为我们要把 Menu 放在 Toolbar 上
             (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
-
             binding.tabLayoutAgenda.visibility = View.VISIBLE
-
-            // 调整 RecyclerView 的约束，使其位于 TabLayout 下方
-            // (XML 中已设置 app:layout_constraintTop_toBottomOf="@id/tab_layout_agenda")
-
             setupCompactTabs()
+            setupSwipeToSwitchTabs() // 开启左右滑动切页
         } else {
             binding.tabLayoutAgenda.visibility = View.GONE
+            setupSwipeToDelete(adapter) // 开启侧滑删除
         }
 
-        // 4. 滑动删除
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean = false
+        // 4. 数据观察
+        homeViewModel.allEvents.observe(viewLifecycleOwner) { events ->
+            currentAllEvents = events ?: emptyList()
+            applyFilterAndSubmitList(adapter)
+            checkDevModeActivation(currentAllEvents)
+        }
+
+        agendaViewModel.currentFilterId.observe(viewLifecycleOwner) {
+            applyFilterAndSubmitList(adapter)
+            if (isCompact) syncTabSelection()
+        }
+
+        agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
+            val bookList = books ?: emptyList()
+
+            // 1. 维持旧的颜色映射表以防部分旧逻辑需要
+            currentBookColors = bookList.associate { it.id to it.colorHex }
+            adapter.setBookColorMap(currentBookColors)
+
+            // 2. 【核心修复】将完整的日程本列表传给 Adapter
+            adapter.setAgendaBooks(bookList)
+
+            // 3. 更新紧凑模式下的 Tabs
+            if (isCompact) updateTabs(bookList)
+        }
+
+        binding.fabAddEvent.setOnClickListener {
+            val currentFilter = agendaViewModel.currentFilterId.value ?: -1L
+            val defaultBookId = if (currentFilter > 0) currentFilter else -1L
+            val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "添加日程", defaultBookId = defaultBookId)
+            findNavController().navigate(action)
+        }
+    }
+
+    // --- 核心优化：滑动手势控制 ---
+    private fun setupSwipeToDelete(adapter: CountdownAdapter) {
+        itemTouchHelper?.attachToRecyclerView(null) // 清除旧的
+        itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.adapterPosition
                 if (position != RecyclerView.NO_POSITION) {
@@ -148,42 +173,52 @@ class HomeFragment : Fragment() {
                         .setAction("撤销") { homeViewModel.insert(eventToDelete) }.show()
                 }
             }
-        }).attachToRecyclerView(binding.recyclerViewEvents)
-
-        // 5. 数据观察
-        homeViewModel.allEvents.observe(viewLifecycleOwner) { events ->
-            currentAllEvents = events ?: emptyList()
-            applyFilterAndSubmitList(adapter)
-            checkDevModeActivation(currentAllEvents)
-        }
-
-        agendaViewModel.currentFilterId.observe(viewLifecycleOwner) {
-            applyFilterAndSubmitList(adapter)
-            // 如果是紧凑模式，需要同步 Tab 的选中状态
-            if (isCompact) syncTabSelection()
-        }
-
-        agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
-            // --- 核心修改：传递完整对象 ---
-            adapter.setAgendaBooks(books)
-
-            // 如果是紧凑模式，刷新 Tab 列表
-            if (isCompact) updateTabs(books)
-        }
-
-        binding.fabAddEvent.setOnClickListener {
-            // 获取当前选中的 Filter，如果是具体日程本，则新建时默认归属该本
-            val currentFilter = agendaViewModel.currentFilterId.value ?: -1L
-            val defaultBookId = if (currentFilter > 0) currentFilter else -1L
-
-            val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(
-                title = "添加日程",
-                defaultBookId = defaultBookId
-            )
-            findNavController().navigate(action)
-        }
+        })
+        itemTouchHelper?.attachToRecyclerView(binding.recyclerViewEvents)
     }
 
+    private fun setupSwipeToSwitchTabs() {
+        itemTouchHelper?.attachToRecyclerView(null) // 紧凑模式下关闭滑动删除
+
+        val gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
+            private val SWIPE_THRESHOLD = 100
+            private val SWIPE_VELOCITY_THRESHOLD = 100
+
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                if (e1 == null) return false
+                val diffY = e2.y - e1.y
+                val diffX = e2.x - e1.x
+
+                // 判断是横向滑动
+                if (abs(diffX) > abs(diffY)) {
+                    if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                        val currentTabIndex = binding.tabLayoutAgenda.selectedTabPosition
+                        if (diffX > 0) {
+                            // 向右滑，切到上一个 Tab
+                            if (currentTabIndex > 0) {
+                                binding.tabLayoutAgenda.getTabAt(currentTabIndex - 1)?.select()
+                            }
+                        } else {
+                            // 向左滑，切到下一个 Tab
+                            if (currentTabIndex < binding.tabLayoutAgenda.tabCount - 1) {
+                                binding.tabLayoutAgenda.getTabAt(currentTabIndex + 1)?.select()
+                            }
+                        }
+                        return true
+                    }
+                }
+                return false
+            }
+        })
+
+        // 拦截 RecyclerView 的触摸事件交给 GestureDetector
+        binding.recyclerViewEvents.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                gestureDetector.onTouchEvent(e)
+                return false // 返回 false 允许列表继续垂直滚动
+            }
+        })
+    }
     private fun setupCompactTabs() {
         binding.tabLayoutAgenda.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {

@@ -238,5 +238,9 @@
             app:argType="string"
             android:defaultValue="新建日程本" />
     </fragment>
-
+    <!-- 数据备份与迁移页 -->
+    <fragment
+        android:id="@+id/backupRestoreFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.BackupRestoreFragment"
+        android:label="数据备份与迁移" />
 </navigation>

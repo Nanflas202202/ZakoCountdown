@@ -4,14 +4,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/colorSurfaceContainerLow"> <!-- 优化：背景微灰，突出卡片 -->
+    android:background="?attr/colorSurfaceContainerLow">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/app_bar"
         android:layout_width="match_parent"
         android:layout_height="220dp"
         android:fitsSystemWindows="true"
-        android:background="?attr/colorSurface">
+        android:background="@android:color/transparent">
+        <!-- 重点：AppBarLayout 透明，颜色由 CollapsingToolbar 的 ContentScrim 控制 -->
 
         <com.google.android.material.appbar.CollapsingToolbarLayout
             android:id="@+id/collapsing_toolbar"
@@ -25,7 +26,6 @@
             app:expandedTitleTextAppearance="?attr/textAppearanceHeadlineMedium"
             app:collapsedTitleTextAppearance="?attr/textAppearanceTitleLarge">
 
-            <!-- 封面背景 -->
             <ImageView
                 android:id="@+id/iv_header_image"
                 android:layout_width="match_parent"
@@ -34,25 +34,22 @@
                 app:layout_collapseMode="parallax"
                 app:layout_collapseParallaxMultiplier="0.7" />
 
-            <!-- 遮罩：让文字更清晰 -->
             <View
                 android:id="@+id/v_header_scrim"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="#33000000"/>
 
+            <!-- 优化：Toolbar 背景透明，让其与下层融为一体 -->
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
+                android:background="@android:color/transparent"
                 app:layout_collapseMode="pin"
-                app:navigationIcon="@drawable/ic_arrow_back"
-                app:title="日程本详情"
-                app:titleTextColor="?attr/colorOnSurface" />
-            <!-- 颜色跟随主题，或者在代码中根据背景亮度动态设置 -->
+                app:navigationIcon="@drawable/ic_arrow_back" />
 
         </com.google.android.material.appbar.CollapsingToolbarLayout>
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <!-- 日程列表 -->
