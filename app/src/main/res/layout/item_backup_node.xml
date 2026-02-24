@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingHorizontal="16dp"
+    android:paddingVertical="8dp"
+    android:background="?attr/selectableItemBackground">
+
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/cb_node"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:layout_marginStart="8dp">
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodyLarge"
+            android:textColor="?attr/colorOnSurface"
+            tools:text="日程：毕业典礼"/>
+
+        <TextView
+            android:id="@+id/tv_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="2025-06-07"/>
+
+        <TextView
+            android:id="@+id/tv_conflict"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorError"
+            android:visibility="gone"
+            tools:text="存在同名日程，导入将产生重复项"
+            tools:visibility="visible"/>
+    </LinearLayout>
+
+    <!-- 状态指示图标 -->
+    <ImageView
+        android:id="@+id/iv_status_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:visibility="gone"/>
+    <!-- item_backup_node.xml -->
+    <ImageView
+        android:id="@+id/iv_expand"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_arrow_drop_down"
+    android:padding="4dp"
+    app:tint="?attr/colorOnSurfaceVariant"/>
+</LinearLayout>

@@ -1,90 +1,127 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/utils/ImportConflictAnalyzer.kt
 package com.errorsiayusulif.zakocountdown.utils
 
-import com.errorsiayusulif.zakocountdown.data.EventRepository
-import com.errorsiayusulif.zakocountdown.data.ExportAgendaBook
-import com.errorsiayusulif.zakocountdown.data.ExportEvent
-import com.errorsiayusulif.zakocountdown.data.PreferenceManager
+import com.errorsiayusulif.zakocountdown.BuildConfig
+import com.errorsiayusulif.zakocountdown.data.*
 
 object ImportConflictAnalyzer {
 
-    enum class ConflictType {
-        NONE,               // 正常，无冲突
-        NAME_CONFLICT,      // 命名冲突 (同名日程/日程本)
-        ALPHA_WARNING       // 设置冲突 (如禁用了全局透明度但卡片有透明度)
-    }
-
-    data class EventImportItem(
-        val data: ExportEvent,
-        var isSelected: Boolean = true, // 用户是否勾选导入
-        val conflictType: ConflictType,
-        val conflictMessage: String?
-    )
-
-    data class BookImportItem(
-        val data: ExportAgendaBook,
-        var isSelected: Boolean = true,
-        val conflictType: ConflictType,
-        val conflictMessage: String?
-    )
-
-    data class AnalysisResult(
-        val parsedEvents: List<EventImportItem>,
-        val parsedBooks: List<BookImportItem>
-    )
-
-    /**
-     * 对读取到的备份数据进行冲突分析
-     */
     suspend fun analyze(
         repository: EventRepository,
         preferenceManager: PreferenceManager,
-        importedEvents: List<ExportEvent>?,
-        importedBooks: List<ExportAgendaBook>?
-    ): AnalysisResult {
+        parsedPackage: BackupManager.ParsedEyfPackage
+    ): List<SelectableNode> {
 
-        val resultEvents = mutableListOf<EventImportItem>()
-        val resultBooks = mutableListOf<BookImportItem>()
+        val nodes = mutableListOf<SelectableNode>()
+        val manifest = parsedPackage.manifest
+        val eyfData = parsedPackage.data
 
-        // 1. 分析日程本
-        if (importedBooks != null) {
-            val localBooks = repository.getAllBooksSuspend()
-            val localBookNames = localBooks.map { it.name }.toSet()
+        // 版本降级警告
+        if (manifest.appVersionCode > BuildConfig.VERSION_CODE) {
+            nodes.add(
+                SelectableNode(
+                    type = NodeType.HEADER,
+                    id = "hdr_downgrade_warning",
+                    title = "跨版本恢复警告",
+                    subtitle = "备份来源版本 (v${manifest.appVersionCode}) 高于当前版本",
+                    isChecked = true,
+                    conflictLevel = ConflictLevel.WARNING,
+                    conflictMessage = "可能会丢失部分新版特性数据。"
+                )
+            )
+        } else if (manifest.appId != BuildConfig.APPLICATION_ID) {
+            nodes.add(
+                SelectableNode(
+                    type = NodeType.HEADER,
+                    id = "hdr_cross_app_warning",
+                    title = "跨应用数据",
+                    subtitle = "来源: ${manifest.appId}",
+                    isChecked = true,
+                    conflictLevel = ConflictLevel.WARNING,
+                    conflictMessage = "这不是标准备份，可能无法完全兼容。"
+                )
+            )
+        }
 
-            for (book in importedBooks) {
-                if (localBookNames.contains(book.name)) {
-                    resultBooks.add(BookImportItem(book, true, ConflictType.NAME_CONFLICT, "存在同名日程本，导入将导致重复"))
-                } else {
-                    resultBooks.add(BookImportItem(book, true, ConflictType.NONE, null))
-                }
+        // 1. 设置
+        if (!eyfData.settings.isNullOrEmpty()) {
+            nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", "应用配置", isChecked = true))
+            for ((key, value) in eyfData.settings) {
+                nodes.add(
+                    SelectableNode(
+                        type = NodeType.SETTING,
+                        id = "set_$key",
+                        title = "配置项: $key",
+                        subtitle = "值: $value",
+                        conflictLevel = ConflictLevel.NONE,
+                        rawSettingValue = value
+                    )
+                )
             }
         }
 
-        // 2. 分析日程
-        if (importedEvents != null) {
+        // 2. 日程本
+        if (!eyfData.agendaBooks.isNullOrEmpty()) {
+            nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", "日程集", isChecked = true))
+            val localBooks = repository.getAllBooksSuspend()
+            val localBookNames = localBooks.map { it.name }.toSet()
+
+            for (book in eyfData.agendaBooks) {
+                var level = ConflictLevel.NONE
+                var msg: String? = null
+
+                if (localBookNames.contains(book.name)) {
+                    level = ConflictLevel.WARNING
+                    msg = "存在同名日程集，导入将导致重复"
+                }
+
+                nodes.add(
+                    SelectableNode(
+                        type = NodeType.BOOK,
+                        id = "book_${book.originalId}",
+                        title = book.name,
+                        subtitle = "标识色: ${book.colorHex ?: "默认"}",
+                        conflictLevel = level,
+                        conflictMessage = msg,
+                        rawBook = book
+                    )
+                )
+            }
+        }
+
+        // 3. 日程
+        if (!eyfData.events.isNullOrEmpty()) {
+            nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", "日程卡片", isChecked = true))
             val localEvents = repository.getAllEventsSuspend()
             val localEventTitles = localEvents.map { it.title }.toSet()
             val isGlobalAlphaUnlocked = preferenceManager.isGlobalAlphaUnlocked()
 
-            for (event in importedEvents) {
-                var conflictType = ConflictType.NONE
-                var message: String? = null
+            for (event in eyfData.events) {
+                var level = ConflictLevel.NONE
+                var msg: String? = null
 
-                // 检查命名冲突
                 if (localEventTitles.contains(event.title)) {
-                    conflictType = ConflictType.NAME_CONFLICT
-                    message = "存在同名日程，导入将产生重复项"
-                }
-                // 检查透明度设置冲突
-                else if (event.cardAlpha != null && event.cardAlpha < 1.0f && !event.isPinned && !isGlobalAlphaUnlocked) {
-                    conflictType = ConflictType.ALPHA_WARNING
-                    message = "该卡片带有半透明效果，但您当前系统未解锁全局透明度，效果可能失效"
+                    level = ConflictLevel.WARNING
+                    msg = "存在同名日程，导入将产生重复项"
+                } else if (event.cardAlpha != null && event.cardAlpha < 1.0f && !event.isPinned && !isGlobalAlphaUnlocked) {
+                    level = ConflictLevel.ERROR
+                    msg = "冲突：使用了透明度，但系统设置未解锁全局透明度"
                 }
 
-                resultEvents.add(EventImportItem(event, true, conflictType, message))
+                nodes.add(
+                    SelectableNode(
+                        type = NodeType.EVENT,
+                        id = "event_${event.title}_${event.targetDate}",
+                        title = event.title,
+                        subtitle = if (event.isImportant) "重点日程" else "普通日程",
+                        conflictLevel = level,
+                        conflictMessage = msg,
+                        rawEvent = event
+                    )
+                )
             }
         }
 
-        return AnalysisResult(resultEvents, resultBooks)
+        return nodes
     }
 }

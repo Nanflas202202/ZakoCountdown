@@ -13,17 +13,24 @@
         app:summary="常驻通知、定时提醒"
         app:icon="@drawable/ic_notifications"/>
 
-    <Preference
-        app:key="nav_to_advanced"
-        app:title="高级功能"
-        app:summary="开屏弹窗、微件"
-        app:icon="@drawable/ic_advanced"/>
 
     <Preference
         app:key="nav_to_permissions"
         app:title="权限中心"
         app:summary="检查并授予所有必要的后台与特殊权限"
         app:icon="@drawable/ic_security"/>
+
+    <Preference
+        app:key="nav_to_backup_restore"
+        app:title="数据备份与迁移"
+        app:summary="导出或导入 EYF 格式数据包"
+        app:icon="@drawable/ic_backup"/>
+
+    <Preference
+        app:key="nav_to_advanced"
+        app:title="高级功能"
+        app:summary="开屏弹窗、微件"
+        app:icon="@drawable/ic_advanced"/>
 
     <Preference
         app:key="nav_to_about"

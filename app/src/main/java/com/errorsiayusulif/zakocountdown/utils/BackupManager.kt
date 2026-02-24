@@ -1,8 +1,8 @@
-// file: app/src/main/java/com/errorsiayusulif/zakocountdown/utils/BackupManager.kt
 package com.errorsiayusulif.zakocountdown.utils
 
 import android.content.Context
 import android.net.Uri
+import com.errorsiayusulif.zakocountdown.BuildConfig
 import com.errorsiayusulif.zakocountdown.data.*
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -17,280 +17,227 @@ import java.util.zip.ZipOutputStream
 object BackupManager {
 
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
+    private const val SUPPORTED_EYF_VERSION = 1.0f
 
-    /**
-     * 导出为 .eyf 文件 (存放在 Cache 目录)
-     * 返回生成文件的 File 对象
-     */
-    suspend fun exportToEyf(
+    suspend fun exportToStream(
         context: Context,
+        outputStream: OutputStream,
         repository: EventRepository,
-        prefManager: PreferenceManager,
-        config: ExportConfig
-    ): File = withContext(Dispatchers.IO) {
-
-        val exportDir = File(context.cacheDir, "eyf_export_${System.currentTimeMillis()}")
-        if (!exportDir.exists()) exportDir.mkdirs()
-
+        rootNodes: List<SelectableNode>
+    ) = withContext(Dispatchers.IO) {
+        val exportDir = File(context.cacheDir, "eyf_export_temp_${System.currentTimeMillis()}")
+        if (exportDir.exists()) exportDir.deleteRecursively()
+        exportDir.mkdirs()
         val mediaDir = File(exportDir, "media")
-        if (!mediaDir.exists()) mediaDir.mkdirs()
+        mediaDir.mkdirs()
 
-        // 1. 生成 Manifest
-        val manifestFile = File(exportDir, "manifest.json")
-        manifestFile.writeText(gson.toJson(EyfManifest()))
+        val settingsToExport = mutableMapOf<String, Any?>()
+        val booksToExport = mutableListOf<ExportAgendaBook>()
+        val eventsToExport = mutableListOf<ExportEvent>()
 
-        // 2. 生成 Preferences (如果允许)
-        if (config.includeSettings) {
-            val prefsMap = getExportablePreferences(context)
-            val prefsFile = File(exportDir, "preferences.json")
-            prefsFile.writeText(gson.toJson(prefsMap))
-        }
+        val allPrefs = context.getSharedPreferences("zako_prefs", Context.MODE_PRIVATE).all
 
-        // 3. 处理业务数据 (Data)
-        val exportBooks = mutableListOf<ExportAgendaBook>()
-        val exportEvents = mutableListOf<ExportEvent>()
+        rootNodes.filter { it.isChecked }.forEach { node ->
+            val includeColor = node.children.find { it.subOptionType == SubOptionType.COLOR }?.isChecked ?: true
+            val includeCover = node.children.find { it.subOptionType == SubOptionType.COVER }?.isChecked ?: true
+            val includeAlpha = node.children.find { it.subOptionType == SubOptionType.ALPHA }?.isChecked ?: true
 
-        if (config.includeBooks) {
-            val books = repository.getAllBooksSuspend()
-            books.forEach { book ->
-                var coverFileName: String? = null
-                // 如果需要导出封面，且封面存在，复制文件到 media 目录
-                if (config.includeBookCovers && book.coverImageUri != null) {
-                    coverFileName = "book_${book.id}_cover.png"
-                    copyUriToFile(context, Uri.parse(book.coverImageUri), File(mediaDir, coverFileName))
+            when (node.type) {
+                NodeType.SETTING -> {
+                    if (!node.id.startsWith("ctrl_")) {
+                        val key = node.id.removePrefix("set_")
+                        if (allPrefs.containsKey(key)) {
+                            settingsToExport[key] = allPrefs[key]
+                        }
+                    }
                 }
-
-                exportBooks.add(ExportAgendaBook(
-                    originalId = book.id,
-                    name = book.name,
-                    colorHex = if (config.includeBookColors) book.colorHex else null,
-                    coverImageFileName = coverFileName,
-                    cardAlpha = if (config.includeBookAlphas) book.cardAlpha else null,
-                    sortOrder = book.sortOrder
-                ))
+                NodeType.BOOK -> {
+                    node.rawBook?.let { raw ->
+                        val book = repository.getBookById(raw.originalId)
+                        if (book != null) {
+                            var coverName: String? = null
+                            if (includeCover && book.coverImageUri != null) {
+                                coverName = "book_${book.id}_cover.png"
+                                copyUriToFile(context, Uri.parse(book.coverImageUri), File(mediaDir, coverName))
+                            }
+                            booksToExport.add(ExportAgendaBook(
+                                book.id,
+                                book.name,
+                                if (includeColor) book.colorHex else null,
+                                coverName,
+                                if (includeAlpha) book.cardAlpha else null,
+                                book.sortOrder
+                            ))
+                        }
+                    }
+                }
+                NodeType.EVENT -> {
+                    node.rawEvent?.let { ev ->
+                        var bgName: String? = null
+                        if (includeCover && ev.backgroundFileName != null) {
+                            bgName = "event_${System.nanoTime()}.png"
+                            copyUriToFile(context, Uri.parse(ev.backgroundFileName), File(mediaDir, bgName))
+                        }
+                        eventsToExport.add(ev.copy(
+                            backgroundFileName = bgName,
+                            colorHex = if(includeColor) ev.colorHex else null,
+                            cardAlpha = if(includeAlpha) ev.cardAlpha else null
+                        ))
+                    }
+                }
+                else -> {}
             }
         }
 
-        if (config.includeEvents) {
-            val events = repository.getAllEventsSuspend()
-            events.forEach { event ->
-                var bgFileName: String? = null
-                if (config.includeEventCovers && event.backgroundUri != null) {
-                    bgFileName = "event_${event.id}_bg.png"
-                    copyUriToFile(context, Uri.parse(event.backgroundUri), File(mediaDir, bgFileName))
-                }
+        File(exportDir, "manifest.json").writeText(gson.toJson(EyfManifest(appVersionCode = BuildConfig.VERSION_CODE)))
+        File(exportDir, "data.json").writeText(gson.toJson(EyfData(settingsToExport, booksToExport, eventsToExport)))
 
-                exportEvents.add(ExportEvent(
-                    title = event.title,
-                    targetDate = event.targetDate.time,
-                    isImportant = event.isImportant,
-                    originalBookId = event.bookId,
-                    colorHex = if (config.includeEventColors) event.colorHex else null,
-                    backgroundFileName = bgFileName,
-                    isPinned = event.isPinned,
-                    displayMode = event.displayMode,
-                    cardAlpha = if (config.includeEventAlphas) event.cardAlpha else null
-                ))
+        ZipOutputStream(BufferedOutputStream(outputStream)).use { zos ->
+            exportDir.walkTopDown().filter { it.isFile }.forEach { file ->
+                zos.putNextEntry(ZipEntry(exportDir.toPath().relativize(file.toPath()).toString().replace("\\", "/")))
+                file.inputStream().use { it.copyTo(zos) }
+                zos.closeEntry()
             }
         }
-
-        val dataFile = File(exportDir, "data.json")
-        dataFile.writeText(gson.toJson(EyfData(exportBooks, exportEvents)))
-
-        // 4. 将整个目录打包为 ZIP (.eyf)
-        val zipFile = File(context.cacheDir, "ZakoBackup_${System.currentTimeMillis()}.eyf")
-        zipDirectory(exportDir, zipFile)
-
-        // 清理缓存目录
         exportDir.deleteRecursively()
-
-        return@withContext zipFile
     }
 
-    /**
-     * 从 .eyf 文件导入数据
-     */
-    suspend fun importFromEyf(
-        context: Context,
-        uri: Uri,
-        repository: EventRepository,
-        prefManager: PreferenceManager,
-        config: ImportConfig
-    ) = withContext(Dispatchers.IO) {
+    data class ParsedEyfPackage(val manifest: EyfManifest, val data: EyfData)
 
-        val importDir = File(context.cacheDir, "eyf_import_${System.currentTimeMillis()}")
-        if (!importDir.exists()) importDir.mkdirs()
-
-        // 1. 解压文件
+    suspend fun parseEyf(context: Context, uri: Uri): ParsedEyfPackage = withContext(Dispatchers.IO) {
+        val importDir = File(context.cacheDir, "eyf_temp_${System.currentTimeMillis()}")
+        importDir.mkdirs()
         unzip(context, uri, importDir)
 
-        // 2. 检查 Manifest (合法性校验)
         val manifestFile = File(importDir, "manifest.json")
-        if (!manifestFile.exists()) throw Exception("非法的 EYF 格式：缺失 manifest.json")
+        if (!manifestFile.exists()) {
+            importDir.deleteRecursively()
+            throw Exception("无效的 EYF 格式：缺失 manifest.json")
+        }
         val manifest = gson.fromJson(manifestFile.readText(), EyfManifest::class.java)
-        if (manifest.appId != "com.errorsiayusulif.zakocountdown") {
-            // 可在此处作拦截或警告处理
+
+        val fileEyfVersion = manifest.eyfVersion.toFloatOrNull() ?: 0f
+        if (fileEyfVersion > SUPPORTED_EYF_VERSION) {
+            importDir.deleteRecursively()
+            throw Exception("版本不兼容：备份文件版本 ($fileEyfVersion) 高于当前支持版本 ($SUPPORTED_EYF_VERSION)。请更新应用。")
         }
 
-        // 3. 恢复设置项
-        if (config.importSettings) {
-            val prefsFile = File(importDir, "preferences.json")
-            if (prefsFile.exists()) {
-                val type = object : com.google.gson.reflect.TypeToken<Map<String, Any>>() {}.type
-                val prefsMap: Map<String, Any> = gson.fromJson(prefsFile.readText(), type)
-                restorePreferences(context, prefsMap)
-            }
-        }
-
-        // 4. 恢复业务数据
         val dataFile = File(importDir, "data.json")
-        if (dataFile.exists()) {
-            val eyfData = gson.fromJson(dataFile.readText(), EyfData::class.java)
-            val mediaDir = File(importDir, "media")
+        if (!dataFile.exists()) {
+            importDir.deleteRecursively()
+            throw Exception("无效的 EYF 格式：缺失 data.json")
+        }
+        val data = gson.fromJson(dataFile.readText(), EyfData::class.java)
 
-            // 【核心】：记录旧 ID 到 新生成的数据库 ID 的映射
-            val bookIdMapping = mutableMapOf<Long, Long>()
+        return@withContext ParsedEyfPackage(manifest, data)
+    }
 
-            // A. 先恢复日程本 (因为日程需要关联它的 ID)
-            if (config.importBooks && eyfData.agendaBooks != null) {
-                for (eb in eyfData.agendaBooks) {
-                    var newCoverUri: String? = null
-                    if (config.importBookCovers && eb.coverImageFileName != null) {
-                        val srcFile = File(mediaDir, eb.coverImageFileName)
-                        if (srcFile.exists()) {
-                            val destFile = File(context.filesDir, "book_cover_${System.currentTimeMillis()}_${srcFile.name}")
-                            srcFile.copyTo(destFile, overwrite = true)
-                            newCoverUri = Uri.fromFile(destFile).toString()
+    suspend fun executeImport(
+        context: Context,
+        repository: EventRepository,
+        rootNodes: List<SelectableNode>
+    ) = withContext(Dispatchers.IO) {
+        val importDir = context.cacheDir.listFiles()?.filter { it.name.startsWith("eyf_temp_") }?.maxByOrNull { it.lastModified() }
+            ?: throw Exception("找不到临时解压文件，请重新选择文件")
+        val mediaDir = File(importDir, "media")
+
+        val prefs = context.getSharedPreferences("zako_prefs", Context.MODE_PRIVATE).edit()
+        val bookIdMapping = mutableMapOf<Long, Long>()
+
+        for (node in rootNodes.filter { it.isChecked }) {
+            val includeColor = node.children.find { it.subOptionType == SubOptionType.COLOR }?.isChecked ?: true
+            val includeCover = node.children.find { it.subOptionType == SubOptionType.COVER }?.isChecked ?: true
+            val includeAlpha = node.children.find { it.subOptionType == SubOptionType.ALPHA }?.isChecked ?: true
+
+            when (node.type) {
+                NodeType.SETTING -> {
+                    if (!node.id.startsWith("ctrl_")) {
+                        val key = node.id.removePrefix("set_")
+                        when (val v = node.rawSettingValue) {
+                            is Boolean -> prefs.putBoolean(key, v)
+                            is String -> prefs.putString(key, v)
+                            is Double -> {
+                                if (key.contains("duration") || key.contains("delay") || key.contains("alpha")) {
+                                    prefs.putInt(key, v.toInt())
+                                } else {
+                                    prefs.putFloat(key, v.toFloat())
+                                }
+                            }
                         }
                     }
-
-                    val newBook = AgendaBook(
-                        name = eb.name,
-                        colorHex = if (config.importBookColors) eb.colorHex ?: "#212121" else "#212121",
-                        coverImageUri = newCoverUri,
-                        cardAlpha = if (config.importBookAlphas) eb.cardAlpha ?: 1.0f else 1.0f,
-                        sortOrder = eb.sortOrder
-                    )
-                    // 插入数据库并获取新 ID
-                    val newId = repository.insertBookAndGetId(newBook)
+                }
+                NodeType.BOOK -> {
+                    val eb = node.rawBook!!
+                    var newCoverUri: String? = null
+                    if (includeCover && eb.coverImageFileName != null) {
+                        val src = File(mediaDir, eb.coverImageFileName)
+                        if (src.exists()) {
+                            val dest = File(context.filesDir, "book_cover_${System.nanoTime()}.png")
+                            src.copyTo(dest, true)
+                            newCoverUri = Uri.fromFile(dest).toString()
+                        }
+                    }
+                    val newId = repository.insertBookAndGetId(AgendaBook(
+                        0, eb.name,
+                        if(includeColor) eb.colorHex ?: "#000" else "#000",
+                        System.currentTimeMillis(), newCoverUri,
+                        if(includeAlpha) eb.cardAlpha ?: 1f else 1f,
+                        eb.sortOrder
+                    ))
                     bookIdMapping[eb.originalId] = newId
                 }
-            }
-
-            // B. 恢复日程
-            if (config.importEvents && eyfData.events != null) {
-                for (ev in eyfData.events) {
+                NodeType.EVENT -> {
+                    val ev = node.rawEvent!!
                     var newBgUri: String? = null
-                    if (config.importEventCovers && ev.backgroundFileName != null) {
-                        val srcFile = File(mediaDir, ev.backgroundFileName)
-                        if (srcFile.exists()) {
-                            val destFile = File(context.filesDir, "event_bg_${System.currentTimeMillis()}_${srcFile.name}")
-                            srcFile.copyTo(destFile, overwrite = true)
-                            newBgUri = Uri.fromFile(destFile).toString()
+                    if (includeCover && ev.backgroundFileName != null) {
+                        val src = File(mediaDir, ev.backgroundFileName)
+                        if (src.exists()) {
+                            val dest = File(context.filesDir, "bg_${System.nanoTime()}.png")
+                            src.copyTo(dest, true)
+                            newBgUri = Uri.fromFile(dest).toString()
                         }
                     }
+                    val mappedBookId = if (ev.originalBookId != null) bookIdMapping[ev.originalBookId] else null
 
-                    // 映射新的 Book ID。如果旧的没找到或者没导入，归入默认分类 (null)
-                    val remappedBookId = if (ev.originalBookId != null) bookIdMapping[ev.originalBookId] else null
-
-                    val newEvent = CountdownEvent(
-                        title = ev.title,
-                        targetDate = Date(ev.targetDate),
-                        isImportant = ev.isImportant,
-                        bookId = remappedBookId,
-                        colorHex = if (config.importEventColors) ev.colorHex else null,
-                        backgroundUri = newBgUri,
-                        isPinned = ev.isPinned,
-                        displayMode = ev.displayMode,
-                        cardAlpha = if (config.importEventAlphas) ev.cardAlpha else null
-                    )
-                    repository.insert(newEvent)
+                    repository.insert(CountdownEvent(
+                        0, ev.title, Date(ev.targetDate), ev.isImportant, Date(),
+                        if(includeColor) ev.colorHex else null,
+                        newBgUri, ev.isPinned, ev.displayMode,
+                        if(includeAlpha) ev.cardAlpha else null,
+                        mappedBookId
+                    ))
                 }
+                else -> {}
             }
         }
-
-        // 清理缓存
+        prefs.apply()
         importDir.deleteRecursively()
     }
 
-    // --- 辅助方法 ---
-
     private fun copyUriToFile(context: Context, uri: Uri, destFile: File) {
         try {
-            val inputStream = context.contentResolver.openInputStream(uri) ?: return
-            val outputStream = FileOutputStream(destFile)
-            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+            context.contentResolver.openInputStream(uri)?.use { input -> FileOutputStream(destFile).use { input.copyTo(it) } }
+        } catch (e: Exception) { e.printStackTrace() }
     }
-
     private fun zipDirectory(sourceDir: File, zipFile: File) {
         ZipOutputStream(BufferedOutputStream(FileOutputStream(zipFile))).use { zos ->
             sourceDir.walkTopDown().filter { it.isFile }.forEach { file ->
-                val zipEntry = ZipEntry(sourceDir.toPath().relativize(file.toPath()).toString().replace("\\", "/"))
-                zos.putNextEntry(zipEntry)
+                zos.putNextEntry(ZipEntry(sourceDir.toPath().relativize(file.toPath()).toString().replace("\\", "/")))
                 file.inputStream().use { it.copyTo(zos) }
                 zos.closeEntry()
             }
         }
     }
-
     private fun unzip(context: Context, zipUri: Uri, targetDir: File) {
-        val inputStream = context.contentResolver.openInputStream(zipUri) ?: throw Exception("Cannot open ZIP")
-        ZipInputStream(BufferedInputStream(inputStream)).use { zis ->
-            var entry: ZipEntry? = zis.nextEntry
-            while (entry != null) {
+        context.contentResolver.openInputStream(zipUri)?.let { ZipInputStream(BufferedInputStream(it)) }?.use { zis ->
+            generateSequence { zis.nextEntry }.forEach { entry ->
                 val file = File(targetDir, entry.name)
-                // 防御 ZIP 目录穿越漏洞
-                val canonicalDestPath = file.canonicalPath
-                val canonicalDirPath = targetDir.canonicalPath
-                if (!canonicalDestPath.startsWith(canonicalDirPath + File.separator)) {
-                    throw SecurityException("Entry is outside of the target dir: ${entry.name}")
-                }
-
-                if (entry.isDirectory) {
-                    file.mkdirs()
-                } else {
+                if (!file.canonicalPath.startsWith(targetDir.canonicalPath)) throw SecurityException("Zip Path Traversal")
+                if (entry.isDirectory) file.mkdirs() else {
                     file.parentFile?.mkdirs()
-                    FileOutputStream(file).use { out ->
-                        zis.copyTo(out)
-                    }
+                    FileOutputStream(file).use { zis.copyTo(it) }
                 }
-                entry = zis.nextEntry
             }
         }
-    }
-
-    // 获取并过滤我们真正需要的 Preference，以防导出系统缓存垃圾
-    private fun getExportablePreferences(context: Context): Map<String, Any?> {
-        val prefs = context.getSharedPreferences("zako_prefs", Context.MODE_PRIVATE)
-        return prefs.all.filterKeys {
-            // 这里可以过滤掉不需要备份的 key，比如 Widget IDs (由于跨设备，旧的微件ID无效)
-            !it.startsWith("widget_")
-        }
-    }
-
-    private fun restorePreferences(context: Context, map: Map<String, Any>) {
-        val prefs = context.getSharedPreferences("zako_prefs", Context.MODE_PRIVATE).edit()
-        for ((key, value) in map) {
-            when (value) {
-                is Boolean -> prefs.putBoolean(key, value)
-                is String -> prefs.putString(key, value)
-                // Gson 解析数字默认转为 Double，根据类型需要强转
-                is Double -> {
-                    // 判断这个key我们原本存的是 Int 还是 Float (根据您的系统设定)
-                    // 为了简化，由于 Android Prefs 常用 Int 和 Float，这里通过名称猜测或存为 Float
-                    if (key.contains("duration") || key.contains("delay") || key.contains("alpha")) {
-                        prefs.putInt(key, value.toInt())
-                    } else {
-                        prefs.putFloat(key, value.toFloat())
-                    }
-                }
-                is Float -> prefs.putFloat(key, value)
-                is Int -> prefs.putInt(key, value)
-            }
-        }
-        prefs.apply()
     }
 }

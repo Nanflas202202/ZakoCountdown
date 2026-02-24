@@ -32,5 +32,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findNavController().navigate(R.id.action_settingsFragment_to_aboutFragment)
             true
         }
+        findPreference<Preference>("nav_to_backup_restore")?.setOnPreferenceClickListener {
+            findNavController().navigate(R.id.backupRestoreFragment) // 或者具体的 action
+            // 由于我们没在 nav_graph 里写从 settings 过去的 action，可以直接用目标 ID
+            // findNavController().navigate(R.id.backupRestoreFragment)
+            true
+        }
     }
 }

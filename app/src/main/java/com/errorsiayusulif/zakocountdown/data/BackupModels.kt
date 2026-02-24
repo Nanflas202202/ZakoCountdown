@@ -3,8 +3,7 @@ package com.errorsiayusulif.zakocountdown.data
 
 import com.google.gson.annotations.SerializedName
 
-// --- .eyf 文件内各 JSON 映射实体 ---
-
+// ... (EyfManifest, EyfData, ExportAgendaBook, ExportEvent 保持不变) ...
 data class EyfManifest(
     @SerializedName("eyf_version") val eyfVersion: String = "1.0",
     @SerializedName("app_id") val appId: String = "com.errorsiayusulif.zakocountdown",
@@ -13,6 +12,7 @@ data class EyfManifest(
 )
 
 data class EyfData(
+    @SerializedName("settings") val settings: Map<String, Any?>?,
     @SerializedName("agenda_books") val agendaBooks: List<ExportAgendaBook>?,
     @SerializedName("events") val events: List<ExportEvent>?
 )
@@ -20,8 +20,8 @@ data class EyfData(
 data class ExportAgendaBook(
     val originalId: Long,
     val name: String,
-    val colorHex: String?,           // 若配置不导出颜色，则为 null
-    val coverImageFileName: String?, // 相对路径，如 "cover_123.png"，若不导出封面则为 null
+    val colorHex: String?,
+    val coverImageFileName: String?,
     val cardAlpha: Float?,
     val sortOrder: Int
 )
@@ -30,40 +30,41 @@ data class ExportEvent(
     val title: String,
     val targetDate: Long,
     val isImportant: Boolean,
-    val originalBookId: Long?,       // 关联的日程本原始 ID
+    val originalBookId: Long?,
     val colorHex: String?,
-    val backgroundFileName: String?, // 相对路径
+    val backgroundFileName: String?,
     val isPinned: Boolean,
     val displayMode: String,
     val cardAlpha: Float?
 )
 
-// --- 控制配置实体 ---
+// --- UI 节点实体 (树形结构升级) ---
+enum class NodeType { HEADER, SETTING, BOOK, EVENT, SUB_OPTION }
 
-data class ExportConfig(
-    val includeEvents: Boolean = true,
-    val includeEventColors: Boolean = true,
-    val includeEventCovers: Boolean = true,
-    val includeEventAlphas: Boolean = true,
+enum class ConflictLevel { NONE, WARNING, ERROR }
 
-    val includeBooks: Boolean = true,
-    val includeBookColors: Boolean = true,
-    val includeBookCovers: Boolean = true,
-    val includeBookAlphas: Boolean = true,
+data class SelectableNode(
+    val type: NodeType,
+    val id: String,
+    val title: String,
+    val subtitle: String? = null,
+    var isChecked: Boolean = true,
 
-    val includeSettings: Boolean = true
+    // 树形结构支持
+    var isExpanded: Boolean = false,
+    val children: MutableList<SelectableNode> = mutableListOf(),
+
+    // 冲突信息
+    val conflictLevel: ConflictLevel = ConflictLevel.NONE,
+    val conflictMessage: String? = null,
+
+    // 原始数据
+    val rawSettingValue: Any? = null,
+    val rawBook: ExportAgendaBook? = null,
+    val rawEvent: ExportEvent? = null,
+
+    // 子选项类型 (用于 SUB_OPTION)
+    val subOptionType: SubOptionType? = null
 )
 
-data class ImportConfig(
-    val importEvents: Boolean = true,
-    val importEventColors: Boolean = true,
-    val importEventCovers: Boolean = true,
-    val importEventAlphas: Boolean = true,
-
-    val importBooks: Boolean = true,
-    val importBookColors: Boolean = true,
-    val importBookCovers: Boolean = true,
-    val importBookAlphas: Boolean = true,
-
-    val importSettings: Boolean = true
-)
+enum class SubOptionType { COLOR, COVER, ALPHA }

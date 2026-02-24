@@ -6,10 +6,22 @@
     android:layout_height="match_parent"
     android:background="?attr/colorSurfaceVariant">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="构建详情"
+            app:navigationIcon="@drawable/ic_arrow_back"
+            android:visibility="gone"/>
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
         android:padding="16dp">
 
         <LinearLayout
@@ -17,77 +29,57 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- 构建信息卡片 -->
+            <!-- 卡片 1：App 信息 -->
             <com.google.android.material.card.MaterialCardView
-                style="?attr/materialCardViewElevatedStyle"
+                style="?attr/materialCardViewFilledStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:id="@+id/ll_build_info"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="16dp">
 
                     <TextView
+                        android:text="应用信息"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="构建信息"
-                        android:textColor="?attr/colorPrimary"
-                        android:textStyle="bold"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"/>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="12dp"
-                        android:background="?attr/colorOutlineVariant" />
-
-                    <!-- 构建信息由代码动态添加 Item -->
+                        android:layout_marginBottom="12dp"/>
+                    <!-- 内容由代码动态填充 -->
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- 依赖库卡片 -->
+            <!-- 卡片 2：依赖库 -->
             <com.google.android.material.card.MaterialCardView
-                style="?attr/materialCardViewElevatedStyle"
+                style="?attr/materialCardViewFilledStyle"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="24dp"
-                app:cardBackgroundColor="?attr/colorSurface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp">
+                app:cardBackgroundColor="?attr/colorSurface">
 
                 <LinearLayout
                     android:id="@+id/ll_dependencies"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="20dp">
+                    android:padding="16dp">
 
                     <TextView
+                        android:text="开源组件版本"
+                        android:textAppearance="?attr/textAppearanceTitleMedium"
+                        android:textColor="?attr/colorPrimary"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="开源依赖库"
-                        android:textColor="?attr/colorPrimary"
-                        android:textStyle="bold"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"/>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:layout_marginTop="12dp"
-                        android:background="?attr/colorOutlineVariant" />
-
-                    <!-- 依赖库由代码动态添加 Item -->
+                        android:layout_marginBottom="12dp"/>
+                    <!-- 内容由代码动态填充 -->
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

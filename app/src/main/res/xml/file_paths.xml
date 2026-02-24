@@ -2,4 +2,6 @@
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 允许访问 cache/shared_images/ 目录下的文件 -->
     <cache-path name="shared_images" path="shared_images/" />
+    <!-- 【修复】：新增 backups 路径，允许分享 .eyf 备份包 -->
+    <cache-path name="backups" path="backups/" />
 </paths>
