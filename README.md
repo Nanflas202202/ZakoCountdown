@@ -7,7 +7,7 @@
 <div align="center">
     <h1>ZakoCountdown</h1>
 <div align="center">
-	
+
 ![GitHub repo size](https://img.shields.io/github/repo-size/nanflas202202/ZakoCountdown) 
 	![GitHub Repo stars](https://img.shields.io/github/stars/nanflas202202/ZakoCountdown) 
 ![GitHub all releases](https://img.shields.io/github/downloads/nanflas202202/ZakoCountdown/total) 
@@ -88,9 +88,9 @@
 	- [x] 生成分享卡片
 	- [ ] 分享日程
 	- [ ] 分享app（短期内暂无加入的计划）  
-- [ ] 导入导出日程
-	- [ ] 导出配置文件
-	- [ ] 批量导入导出日程
+- [x] 导入导出日程
+	- [x] 导出配置文件
+	- [x] 批量导入导出日程
 - [x] 添加日程到日历
 - [ ] 等等
 
