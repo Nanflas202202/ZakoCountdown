@@ -141,7 +141,7 @@ class MainActivity : AppCompatActivity() {
                         menu.findItem(R.id.homeFragment)?.isChecked = true
                     }
                     R.id.settingsFragment, R.id.personalizationFragment, R.id.advancedSettingsFragment,
-                    R.id.aboutFragment, R.id.developerSettingsFragment, R.id.permissionsFragment -> {
+                    R.id.aboutFragment, R.id.developerSettingsFragment, R.id.permissionsFragment, R.id.backupRestoreFragment -> {
                         menu.findItem(R.id.settingsFragment)?.isChecked = true
                     }
                     R.id.agendaBookFragment -> {

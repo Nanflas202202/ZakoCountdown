@@ -73,8 +73,37 @@ class BackupRestoreFragment : Fragment() {
             val dateStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
             createEyfLauncher.launch("ZakoBackup_$dateStr.eyf")
         }
-    }
+        // 修复手势切换逻辑 (滑动方向判定)
+        val gestureDetector = android.view.GestureDetector(requireContext(), object : android.view.GestureDetector.SimpleOnGestureListener() {
+            private val SWIPE_THRESHOLD = 100
+            private val SWIPE_VELOCITY_THRESHOLD = 100
 
+            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                if (e1 == null) return false
+                val diffX = e2.x - e1.x
+                val diffY = e2.y - e1.y
+
+                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    if (diffX > 0) {
+                        // 从左向右滑动：e2.x > e1.x，手指向右划
+                        // 用户想看左边的内容 -> 切换到 [0] (导出备份)
+                        binding.tabLayout.getTabAt(0)?.select()
+                    } else {
+                        // 从右向左滑动：e2.x < e1.x，手指向左划
+                        // 用户想看右边的内容 -> 切换到 [1] (导入恢复)
+                        binding.tabLayout.getTabAt(1)?.select()
+                    }
+                    return true
+                }
+                return false
+            }
+        })
+
+        // 绑定手势 (保持不变)
+        binding.root.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event) }
+        binding.rvExport.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event); false }
+        binding.rvImport.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event); false }
+}
     private fun setupTabs() {
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("导出备份"))
         binding.tabLayout.addTab(binding.tabLayout.newTab().setText("导入恢复"))

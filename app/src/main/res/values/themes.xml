@@ -25,17 +25,17 @@
     <!-- MD3 按钮: 保持默认，跟随动态色 -->
     <style name="Widget.Zako.Button.M3" parent="Widget.Material3.Button" />
 
-    <!-- ... (Switch 样式保持不变) ... -->
+    <!-- MD1 开关 -->
     <style name="Widget.Zako.Switch.MD1" parent="Widget.AppCompat.CompoundButton.Switch">
-        <item name="thumbTint">?attr/colorAccent</item>
-        <item name="trackTint">?attr/colorAccent</item>
+        <item name="thumbTint">@color/switch_thumb_tint</item>
+        <item name="trackTint">@color/switch_track_tint</item>
     </style>
-    <style name="Widget.Zako.Switch.MD2" parent="Widget.MaterialComponents.CompoundButton.Switch">
-        <item name="thumbTint">?attr/colorAccent</item>
-        <item name="trackTint">?attr/colorAccent</item>
-    </style>
-    <style name="Widget.Zako.Switch.M3" parent="Widget.Material3.CompoundButton.MaterialSwitch" />
 
+    <!-- MD2 开关 -->
+    <style name="Widget.Zako.Switch.MD2" parent="Widget.MaterialComponents.CompoundButton.Switch">
+        <item name="thumbTint">@color/switch_thumb_tint</item>
+        <item name="trackTint">@color/switch_track_tint</item>
+    </style>
     <!-- ... (CardView, Toolbar 样式保持不变) ... -->
     <style name="Widget.ZakoCountdown.CardView.MD1" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">2dp</item>
@@ -225,4 +225,5 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
+
 </resources>

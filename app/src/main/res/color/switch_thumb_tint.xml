@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 开启状态：使用主题的强调色 -->
+    <item android:state_checked="true" android:color="?attr/colorAccent" />
+    <!-- 关闭状态：浅灰色 (通常是 Surface 的变体) -->
+    <item android:color="#FAFAFA" /> <!-- 经典 MD1/2 的关闭滑块颜色 -->
+</selector>

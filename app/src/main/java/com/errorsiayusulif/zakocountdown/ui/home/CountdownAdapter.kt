@@ -221,6 +221,7 @@ class CountdownAdapter(
 
                 val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
                 binding.tvCompactDate.text = sdf.format(event.targetDate)
+                applyCardAlpha(event)
             }
 
             private fun startCompactTimer(event: CountdownEvent) {
@@ -378,7 +379,9 @@ class CountdownAdapter(
                 binding.heroTitle.text = "距离 ${event.title}"
                 binding.heroDays.text = diff.totalDays.toString()
                 binding.heroLabelPrefix.text = if (diff.isPast) "已过" else "还有"
-                applyCardAlpha(event)
+                val alphaFloat = event.cardAlpha ?: 1.0f
+                val colorPrimarySurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface)
+                binding.root.setCardBackgroundColor(ColorUtils.setAlphaComponent(colorPrimarySurface, (alphaFloat * 255).toInt()))
             }
         }
     }

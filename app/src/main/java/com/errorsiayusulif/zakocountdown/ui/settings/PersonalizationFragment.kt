@@ -36,6 +36,29 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         "#DCEDC8", "#F0F4C3", "#FFF9C4", "#FFECB3", "#FFE0B2", "#FFCCBC"
     )
 
+    override fun onResume() {
+        super.onResume()
+        // 每次页面可见时，检查是否需要禁用主题设置
+        updateThemePreferenceState()
+    }
+
+    private fun updateThemePreferenceState() {
+        val themePref = findPreference<ListPreference>("theme") ?: return
+        val layoutMode = appPreferenceManager.getHomeLayoutMode()
+        val isCompact = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
+        val isLegacyUnlocked = appPreferenceManager.isLegacyThemeUnlockedInCompact()
+
+        if (isCompact && !isLegacyUnlocked) {
+            // 紧凑模式且未解锁旧主题，禁用主题切换并提示
+            themePref.isEnabled = false
+            themePref.summary = "紧凑模式下强制使用 MD3 主题"
+        } else {
+            // 正常状态
+            themePref.isEnabled = true
+            // 恢复原来的 summary 逻辑，或者简单使用 entries 里的显示值
+            themePref.summary = themePref.entry
+        }
+    }
     private val pickImageLauncher =
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
             uri?.let { sourceUri ->

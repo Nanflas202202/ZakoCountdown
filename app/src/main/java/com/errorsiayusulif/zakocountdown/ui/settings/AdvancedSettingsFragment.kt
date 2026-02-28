@@ -13,6 +13,7 @@ import com.errorsiayusulif.zakocountdown.utils.AccessibilityStatusHelper
 class AdvancedSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var appPreferenceManager: PreferenceManager
 
+
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.sharedPreferencesName = "zako_prefs"
         setPreferencesFromResource(R.xml.advanced_preferences, rootKey)
@@ -48,6 +49,23 @@ class AdvancedSettingsFragment : PreferenceFragmentCompat() {
     override fun onResume() {
         super.onResume()
         updateAccessibilityStatus()
+
+        // --- 新增：检查导航设置状态 ---
+        updateNavModePreferenceState()
+    }
+
+    private fun updateNavModePreferenceState() {
+        val navPref = findPreference<ListPreference>("key_nav_mode") ?: return
+        val appPreferenceManager = PreferenceManager(requireContext())
+        val layoutMode = appPreferenceManager.getHomeLayoutMode()
+
+        if (layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT) {
+            navPref.isEnabled = false
+            navPref.summary = "紧凑模式不使用传统导航栏"
+        } else {
+            navPref.isEnabled = true
+            navPref.summary = navPref.entry
+        }
     }
 
     private fun updateAccessibilityStatus() {
