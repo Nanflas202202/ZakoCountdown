@@ -49,10 +49,7 @@ class HomeFragment : Fragment() {
     private val agendaViewModel: AgendaViewModel by viewModels({ requireActivity() })
 
     private var currentAllEvents: List<CountdownEvent> = emptyList()
-    private var currentBookColors: Map<Long, String> = emptyMap()
     private var isUpdatingTabs = false
-
-    // 用于保存滑动删除的引用，方便解绑
     private var itemTouchHelper: ItemTouchHelper? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -114,15 +111,15 @@ class HomeFragment : Fragment() {
         binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
         binding.recyclerViewEvents.itemAnimator = null
 
-        // 3. 紧凑模式 UI 与手势逻辑
+        // 3. 紧凑模式 UI 与手势
         if (isCompact) {
             (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
             binding.tabLayoutAgenda.visibility = View.VISIBLE
             setupCompactTabs()
-            setupSwipeToSwitchTabs() // 开启左右滑动切页
+            setupSwipeToSwitchTabs()
         } else {
             binding.tabLayoutAgenda.visibility = View.GONE
-            setupSwipeToDelete(adapter) // 开启侧滑删除
+            setupSwipeToDelete(adapter)
         }
 
         // 4. 数据观察
@@ -139,18 +136,12 @@ class HomeFragment : Fragment() {
 
         agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
             val bookList = books ?: emptyList()
-
-            // 1. 维持旧的颜色映射表以防部分旧逻辑需要
-            currentBookColors = bookList.associate { it.id to it.colorHex }
-            adapter.setBookColorMap(currentBookColors)
-
-            // 2. 【核心修复】将完整的日程本列表传给 Adapter
-            adapter.setAgendaBooks(bookList)
-
-            // 3. 更新紧凑模式下的 Tabs
+            // --- 【核心修复：调用 setAgendaBooks 而不是 setAgendaBooksMap】 ---
+            adapter.setAgendaBooks(bookList, prefs)
             if (isCompact) updateTabs(bookList)
         }
 
+        // 5. FAB
         binding.fabAddEvent.setOnClickListener {
             val currentFilter = agendaViewModel.currentFilterId.value ?: -1L
             val defaultBookId = if (currentFilter > 0) currentFilter else -1L
@@ -159,9 +150,8 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // --- 核心优化：滑动手势控制 ---
     private fun setupSwipeToDelete(adapter: CountdownAdapter) {
-        itemTouchHelper?.attachToRecyclerView(null) // 清除旧的
+        itemTouchHelper?.attachToRecyclerView(null)
         itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
@@ -178,7 +168,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun setupSwipeToSwitchTabs() {
-        itemTouchHelper?.attachToRecyclerView(null) // 紧凑模式下关闭滑动删除
+        itemTouchHelper?.attachToRecyclerView(null)
 
         val gestureDetector = GestureDetector(requireContext(), object : GestureDetector.SimpleOnGestureListener() {
             private val SWIPE_THRESHOLD = 100
@@ -189,45 +179,33 @@ class HomeFragment : Fragment() {
                 val diffY = e2.y - e1.y
                 val diffX = e2.x - e1.x
 
-                // 判断是横向滑动
-                if (abs(diffX) > abs(diffY)) {
-                    if (abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        val currentTabIndex = binding.tabLayoutAgenda.selectedTabPosition
-                        if (diffX > 0) {
-                            // 向右滑，切到上一个 Tab
-                            if (currentTabIndex > 0) {
-                                binding.tabLayoutAgenda.getTabAt(currentTabIndex - 1)?.select()
-                            }
-                        } else {
-                            // 向左滑，切到下一个 Tab
-                            if (currentTabIndex < binding.tabLayoutAgenda.tabCount - 1) {
-                                binding.tabLayoutAgenda.getTabAt(currentTabIndex + 1)?.select()
-                            }
-                        }
-                        return true
+                if (abs(diffX) > abs(diffY) && abs(diffX) > SWIPE_THRESHOLD && abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
+                    val currentTabIndex = binding.tabLayoutAgenda.selectedTabPosition
+                    if (diffX > 0) {
+                        if (currentTabIndex > 0) binding.tabLayoutAgenda.getTabAt(currentTabIndex - 1)?.select()
+                    } else {
+                        if (currentTabIndex < binding.tabLayoutAgenda.tabCount - 1) binding.tabLayoutAgenda.getTabAt(currentTabIndex + 1)?.select()
                     }
+                    return true
                 }
                 return false
             }
         })
 
-        // 拦截 RecyclerView 的触摸事件交给 GestureDetector
         binding.recyclerViewEvents.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
             override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
                 gestureDetector.onTouchEvent(e)
-                return false // 返回 false 允许列表继续垂直滚动
+                return false
             }
         })
     }
+
     private fun setupCompactTabs() {
         binding.tabLayoutAgenda.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 if (isUpdatingTabs) return
                 val filterId = tab?.tag as? Long ?: -1L
-
-                // --- 优化：动态高亮颜色 ---
                 updateTabColors(filterId)
-
                 agendaViewModel.setFilter(filterId)
             }
             override fun onTabUnselected(tab: TabLayout.Tab?) {}
@@ -235,24 +213,19 @@ class HomeFragment : Fragment() {
         })
     }
 
-    // 新增：根据日程本 ID 更新 Tab 颜色
     private fun updateTabColors(filterId: Long) {
         val colorHex = when (filterId) {
-            -1L -> "#212121" // 全部: 黑/深灰
-            -2L -> "#F44336" // 重点: 红
-            else -> currentBookColors[filterId] ?: "#6750A4" // 自定义或默认紫
+            -1L -> "#212121"
+            -2L -> "#F44336"
+            else -> agendaViewModel.allBooks.value?.find { it.id == filterId }?.colorHex ?: "#6750A4"
         }
 
         try {
             val color = Color.parseColor(colorHex)
             binding.tabLayoutAgenda.setSelectedTabIndicatorColor(color)
-
-            // 设置文字颜色：未选中为灰色，选中为日程本颜色
             val unselectedColor = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurfaceVariant)
             binding.tabLayoutAgenda.setTabTextColors(unselectedColor, color)
-        } catch (e: Exception) {
-            // Fallback
-        }
+        } catch (e: Exception) {}
     }
 
     private fun updateTabs(books: List<AgendaBook>) {
@@ -261,26 +234,21 @@ class HomeFragment : Fragment() {
 
         binding.tabLayoutAgenda.removeAllTabs()
 
-        // 1. 全部
         val tabAll = binding.tabLayoutAgenda.newTab().setText("全部").setTag(-1L)
         binding.tabLayoutAgenda.addTab(tabAll)
         if (currentFilter == -1L) tabAll.select()
 
-        // 2. 重点
         val tabImp = binding.tabLayoutAgenda.newTab().setText("重点").setTag(-2L)
         binding.tabLayoutAgenda.addTab(tabImp)
         if (currentFilter == -2L) tabImp.select()
 
-        // 3. 自定义日程本
         books.forEach { book ->
             val tab = binding.tabLayoutAgenda.newTab().setText(book.name).setTag(book.id)
             binding.tabLayoutAgenda.addTab(tab)
             if (currentFilter == book.id) tab.select()
         }
 
-        // 初始化颜色
         updateTabColors(currentFilter)
-
         isUpdatingTabs = false
     }
 
@@ -291,12 +259,11 @@ class HomeFragment : Fragment() {
             val tab = binding.tabLayoutAgenda.getTabAt(i)
             if (tab?.tag == currentFilter) {
                 tab.select()
-                updateTabColors(currentFilter) // 同步颜色
+                updateTabColors(currentFilter)
                 break
             }
         }
     }
-
 
     private fun applyFilterAndSubmitList(adapter: CountdownAdapter) {
         val filterId = agendaViewModel.currentFilterId.value ?: -1L
@@ -313,9 +280,6 @@ class HomeFragment : Fragment() {
         loadWallpaper()
     }
 
-    // ... loadWallpaper, checkDevModeActivation, showContextMenu, addToSystemCalendar, openShareSettings, pinWidget 保持不变 ...
-
-    // (为了代码完整性，请保留这些方法，逻辑与之前一致)
     private fun loadWallpaper() {
         val app = requireActivity().application as ZakoCountdownApplication
         val wallpaperUriString = app.preferenceManager.getHomepageWallpaperUri()

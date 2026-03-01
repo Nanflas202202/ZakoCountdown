@@ -1,101 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="?attr/colorSurface">
 
     <com.google.android.material.tabs.TabLayout
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
         app:tabMode="fixed"/>
 
-    <ViewFlipper
-        android:id="@+id/view_flipper"
+    <!-- 核心：使用 ViewPager2 实现完美滑动 -->
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        app:layout_constraintTop_toBottomOf="@id/tab_layout"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
-        <!-- 视图 0：导出 -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+    <!-- 全局加载遮罩 -->
+    <FrameLayout
+        android:id="@+id/fl_loading_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone"
+        android:elevation="10dp"> <!-- 确保遮盖在最上层 -->
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            app:indicatorColor="?attr/colorPrimary"/>
+    </FrameLayout>
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_export"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingBottom="80dp"
-                android:clipToPadding="false"/>
-
-            <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-                android:id="@+id/fab_export"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentEnd="true"
-                android:layout_margin="16dp"
-                android:text="生成导出文件"
-                app:icon="@drawable/ic_save"/>
-        </RelativeLayout>
-
-        <!-- 视图 1：导入 -->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <!-- 初始状态 -->
-            <LinearLayout
-                android:id="@+id/ll_import_empty"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:gravity="center">
-                <ImageView
-                    android:layout_width="64dp"
-                    android:layout_height="64dp"
-                    android:src="@drawable/ic_restore"
-                    app:tint="?attr/colorPrimary"/>
-                <Button
-                    android:id="@+id/btn_select_file"
-                    style="?attr/materialButtonStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="选择 .eyf 文件"/>
-            </LinearLayout>
-
-            <!-- 分析列表状态 -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rv_import"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:visibility="gone"
-                android:paddingBottom="80dp"
-                android:clipToPadding="false"/>
-
-            <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-                android:id="@+id/fab_import"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_alignParentEnd="true"
-                android:layout_margin="16dp"
-                android:visibility="gone"
-                android:text="确认导入"
-                app:icon="@drawable/ic_check"/>
-        </RelativeLayout>
-    </ViewFlipper>
-
-    <!-- 遮罩 Loading -->
-    <ProgressBar
-        android:id="@+id/loading_indicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:translationY="-200dp"
-        android:visibility="gone"/>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

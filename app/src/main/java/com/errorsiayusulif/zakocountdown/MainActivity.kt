@@ -66,8 +66,34 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        // 确保从设置返回时刷新
         setupNavigationMode()
+        checkAccessibilityAndPopup() // 新增
+    }
+
+    private fun checkAccessibilityAndPopup() {
+        val prefs = preferenceManager
+        val isPopupEnabled = prefs.isPopupReminderEnabled()
+        val isServiceRunning = com.errorsiayusulif.zakocountdown.utils.AccessibilityStatusHelper.isAccessibilityServiceEnabled(this)
+
+        if (isPopupEnabled && !isServiceRunning) {
+            // 如果开关开着但服务没跑，自动禁用开关 (防止死循环检测)
+            // prefs.setPopupReminderEnabled(false) // 如果你想强制关掉
+
+            // 检查是否是首次提示（用一个标志位记录）
+            if (!prefs.hasPromptedAccessibility()) {
+                prefs.setHasPromptedAccessibility(true)
+                androidx.appcompat.app.AlertDialog.Builder(this)
+                    .setTitle("需要无障碍权限")
+                    .setMessage("为了在您打开指定应用时弹出倒数日提醒，我们需要开启无障碍服务。")
+                    .setPositiveButton("去开启") { _, _ ->
+                        startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                    }
+                    .setNegativeButton("取消并禁用弹窗", { _, _ ->
+                        // prefs.setPopupReminderEnabled(false)
+                    })
+                    .show()
+            }
+        }
     }
 
     private fun setupNavigationMode() {

@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.view.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -29,12 +30,9 @@ import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModelFactory
 import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Collections
 
-/**
- * 日程本列表/管理页面
- * 支持网格/列表切换，拖拽排序，长按管理
- */
 class AgendaBookFragment : Fragment() {
 
     private var _binding: FragmentAgendaBookBinding? = null
@@ -51,6 +49,40 @@ class AgendaBookFragment : Fragment() {
     private var currentEvents: List<CountdownEvent> = emptyList()
     private var isGridView = true
 
+    // -1 = 全部, -2 = 重点, >0 = 自定义
+    private var editingBookId: Long? = null
+
+    private val pickImageLauncher =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+            uri?.let { sourceUri ->
+                val bookId = editingBookId ?: return@let
+                try {
+                    val context = requireContext()
+                    val inputStream = context.contentResolver.openInputStream(sourceUri)
+                    if (inputStream != null) {
+                        val dir = File(context.filesDir, "covers")
+                        if (!dir.exists()) dir.mkdirs()
+                        val file = File(dir, "cover_${System.currentTimeMillis()}_$bookId.png")
+                        val outputStream = java.io.FileOutputStream(file)
+                        inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
+
+                        val finalUri = Uri.fromFile(file).toString()
+
+                        if (bookId < 0) {
+                            // 保存默认本子的封面
+                            preferenceManager.saveDefaultBookCover(bookId == -2L, finalUri)
+                            binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
+                        } else {
+                            // 保存自定义本子的封面
+                            agendaViewModel.updateBookCover(bookId, finalUri)
+                        }
+                        android.widget.Toast.makeText(requireContext(), "封面已更新", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                } catch (e: Exception) {
+                    android.widget.Toast.makeText(context, "设置失败", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAgendaBookBinding.inflate(inflater, container, false)
         preferenceManager = PreferenceManager(requireContext())
@@ -60,7 +92,6 @@ class AgendaBookFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // --- 修复 Bug 3: 从 Preference 读取布局偏好 ---
         isGridView = preferenceManager.isAgendaViewModeGrid()
 
         setupMenu()
@@ -68,7 +99,6 @@ class AgendaBookFragment : Fragment() {
 
         homeViewModel.allEvents.observe(viewLifecycleOwner) { events ->
             currentEvents = events ?: emptyList()
-            // 数据变化时刷新列表 (更新计数)
             binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
         }
 
@@ -85,7 +115,6 @@ class AgendaBookFragment : Fragment() {
     private fun setupMenu() {
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                // 根据当前状态显示对应图标
                 val iconRes = if (isGridView) R.drawable.ic_list else R.drawable.ic_grid_view
                 val item = menu.add(0, 1001, 0, "切换视图")
                 item.setIcon(iconRes)
@@ -95,15 +124,11 @@ class AgendaBookFragment : Fragment() {
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 if (menuItem.itemId == 1001) {
                     isGridView = !isGridView
-
-                    // --- 修复 Bug 3: 保存布局偏好 ---
                     preferenceManager.setAgendaViewMode(isGridView)
 
-                    // 更新图标
                     val iconRes = if (isGridView) R.drawable.ic_list else R.drawable.ic_grid_view
                     menuItem.setIcon(iconRes)
 
-                    // 重新应用布局管理器并刷新适配器
                     setupRecyclerView()
                     val books = agendaViewModel.allBooks.value ?: emptyList()
                     (binding.recyclerViewBooks.adapter as? BookAdapter)?.setBooks(books)
@@ -121,7 +146,6 @@ class AgendaBookFragment : Fragment() {
         val adapter = BookAdapter()
         binding.recyclerViewBooks.adapter = adapter
 
-        // 拖拽排序
         val itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT, 0
         ) {
@@ -132,9 +156,7 @@ class AgendaBookFragment : Fragment() {
             ): Boolean {
                 val fromPos = viewHolder.adapterPosition
                 val toPos = target.adapterPosition
-                // 锁定前两项 (全部/重点) 不可移动
                 if (fromPos < 2 || toPos < 2) return false
-
                 adapter.onItemMove(fromPos, toPos)
                 return true
             }
@@ -143,7 +165,6 @@ class AgendaBookFragment : Fragment() {
 
             override fun clearView(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder) {
                 super.clearView(recyclerView, viewHolder)
-                // 拖拽结束后保存顺序
                 adapter.saveOrder()
             }
         })
@@ -161,7 +182,6 @@ class AgendaBookFragment : Fragment() {
 
         fun onItemMove(fromPosition: Int, toPosition: Int) {
             if (fromPosition < 2 || toPosition < 2) return
-            // Adapter索引 -> List索引 (减去2个header)
             Collections.swap(books, fromPosition - 2, toPosition - 2)
             notifyItemMoved(fromPosition, toPosition)
         }
@@ -189,7 +209,6 @@ class AgendaBookFragment : Fragment() {
         }
 
         private fun bindGrid(holder: GridViewHolder, position: Int) {
-            // ... (Grid 数据绑定逻辑)
             val bookId: Long
             val name: String
             val colorHex: String
@@ -198,10 +217,14 @@ class AgendaBookFragment : Fragment() {
             val alpha: Float
 
             if (position == 0) {
-                bookId = -1L; name = "全部日程"; colorHex = "#212121"; coverUri = null; alpha = 1f
+                bookId = -1L; name = "全部日程"; colorHex = "#212121"
+                coverUri = preferenceManager.getDefaultBookCover(false)
+                alpha = preferenceManager.getDefaultBookAlpha(false)
                 count = currentEvents.size
             } else if (position == 1) {
-                bookId = -2L; name = "重点日程"; colorHex = "#F44336"; coverUri = null; alpha = 1f
+                bookId = -2L; name = "重点日程"; colorHex = "#F44336"
+                coverUri = preferenceManager.getDefaultBookCover(true)
+                alpha = preferenceManager.getDefaultBookAlpha(true)
                 count = currentEvents.count { it.isImportant }
             } else {
                 val book = books[position - 2]
@@ -222,43 +245,86 @@ class AgendaBookFragment : Fragment() {
                 holder.binding.tvCount.setTextColor(textColor)
             } catch (e: Exception) {}
 
+            // 【核心修复 3】：不管有没有图片，透明度都要生效
             if (coverUri != null) {
                 holder.binding.ivCover.load(Uri.parse(coverUri))
-                holder.binding.ivCover.alpha = alpha
                 holder.binding.vScrim.visibility = View.VISIBLE
+                // 如果是图片，让图片半透明，或者让遮罩变深。这里统一用 alpha 控制 ivCover
+                holder.binding.ivCover.alpha = alpha
             } else {
                 holder.binding.ivCover.setImageDrawable(null)
                 try {
                     holder.binding.ivCover.setBackgroundColor(Color.parseColor(colorHex))
-                    holder.binding.ivCover.alpha = if (position < 2) 0.3f else 1.0f
                 } catch (e:Exception) {
                     holder.binding.ivCover.setBackgroundColor(Color.LTGRAY)
                 }
                 holder.binding.vScrim.visibility = View.GONE
+                // 无图纯色时，同样应用透明度
+                holder.binding.ivCover.alpha = alpha
             }
 
             holder.itemView.setOnClickListener {
                 val action = AgendaBookFragmentDirections.actionAgendaBookFragmentToAgendaDetailFragment(bookId)
                 findNavController().navigate(action)
             }
-            if (position >= 2) {
-                holder.itemView.setOnLongClickListener { showOptions(books[position - 2]); true }
+
+            holder.itemView.setOnLongClickListener {
+                if (position < 2) {
+                    showDefaultBookOptions(position == 1)
+                } else {
+                    showOptions(books[position - 2])
+                }
+                true
             }
         }
 
+        // 【新增】：带有透明度滑块的默认日程本设置对话框
+        private fun showDefaultBookOptions(isImportantBook: Boolean) {
+            val options = arrayOf("设置封面", "移除封面", "调整透明度")
+            MaterialAlertDialogBuilder(requireContext())
+                .setTitle(if (isImportantBook) "重点日程" else "全部日程")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> {
+                            editingBookId = if (isImportantBook) -2L else -1L
+                            pickImageLauncher.launch(arrayOf("image/*"))
+                        }
+                        1 -> {
+                            preferenceManager.saveDefaultBookCover(isImportantBook, null)
+                            binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
+                        }
+                        2 -> {
+                            // 弹出透明度调节
+                            val currentAlpha = preferenceManager.getDefaultBookAlpha(isImportantBook)
+                            val slider = com.google.android.material.slider.Slider(requireContext()).apply {
+                                valueFrom = 0.0f
+                                valueTo = 1.0f
+                                value = currentAlpha
+                                setPadding(48, 48, 48, 48)
+                            }
+                            MaterialAlertDialogBuilder(requireContext())
+                                .setTitle("调整封面透明度")
+                                .setView(slider)
+                                .setPositiveButton("保存") { _, _ ->
+                                    preferenceManager.saveDefaultBookAlpha(isImportantBook, slider.value)
+                                    binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
+                                }
+                                .show()
+                        }
+                    }
+                }.show()
+        }
+
         private fun bindList(holder: ListViewHolder, position: Int) {
-            // ... (List 数据绑定逻辑)
             val bookId: Long
             val name: String
             val colorHex: String
             val count: Int
 
             if (position == 0) {
-                bookId = -1L; name = "全部日程"; colorHex = "#212121"
-                count = currentEvents.size
+                bookId = -1L; name = "全部日程"; colorHex = "#212121"; count = currentEvents.size
             } else if (position == 1) {
-                bookId = -2L; name = "重点日程"; colorHex = "#F44336"
-                count = currentEvents.count { it.isImportant }
+                bookId = -2L; name = "重点日程"; colorHex = "#F44336"; count = currentEvents.count { it.isImportant }
             } else {
                 val book = books[position - 2]
                 bookId = book.id; name = book.name; colorHex = book.colorHex
@@ -268,7 +334,6 @@ class AgendaBookFragment : Fragment() {
             holder.binding.tvBookName.text = name
             try { holder.binding.indicatorBar.setBackgroundColor(Color.parseColor(colorHex)) } catch(e:Exception){}
 
-            // 统计信息：显示最近的一个日程
             val eventsInBook = if (position == 0) currentEvents
             else if (position == 1) currentEvents.filter { it.isImportant }
             else currentEvents.filter { it.bookId == bookId }
@@ -279,7 +344,7 @@ class AgendaBookFragment : Fragment() {
             val statsText = StringBuilder("$count 项")
             if (nextEvent != null) {
                 val diff = TimeCalculator.calculateDifference(nextEvent.targetDate)
-                statsText.append(" · 最近: ${nextEvent.title} (${diff.totalDays}天)")
+                statsText.append(" · 最近: ${nextEvent.title} (还有${diff.totalDays}天)")
             } else if (count > 0 && eventsInBook.isNotEmpty()) {
                 statsText.append(" · 全部已过期")
             } else {
@@ -291,13 +356,36 @@ class AgendaBookFragment : Fragment() {
                 val action = AgendaBookFragmentDirections.actionAgendaBookFragmentToAgendaDetailFragment(bookId)
                 findNavController().navigate(action)
             }
-            if (position >= 2) {
-                holder.itemView.setOnLongClickListener { showOptions(books[position - 2]); true }
+            holder.itemView.setOnLongClickListener {
+                if (position < 2) {
+                    showDefaultBookOptions(position == 1)
+                } else {
+                    showOptions(books[position - 2])
+                }
+                true
             }
         }
 
         inner class GridViewHolder(val binding: ItemAgendaBookCardBinding) : RecyclerView.ViewHolder(binding.root)
         inner class ListViewHolder(val binding: ItemAgendaBookListBinding) : RecyclerView.ViewHolder(binding.root)
+    }
+
+    private fun showDefaultBookOptions(isImportantBook: Boolean) {
+        val options = arrayOf("设置封面", "移除封面")
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(if (isImportantBook) "重点日程" else "全部日程")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> {
+                        editingBookId = if (isImportantBook) -2L else -1L
+                        pickImageLauncher.launch(arrayOf("image/*"))
+                    }
+                    1 -> {
+                        preferenceManager.saveDefaultBookCover(isImportantBook, null)
+                        binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
+                    }
+                }
+            }.show()
     }
 
     private fun showOptions(book: AgendaBook) {
@@ -321,7 +409,7 @@ class AgendaBookFragment : Fragment() {
     private fun deleteBook(book: AgendaBook) {
         MaterialAlertDialogBuilder(requireContext())
             .setTitle("确认删除？")
-            .setMessage("日程本删除后，其中的日程将移回“默认日程本”，不会被删除。")
+            .setMessage("日程本删除后，其中的日程将移回“全部日程”，不会被删除。")
             .setPositiveButton("删除") { _, _ -> agendaViewModel.deleteBook(book) }
             .setNegativeButton("取消", null)
             .show()

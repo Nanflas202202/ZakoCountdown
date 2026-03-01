@@ -1,3 +1,4 @@
+// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/settings/BackupRestoreFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.settings
 
 import android.content.Context
@@ -7,19 +8,24 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.*
 import com.errorsiayusulif.zakocountdown.databinding.FragmentBackupRestoreBinding
 import com.errorsiayusulif.zakocountdown.utils.BackupManager
 import com.errorsiayusulif.zakocountdown.utils.ImportConflictAnalyzer
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.snackbar.Snackbar
-import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -32,11 +38,23 @@ class BackupRestoreFragment : Fragment() {
     private var _binding: FragmentBackupRestoreBinding? = null
     private val binding get() = _binding!!
 
-    private lateinit var exportAdapter: BackupNodeAdapter
-    private lateinit var importAdapter: BackupNodeAdapter
     private lateinit var preferenceManager: PreferenceManager
 
-    private var pendingImportUri: Uri? = null
+    // 子页面的视图引用
+    private lateinit var exportView: View
+    private lateinit var importView: View
+
+    // 控件引用 (从 exportView 和 importView 中找出的)
+    private lateinit var rvExport: RecyclerView
+    private lateinit var fabExport: ExtendedFloatingActionButton
+
+    private lateinit var llImportEmpty: LinearLayout
+    private lateinit var btnSelectFile: Button
+    private lateinit var rvImport: RecyclerView
+    private lateinit var fabImport: ExtendedFloatingActionButton
+
+    private lateinit var exportAdapter: BackupNodeAdapter
+    private lateinit var importAdapter: BackupNodeAdapter
 
     private val createEyfLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         uri?.let { performExportToUri(it) }
@@ -49,22 +67,31 @@ class BackupRestoreFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentBackupRestoreBinding.inflate(inflater, container, false)
         preferenceManager = PreferenceManager(requireContext())
+
+        // 预加载两个子视图
+        exportView = inflater.inflate(R.layout.layout_backup_export, null, false)
+        importView = inflater.inflate(R.layout.layout_backup_import, null, false)
+
+        bindSubViews()
+
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupTabs()
+
+        setupViewPagerAndTabs()
         setupExportView()
 
-        binding.rvImport.layoutManager = LinearLayoutManager(requireContext())
+        // 导入视图初始化
+        rvImport.layoutManager = LinearLayoutManager(requireContext())
         importAdapter = BackupNodeAdapter(emptyList())
-        binding.rvImport.adapter = importAdapter
+        rvImport.adapter = importAdapter
 
-        binding.btnSelectFile.setOnClickListener { pickEyfFileLauncher.launch("*/*") }
-        binding.fabImport.setOnClickListener { executeImport() }
+        btnSelectFile.setOnClickListener { pickEyfFileLauncher.launch("*/*") }
+        fabImport.setOnClickListener { executeImport() }
 
-        binding.fabExport.setOnClickListener {
+        fabExport.setOnClickListener {
             val nodes = exportAdapter.getRootNodes()
             if (nodes.none { it.isChecked && it.type != NodeType.HEADER }) {
                 Toast.makeText(requireContext(), "请至少选择一项进行导出", Toast.LENGTH_SHORT).show()
@@ -73,58 +100,45 @@ class BackupRestoreFragment : Fragment() {
             val dateStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
             createEyfLauncher.launch("ZakoBackup_$dateStr.eyf")
         }
-        // 修复手势切换逻辑 (滑动方向判定)
-        val gestureDetector = android.view.GestureDetector(requireContext(), object : android.view.GestureDetector.SimpleOnGestureListener() {
-            private val SWIPE_THRESHOLD = 100
-            private val SWIPE_VELOCITY_THRESHOLD = 100
-
-            override fun onFling(e1: android.view.MotionEvent?, e2: android.view.MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-                if (e1 == null) return false
-                val diffX = e2.x - e1.x
-                val diffY = e2.y - e1.y
-
-                if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                    if (diffX > 0) {
-                        // 从左向右滑动：e2.x > e1.x，手指向右划
-                        // 用户想看左边的内容 -> 切换到 [0] (导出备份)
-                        binding.tabLayout.getTabAt(0)?.select()
-                    } else {
-                        // 从右向左滑动：e2.x < e1.x，手指向左划
-                        // 用户想看右边的内容 -> 切换到 [1] (导入恢复)
-                        binding.tabLayout.getTabAt(1)?.select()
-                    }
-                    return true
-                }
-                return false
-            }
-        })
-
-        // 绑定手势 (保持不变)
-        binding.root.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event) }
-        binding.rvExport.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event); false }
-        binding.rvImport.setOnTouchListener { _, event -> gestureDetector.onTouchEvent(event); false }
-}
-    private fun setupTabs() {
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("导出备份"))
-        binding.tabLayout.addTab(binding.tabLayout.newTab().setText("导入恢复"))
-        binding.tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
-            override fun onTabSelected(tab: TabLayout.Tab?) {
-                binding.viewFlipper.displayedChild = tab?.position ?: 0
-                if (tab?.position == 0) {
-                    binding.fabExport.show()
-                    binding.fabImport.hide()
-                } else {
-                    binding.fabExport.hide()
-                    if (binding.rvImport.visibility == View.VISIBLE) binding.fabImport.show()
-                }
-            }
-            override fun onTabUnselected(tab: TabLayout.Tab?) {}
-            override fun onTabReselected(tab: TabLayout.Tab?) {}
-        })
     }
 
+    private fun bindSubViews() {
+        rvExport = exportView.findViewById(R.id.rv_export)
+        fabExport = exportView.findViewById(R.id.fab_export)
+
+        llImportEmpty = importView.findViewById(R.id.ll_import_empty)
+        btnSelectFile = importView.findViewById(R.id.btn_select_file)
+        rvImport = importView.findViewById(R.id.rv_import)
+        fabImport = importView.findViewById(R.id.fab_import)
+    }
+
+    private fun setupViewPagerAndTabs() {
+        // 设置 ViewPager2 适配器
+        binding.viewPager.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+            override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+                val view = if (viewType == 0) exportView else importView
+                // 确保视图从旧的父容器中移除 (ViewPager2 刷新机制安全保障)
+                (view.parent as? ViewGroup)?.removeView(view)
+                view.layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                return object : RecyclerView.ViewHolder(view) {}
+            }
+
+            override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {}
+            override fun getItemCount(): Int = 2
+            override fun getItemViewType(position: Int): Int = position
+        }
+
+        // 使用 TabLayoutMediator 将 Tabs 和 ViewPager2 丝滑绑定
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+            tab.text = if (position == 0) "导出备份" else "导入恢复"
+        }.attach()
+    }
+
+    // ==========================================
+    // 导出逻辑
+    // ==========================================
     private fun setupExportView() {
-        binding.rvExport.layoutManager = LinearLayoutManager(requireContext())
+        rvExport.layoutManager = LinearLayoutManager(requireContext())
 
         lifecycleScope.launch(Dispatchers.IO) {
             val app = requireActivity().application as ZakoCountdownApplication
@@ -135,16 +149,14 @@ class BackupRestoreFragment : Fragment() {
             val nodes = mutableListOf<SelectableNode>()
 
             if (prefs.isNotEmpty()) {
-                nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", "应用配置", isChecked = true))
+                nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", "应用配置", isExpanded = true, isChecked = true))
                 val prefMapping = mapOf(
                     "key_theme" to "主题风格",
                     "key_accent_color" to "全局强调色",
                     "key_nav_mode" to "导航栏样式",
                     "key_home_layout_mode" to "主页布局模式",
-                    "enable_popup_reminder" to "开屏弹窗开关",
-                    "important_apps_list" to "弹窗触发白名单"
+                    "enable_popup_reminder" to "开屏弹窗开关"
                 )
-
                 prefs.forEach { (key, value) ->
                     if (!key.startsWith("widget_")) {
                         val title = prefMapping[key] ?: key
@@ -154,7 +166,7 @@ class BackupRestoreFragment : Fragment() {
             }
 
             if (books.isNotEmpty()) {
-                nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", "日程集 (${books.size})", isChecked = true))
+                nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", "日程集 (${books.size})", isExpanded = true, isChecked = true))
                 books.forEach { b ->
                     val raw = ExportAgendaBook(b.id, b.name, b.colorHex, if(b.coverImageUri != null) "cover" else null, b.cardAlpha, b.sortOrder)
                     val bookNode = SelectableNode(NodeType.BOOK, "book_${b.id}", b.name, null, true, rawBook = raw)
@@ -166,7 +178,7 @@ class BackupRestoreFragment : Fragment() {
             }
 
             if (events.isNotEmpty()) {
-                nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", "日程卡片 (${events.size})", isChecked = true))
+                nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", "日程卡片 (${events.size})", isExpanded = true, isChecked = true))
                 val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 events.forEach { e ->
                     val raw = ExportEvent(e.title, e.targetDate.time, e.isImportant, e.bookId, e.colorHex, e.backgroundUri, e.isPinned, e.displayMode, e.cardAlpha)
@@ -181,14 +193,14 @@ class BackupRestoreFragment : Fragment() {
 
             withContext(Dispatchers.Main) {
                 exportAdapter = BackupNodeAdapter(nodes)
-                binding.rvExport.adapter = exportAdapter
+                rvExport.adapter = exportAdapter
             }
         }
     }
 
     private fun performExportToUri(targetUri: Uri) {
-        binding.loadingIndicator.visibility = View.VISIBLE
-        binding.fabExport.isEnabled = false
+        binding.flLoadingOverlay.visibility = View.VISIBLE
+        fabExport.isEnabled = false
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -203,8 +215,8 @@ class BackupRestoreFragment : Fragment() {
                     )
 
                     withContext(Dispatchers.Main) {
-                        binding.loadingIndicator.visibility = View.GONE
-                        binding.fabExport.isEnabled = true
+                        binding.flLoadingOverlay.visibility = View.GONE
+                        fabExport.isEnabled = true
 
                         Snackbar.make(binding.root, "备份已保存到本地", Snackbar.LENGTH_LONG)
                             .setAction("分享") {
@@ -213,24 +225,27 @@ class BackupRestoreFragment : Fragment() {
                                     putExtra(Intent.EXTRA_STREAM, targetUri)
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
-                                startActivity(Intent.createChooser(shareIntent, "分享备份文件"))
+                                startActivity(Intent.createChooser(shareIntent, "分享文件"))
                             }.show()
                     }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    binding.loadingIndicator.visibility = View.GONE
-                    binding.fabExport.isEnabled = true
+                    binding.flLoadingOverlay.visibility = View.GONE
+                    fabExport.isEnabled = true
                     Toast.makeText(requireContext(), "导出失败: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
+    // ==========================================
+    // 导入逻辑
+    // ==========================================
     private fun analyzeImportFile(uri: Uri) {
-        binding.loadingIndicator.visibility = View.VISIBLE
-        binding.llImportEmpty.visibility = View.GONE
+        binding.flLoadingOverlay.visibility = View.VISIBLE
+        llImportEmpty.visibility = View.GONE
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
@@ -240,23 +255,22 @@ class BackupRestoreFragment : Fragment() {
                 val analyzedNodes = ImportConflictAnalyzer.analyze(app.repository, preferenceManager, parsedPackage)
 
                 withContext(Dispatchers.Main) {
-                    binding.loadingIndicator.visibility = View.GONE
+                    binding.flLoadingOverlay.visibility = View.GONE
                     if (analyzedNodes.isEmpty()) {
                         Toast.makeText(context, "空文件", Toast.LENGTH_SHORT).show()
-                        binding.llImportEmpty.visibility = View.VISIBLE
+                        llImportEmpty.visibility = View.VISIBLE
                         return@withContext
                     }
 
-                    importAdapter = BackupNodeAdapter(analyzedNodes)
-                    binding.rvImport.adapter = importAdapter
-                    binding.rvImport.visibility = View.VISIBLE
-                    binding.fabImport.show()
+                    importAdapter.updateNodes(analyzedNodes)
+                    rvImport.visibility = View.VISIBLE
+                    fabImport.visibility = View.VISIBLE
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    binding.loadingIndicator.visibility = View.GONE
-                    binding.llImportEmpty.visibility = View.VISIBLE
+                    binding.flLoadingOverlay.visibility = View.GONE
+                    llImportEmpty.visibility = View.VISIBLE
                     Toast.makeText(requireContext(), e.message, Toast.LENGTH_LONG).show()
                 }
             }
@@ -270,33 +284,28 @@ class BackupRestoreFragment : Fragment() {
             return
         }
 
-        binding.loadingIndicator.visibility = View.VISIBLE
-        binding.fabImport.isEnabled = false
+        binding.flLoadingOverlay.visibility = View.VISIBLE
+        fabImport.isEnabled = false
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val app = requireActivity().application as ZakoCountdownApplication
-                BackupManager.executeImport(
-                    requireContext(),
-                    app.repository,
-                    selectedNodes
-                )
+                BackupManager.executeImport(requireContext(), app.repository, selectedNodes)
 
                 withContext(Dispatchers.Main) {
-                    binding.loadingIndicator.visibility = View.GONE
+                    binding.flLoadingOverlay.visibility = View.GONE
                     Snackbar.make(binding.root, "导入成功！建议重启应用。", Snackbar.LENGTH_INDEFINITE)
                         .setAction("重启") { requireActivity().recreate() }.show()
 
-                    binding.rvImport.visibility = View.GONE
-                    binding.fabImport.hide()
-                    binding.llImportEmpty.visibility = View.VISIBLE
-                    pendingImportUri = null
+                    rvImport.visibility = View.GONE
+                    fabImport.visibility = View.GONE
+                    llImportEmpty.visibility = View.VISIBLE
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
                 withContext(Dispatchers.Main) {
-                    binding.loadingIndicator.visibility = View.GONE
-                    binding.fabImport.isEnabled = true
+                    binding.flLoadingOverlay.visibility = View.GONE
+                    fabImport.isEnabled = true
                     Toast.makeText(requireContext(), "导入失败: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }

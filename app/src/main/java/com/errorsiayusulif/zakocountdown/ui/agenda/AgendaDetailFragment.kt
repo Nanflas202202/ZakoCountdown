@@ -1,3 +1,4 @@
+// file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/agenda/AgendaDetailFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.agenda
 
 import android.graphics.Color
@@ -8,7 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.drawable.DrawableCompat // 导入修复
+import androidx.core.graphics.drawable.DrawableCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -27,7 +28,6 @@ import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModel
 import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModelFactory
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
-import java.io.File
 
 class AgendaDetailFragment : Fragment() {
 
@@ -83,6 +83,12 @@ class AgendaDetailFragment : Fragment() {
             adapter.submitList(filtered)
         }
 
+        // --- 修复：确保 Adapter 能获取到日程本名称和颜色 ---
+        val prefs = PreferenceManager(requireContext())
+        agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
+            adapter.setAgendaBooks(books ?: emptyList(), prefs)
+        }
+
         binding.fabAddToBook.setOnClickListener {
             val targetBookId = if (args.bookId > 0) args.bookId else -1L
             val action = AgendaDetailFragmentDirections.actionAgendaDetailFragmentToAddEditEventFragment(
@@ -119,7 +125,10 @@ class AgendaDetailFragment : Fragment() {
 
     override fun onStop() {
         super.onStop()
-        // 恢复逻辑交给 MainActivity
+        val prefs = PreferenceManager(requireContext())
+        if (prefs.getHomeLayoutMode() == PreferenceManager.HOME_LAYOUT_STANDARD) {
+            (requireActivity() as? AppCompatActivity)?.supportActionBar?.show()
+        }
     }
 
     private fun loadPageDetails() {
@@ -157,20 +166,38 @@ class AgendaDetailFragment : Fragment() {
         } else if (args.bookId == -1L) {
             binding.collapsingToolbar.title = "全部日程"
             binding.toolbar.title = "全部日程"
-            setupStaticHeader(Color.DKGRAY)
+            // --- 修复：加载默认本子的图片 ---
+            loadDefaultBookHeader(isImportant = false, defaultColor = Color.DKGRAY)
         } else if (args.bookId == -2L) {
             binding.collapsingToolbar.title = "重点日程"
             binding.toolbar.title = "重点日程"
-            setupStaticHeader(Color.parseColor("#F44336"))
+            // --- 修复：加载默认本子的图片 ---
+            loadDefaultBookHeader(isImportant = true, defaultColor = Color.parseColor("#F44336"))
         }
     }
 
-    private fun setupStaticHeader(color: Int) {
-        binding.collapsingToolbar.setContentScrimColor(color)
-        binding.collapsingToolbar.setStatusBarScrimColor(color)
-        binding.ivHeaderImage.setBackgroundColor(color)
-        binding.ivHeaderImage.setImageDrawable(null)
-        updateTitleTextColor(color)
+    // --- 核心修复：处理默认日程集的封面显示逻辑 ---
+    private fun loadDefaultBookHeader(isImportant: Boolean, defaultColor: Int) {
+        val prefs = PreferenceManager(requireContext())
+        val coverUri = prefs.getDefaultBookCover(isImportant)
+        val alpha = prefs.getDefaultBookAlpha(isImportant)
+
+        binding.collapsingToolbar.setContentScrimColor(defaultColor)
+        binding.collapsingToolbar.setStatusBarScrimColor(defaultColor)
+
+        if (coverUri != null) {
+            binding.ivHeaderImage.load(Uri.parse(coverUri)) {
+                crossfade(true)
+            }
+            binding.ivHeaderImage.alpha = alpha
+            // 有图片时，假设背景偏暗，强制使用白色文字以保证可读性
+            updateTitleTextColor(Color.BLACK)
+        } else {
+            binding.ivHeaderImage.setImageDrawable(null)
+            binding.ivHeaderImage.setBackgroundColor(defaultColor)
+            binding.ivHeaderImage.alpha = alpha
+            updateTitleTextColor(defaultColor)
+        }
     }
 
     private fun updateTitleTextColor(backgroundColor: Int) {
@@ -182,7 +209,6 @@ class AgendaDetailFragment : Fragment() {
         binding.collapsingToolbar.setCollapsedTitleTextColor(textColor)
         binding.toolbar.setTitleTextColor(textColor)
 
-        // --- 修复：使用 DrawableCompat 设置图标颜色 ---
         binding.toolbar.navigationIcon?.let { icon ->
             val wrapped = DrawableCompat.wrap(icon)
             DrawableCompat.setTint(wrapped, textColor)
