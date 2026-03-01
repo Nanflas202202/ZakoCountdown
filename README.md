@@ -110,6 +110,8 @@
 - [Google Gemini](https://gemini.google.com)
 - [DeepSeek](https://chat.deepseek.com)
 - [Material Design](https://material.io)
+- [Material Icons](https://fonts.google.com/icons)
+- [Material Theme Builder](https://material-foundation.github.io/material-theme-builder/)
 - 等等
 
 ---
