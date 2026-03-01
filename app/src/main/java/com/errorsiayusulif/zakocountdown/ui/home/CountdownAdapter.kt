@@ -19,6 +19,7 @@ import coil.load
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.AgendaBook
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
+import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.*
 import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
 import com.google.android.material.card.MaterialCardView
@@ -30,20 +31,19 @@ class CountdownAdapter(
     private val onLongItemClicked: (CountdownEvent, View) -> Boolean
 ) : ListAdapter<CountdownEvent, CountdownAdapter.CountdownViewHolder>(EventsComparator()) {
 
-    // 存储 AgendaBook 信息的 Map: ID -> AgendaBook
-    private var agendaBookMap: Map<Long, AgendaBook> = emptyMap()
+    var agendaBookMap: Map<Long, AgendaBook> = emptyMap()
     private var isCompactMode: Boolean = false
+    var preferenceManager: PreferenceManager? = null
 
-    // 修改：接收完整的 AgendaBook 列表
-    fun setAgendaBooks(books: List<AgendaBook>) {
+    // --- 方法名必须是这个：setAgendaBooks ---
+    fun setAgendaBooks(books: List<AgendaBook>, prefs: PreferenceManager) {
         this.agendaBookMap = books.associateBy { it.id }
+        this.preferenceManager = prefs
         notifyDataSetChanged()
     }
 
-    // 兼容旧接口 (如果 HomeFragment 还没改完)
-    fun setBookColorMap(map: Map<Long, String>) {
-        // Do nothing, wait for setAgendaBooks
-    }
+    // 为了防止部分旧代码报错，保留一个空实现
+    fun setBookColorMap(map: Map<Long, String>) {}
 
     fun setCompactMode(isCompact: Boolean) {
         this.isCompactMode = isCompact
@@ -110,7 +110,6 @@ class CountdownAdapter(
         abstract fun bind(event: CountdownEvent)
         open fun stopTimer() {}
 
-        // --- 辅助方法 ---
         protected fun getBookColor(bookId: Long?): Int? {
             if (bookId == null) return null
             val hex = adapter.agendaBookMap[bookId]?.colorHex
@@ -137,10 +136,19 @@ class CountdownAdapter(
             }
         }
 
-        // ... applyCardColor, applyCardAlpha (保持不变, 省略) ...
         protected fun applyCardColor(event: CountdownEvent) {
-            // ...
+            val card = itemView as MaterialCardView
+            if (event.colorHex != null) {
+                card.setCardBackgroundColor(Color.parseColor(event.colorHex))
+            } else {
+                val attrs = intArrayOf(com.google.android.material.R.attr.colorSurface)
+                val typedArray = card.context.obtainStyledAttributes(attrs)
+                val defaultColor = typedArray.getColor(0, Color.WHITE)
+                typedArray.recycle()
+                card.setCardBackgroundColor(defaultColor)
+            }
         }
+
         protected fun applyCardAlpha(event: CountdownEvent) {
             itemView.alpha = event.cardAlpha ?: 1.0f
         }
@@ -149,6 +157,7 @@ class CountdownAdapter(
         class CompactViewHolder(private val binding: ItemCountdownCardCompactBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
 
+            // --- 修复：添加缺失的变量声明 ---
             private var timerHandler: Handler? = null
             private var timerRunnable: Runnable? = null
 
@@ -163,27 +172,52 @@ class CountdownAdapter(
 
                 binding.tvCompactTitle.text = event.title
 
-                // 封面图处理
-                if (event.backgroundUri != null) {
-                    binding.ivCompactCover.load(Uri.parse(event.backgroundUri)) { crossfade(true) }
-                    binding.vCompactScrim.visibility = View.VISIBLE
-                } else {
-                    binding.ivCompactCover.setImageDrawable(null)
-                    val bookColor = getBookColor(event.bookId)
-                    binding.ivCompactCover.setBackgroundColor(bookColor ?: Color.LTGRAY)
-                    binding.vCompactScrim.visibility = View.GONE
-                }
-
-                // --- 修复：双标签系统 (Tag) 逻辑重构 ---
+                val prefs = adapter.preferenceManager ?: PreferenceManager(itemView.context)
                 val isImportant = event.isImportant
-                // 只有当 bookId 存在，且不为 -1L (全部) 和 -2L (重点) 时，才认为是自定义的日程本
                 val isCustomBook = event.bookId != null && event.bookId!! > 0L
 
-                // A. 重点标签
+                var coverUri: String? = null
+                var bookColorInt: Int = Color.DKGRAY
+                var bookNameText = "未知"
+                var finalAlpha = 1.0f
+
+                if (isCustomBook) {
+                    val book = adapter.agendaBookMap[event.bookId]
+                    coverUri = book?.coverImageUri
+                    bookColorInt = getBookColor(event.bookId) ?: Color.DKGRAY
+                    bookNameText = book?.name ?: "自定义日程"
+                    finalAlpha = book?.cardAlpha ?: 1.0f
+                } else if (isImportant) {
+                    coverUri = prefs.getDefaultBookCover(isImportantBook = true)
+                    bookColorInt = itemView.context.getColor(R.color.m3_error)
+                    bookNameText = "重点日程"
+                    finalAlpha = prefs.getDefaultBookAlpha(isImportantBook = true)
+                } else {
+                    coverUri = prefs.getDefaultBookCover(isImportantBook = false)
+                    bookColorInt = Color.parseColor("#212121")
+                    bookNameText = "默认日程"
+                    finalAlpha = prefs.getDefaultBookAlpha(isImportantBook = false)
+                }
+
+                binding.vCompactScrim.visibility = View.VISIBLE
+                binding.vCompactScrim.alpha = finalAlpha
+
+                val targetBgUri = event.backgroundUri ?: coverUri
+
+                if (targetBgUri != null) {
+                    binding.ivCompactCover.load(Uri.parse(targetBgUri)) { crossfade(true) }
+                    binding.vCompactScrim.setBackgroundColor(Color.parseColor("#1A000000"))
+                } else {
+                    binding.ivCompactCover.setImageDrawable(null)
+                    binding.ivCompactCover.setBackgroundColor(bookColorInt)
+                    binding.vCompactScrim.visibility = View.GONE
+                    binding.ivCompactCover.alpha = finalAlpha
+                }
+
                 if (isImportant) {
                     binding.tvImportantTag.visibility = View.VISIBLE
-                    val shape = android.graphics.drawable.GradientDrawable()
-                    shape.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    val shape = GradientDrawable()
+                    shape.shape = GradientDrawable.RECTANGLE
                     shape.cornerRadius = 8f
                     shape.setColor(itemView.context.getColor(R.color.m3_error))
                     binding.tvImportantTag.background = shape
@@ -191,41 +225,36 @@ class CountdownAdapter(
                     binding.tvImportantTag.visibility = View.GONE
                 }
 
-                // B. 日程本标签
                 if (isCustomBook) {
                     binding.tvAgendaTag.visibility = View.VISIBLE
-                    binding.tvAgendaTag.text = getBookName(event.bookId) ?: "未知"
-                    val bookColor = getBookColor(event.bookId) ?: Color.DKGRAY
-
-                    val tagShape = android.graphics.drawable.GradientDrawable()
-                    tagShape.shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                    binding.tvAgendaTag.text = bookNameText
+                    val tagShape = GradientDrawable()
+                    tagShape.shape = GradientDrawable.RECTANGLE
                     tagShape.cornerRadius = 8f
-                    tagShape.setColor(bookColor)
+                    tagShape.setColor(bookColorInt)
                     binding.tvAgendaTag.background = tagShape
-
-                    val isDark = androidx.core.graphics.ColorUtils.calculateLuminance(bookColor) < 0.5
+                    val isDark = ColorUtils.calculateLuminance(bookColorInt) < 0.5
                     binding.tvAgendaTag.setTextColor(if (isDark) Color.WHITE else Color.BLACK)
                 } else {
                     binding.tvAgendaTag.visibility = View.GONE
                 }
 
-                // C. 隐藏空白容器：如果既不是重点，也没有自定义日程本，彻底隐藏整个标签行
                 if (!isImportant && !isCustomBook) {
                     binding.llTagsContainer.visibility = View.GONE
                 } else {
                     binding.llTagsContainer.visibility = View.VISIBLE
                 }
 
-                // 时间倒数处理
                 startCompactTimer(event)
 
-                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
+                val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                 binding.tvCompactDate.text = sdf.format(event.targetDate)
+
                 applyCardAlpha(event)
             }
 
             private fun startCompactTimer(event: CountdownEvent) {
-                // ... (倒计时逻辑保持不变，参考之前的代码) ...
+                stopTimer() // 确保之前的被取消
                 timerHandler = Handler(Looper.getMainLooper())
                 timerRunnable = object : Runnable {
                     override fun run() {
@@ -244,20 +273,15 @@ class CountdownAdapter(
                                 if (sb.isEmpty()) "0天" else sb.toString()
                             }
                             else -> {
-                                "${diff.totalDays} 天" // 简单模式
+                                "${diff.totalDays} 天"
                             }
                         }
 
-                        // 统一设置大字号数字
-                        // 如果需要分开样式（如“已过”小字，“42”大字），需要修改 XML 拆分 TextView
-                        // 目前 tv_compact_time_main 是一个 TextView，所以整体字号一致
                         binding.tvCompactTimeMain.text = "$status $timeText"
 
-                        // 动态设置颜色 (跟随标题/日程本色)
                         if (event.isImportant) {
                             binding.tvCompactTimeMain.setTextColor(itemView.context.getColor(R.color.m3_error))
                         } else {
-                            // 跟随主题 Primary
                             val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
                             binding.tvCompactTimeMain.setTextColor(colorPrimary)
                         }
@@ -269,7 +293,6 @@ class CountdownAdapter(
             }
         }
 
-        // ... (其他 ViewHolder Simple/Detailed/Hero/Full 保持不变) ...
         class SimpleViewHolder(private val binding: ItemCountdownCardSimpleBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
             override fun bind(event: CountdownEvent) {
@@ -282,7 +305,7 @@ class CountdownAdapter(
                 applyCardAlpha(event)
             }
         }
-        // ...
+
         class DetailedViewHolder(private val binding: ItemCountdownCardDetailedBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
             private var timerHandler: Handler? = null
@@ -316,6 +339,7 @@ class CountdownAdapter(
                 timerHandler?.post(timerRunnable!!)
             }
         }
+
         class FullViewHolder(private val binding: ItemCountdownCardFullBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
             private var timerHandler: Handler? = null
@@ -351,6 +375,7 @@ class CountdownAdapter(
                 timerHandler?.post(timerRunnable!!)
             }
         }
+
         class HeroViewHolder(private val binding: ItemCountdownCardHeroBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
             override fun bind(event: CountdownEvent) {
@@ -360,6 +385,7 @@ class CountdownAdapter(
                     val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
                     val scrimColor = ColorUtils.setAlphaComponent(colorPrimary, 102)
                     binding.heroScrim.setBackgroundColor(scrimColor)
+
                     binding.heroTitle.setTextColor(Color.WHITE)
                     binding.heroDays.setTextColor(Color.WHITE)
                     binding.heroLabelPrefix.setTextColor(Color.WHITE)
@@ -368,23 +394,26 @@ class CountdownAdapter(
                     binding.heroBackgroundImage.setImageDrawable(null)
                     binding.heroScrim.visibility = View.GONE
                     applyCardColor(event)
+
                     applyTitleColor(binding.heroTitle, event)
+
                     val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
                     binding.heroDays.setTextColor(colorPrimary)
+
                     val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
                     binding.heroLabelPrefix.setTextColor(colorOnSurface)
                     binding.heroLabelSuffix.setTextColor(colorOnSurface)
                 }
+
                 val diff = TimeCalculator.calculateDifference(event.targetDate)
                 binding.heroTitle.text = "距离 ${event.title}"
                 binding.heroDays.text = diff.totalDays.toString()
                 binding.heroLabelPrefix.text = if (diff.isPast) "已过" else "还有"
-                val alphaFloat = event.cardAlpha ?: 1.0f
-                val colorPrimarySurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface)
-                binding.root.setCardBackgroundColor(ColorUtils.setAlphaComponent(colorPrimarySurface, (alphaFloat * 255).toInt()))
+                applyCardAlpha(event)
             }
         }
     }
+
     class EventsComparator : DiffUtil.ItemCallback<CountdownEvent>() {
         override fun areItemsTheSame(oldItem: CountdownEvent, newItem: CountdownEvent): Boolean = oldItem.id == newItem.id
         override fun areContentsTheSame(oldItem: CountdownEvent, newItem: CountdownEvent): Boolean = oldItem == newItem

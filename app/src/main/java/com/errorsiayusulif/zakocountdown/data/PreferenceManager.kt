@@ -279,7 +279,36 @@ class PreferenceManager(context: Context) {
     fun isLegacyThemeUnlockedInCompact(): Boolean {
         return prefs.getBoolean("key_unlock_legacy_theme_compact", false)
     }
+    // 在 PreferenceManager 中添加
+    fun saveDefaultBookCover(isImportantBook: Boolean, uriString: String?) {
+        val key = if (isImportantBook) "cover_book_important" else "cover_book_all"
+        prefs.edit().putString(key, uriString).apply()
+    }
 
+    fun getDefaultBookCover(isImportantBook: Boolean): String? {
+        val key = if (isImportantBook) "cover_book_important" else "cover_book_all"
+        return prefs.getString(key, null)
+    }
+    // --- 【新增】无障碍提示标记 ---
+    fun setHasPromptedAccessibility(prompted: Boolean) {
+        prefs.edit().putBoolean(KEY_HAS_PROMPTED_ACCESSIBILITY, prompted).apply()
+    }
+
+    fun hasPromptedAccessibility(): Boolean {
+        return prefs.getBoolean(KEY_HAS_PROMPTED_ACCESSIBILITY, false)
+    }
+
+
+    // --- 新增：默认日程本的透明度支持 ---
+    fun saveDefaultBookAlpha(isImportantBook: Boolean, alpha: Float) {
+        val key = if (isImportantBook) "alpha_book_important" else "alpha_book_all"
+        prefs.edit().putFloat(key, alpha).apply()
+    }
+
+    fun getDefaultBookAlpha(isImportantBook: Boolean): Float {
+        val key = if (isImportantBook) "alpha_book_important" else "alpha_book_all"
+        return prefs.getFloat(key, 1.0f) // 默认不透明
+    }
     companion object {
         private const val PREFS_NAME = "zako_prefs"
         private const val KEY_THEME = "key_theme"
@@ -335,5 +364,6 @@ class PreferenceManager(context: Context) {
         private const val KEY_HOME_LAYOUT_MODE = "key_home_layout_mode"
         const val HOME_LAYOUT_STANDARD = "standard"
         const val HOME_LAYOUT_COMPACT = "compact"
+        private const val KEY_HAS_PROMPTED_ACCESSIBILITY = "key_has_prompted_accessibility"
     }
 }

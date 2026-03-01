@@ -107,6 +107,12 @@ class AgendaViewModel(application: Application) : AndroidViewModel(application) 
         repository.updateBooks(updatedBooks)
     }
 
+    fun updateBookCover(id: Long, uri: String) = viewModelScope.launch {
+        val book = repository.getBookById(id)
+        book?.let {
+            repository.updateBook(it.copy(coverImageUri = uri))
+        }
+    }
     fun deleteBook(book: AgendaBook) = viewModelScope.launch {
         if (_currentFilterId.value == book.id) {
             _currentFilterId.value = -1L
