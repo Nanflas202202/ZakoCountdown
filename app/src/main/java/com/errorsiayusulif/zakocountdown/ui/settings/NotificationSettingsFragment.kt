@@ -24,7 +24,10 @@ import com.errorsiayusulif.zakocountdown.services.CountdownService
 import com.errorsiayusulif.zakocountdown.utils.PermissionUtils
 
 class NotificationSettingsFragment : PreferenceFragmentCompat() {
-
+    override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine.applyToPreferenceFragment(this)
+    }
     private lateinit var appPreferenceManager: PreferenceManager
 
     private val requestPermissionLauncher =

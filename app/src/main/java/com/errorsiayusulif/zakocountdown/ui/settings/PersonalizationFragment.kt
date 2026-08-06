@@ -1,12 +1,13 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/settings/PersonalizationFragment.kt
 package com.errorsiayusulif.zakocountdown.ui.settings
 
-import android.content.Intent
+import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.children
+import androidx.lifecycle.lifecycleScope
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -21,6 +23,9 @@ import androidx.preference.SeekBarPreference
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeHelper
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
@@ -36,60 +41,49 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         "#DCEDC8", "#F0F4C3", "#FFF9C4", "#FFECB3", "#FFE0B2", "#FFCCBC"
     )
 
-    override fun onResume() {
-        super.onResume()
-        // 每次页面可见时，检查是否需要禁用主题设置
-        updateThemePreferenceState()
-    }
-
-    private fun updateThemePreferenceState() {
-        val themePref = findPreference<ListPreference>("theme") ?: return
-        val layoutMode = appPreferenceManager.getHomeLayoutMode()
-        val isCompact = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
-        val isLegacyUnlocked = appPreferenceManager.isLegacyThemeUnlockedInCompact()
-
-        if (isCompact && !isLegacyUnlocked) {
-            // 紧凑模式且未解锁旧主题，禁用主题切换并提示
-            themePref.isEnabled = false
-            themePref.summary = "紧凑模式下强制使用 MD3 主题"
-        } else {
-            // 正常状态
-            themePref.isEnabled = true
-            // 恢复原来的 summary 逻辑，或者简单使用 entries 里的显示值
-            themePref.summary = themePref.entry
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { sourceUri ->
+            try {
+                val context = requireContext()
+                val inputStream = context.contentResolver.openInputStream(sourceUri)
+                if (inputStream != null) {
+                    val file = File(context.filesDir, "home_wallpaper_cache.png")
+                    FileOutputStream(file).use { output -> inputStream.use { input -> input.copyTo(output) } }
+                    appPreferenceManager.saveHomepageWallpaperUri(Uri.fromFile(file).toString())
+                    Toast.makeText(context, "壁纸设置成功", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), "设置失败: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
-    private val pickImageLauncher =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            uri?.let { sourceUri ->
-                try {
-                    val context = requireContext()
-                    val inputStream = context.contentResolver.openInputStream(sourceUri)
-                    if (inputStream != null) {
-                        val file = File(context.filesDir, "home_wallpaper_cache.png")
-                        val outputStream = FileOutputStream(file)
-                        inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
-                        val localUri = Uri.fromFile(file).toString()
-                        appPreferenceManager.saveHomepageWallpaperUri(localUri)
-                        Toast.makeText(requireContext(), "壁纸设置成功", Toast.LENGTH_SHORT).show()
-                    } else {
-                        Toast.makeText(requireContext(), "无法读取图片", Toast.LENGTH_SHORT).show()
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    Toast.makeText(requireContext(), "设置失败: ${e.message}", Toast.LENGTH_LONG).show()
+
+    private val importMtbJsonLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let {
+            lifecycleScope.launch {
+                val success = MtbThemeHelper.importThemeJson(requireContext(), it, appPreferenceManager)
+                if (success) {
+                    Toast.makeText(requireContext(), "主题导入成功", Toast.LENGTH_SHORT).show()
+                    // 重新加载 Activity 以应用新主题
+                    activity?.recreate()
+                } else {
+                    Toast.makeText(requireContext(), "导入失败: JSON格式错误", Toast.LENGTH_SHORT).show()
                 }
             }
         }
+    }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.sharedPreferencesName = "zako_prefs"
         setPreferencesFromResource(R.xml.personalization_preferences, rootKey)
         appPreferenceManager = PreferenceManager(requireContext())
-        setupPreferenceListeners()
 
-        // 初始化时更新 Monet 选项状态
-        updateAccentColorOptions(appPreferenceManager.getTheme())
+        // --- 核心防御 ---
+        // 手动检查并修复所有可能的 ListPreference，防止 XML 配置丢失导致崩溃
+        safeCheckListPreference("theme", R.array.theme_entries, R.array.theme_values)
+        safeCheckListPreference("key_scrim_color_mode", R.array.scrim_color_entries, R.array.scrim_color_values)
+
+        setupPreferenceListeners()
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -106,67 +100,150 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         super.onViewCreated(view, savedInstanceState)
         setupColorPalette()
         updatePaletteVisibility(appPreferenceManager.getScrimColorMode())
+
+        // MTB 染色挂载
+        MtbThemeEngine.applyToPreferenceFragment(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updateThemePreferenceState()
+        // 动态更新强调色选项 (包含 Monet 逻辑)
+        updateAccentColorOptions()
+    }
+
+    /**
+     * 兜底检查：确保 ListPreference 绝对拥有数组，否则从资源文件强行重新赋值
+     */
+    private fun safeCheckListPreference(key: String, entriesResId: Int, valuesResId: Int) {
+        val listPref = findPreference<ListPreference>(key)
+        if (listPref != null) {
+            val e = listPref.entries
+            val v = listPref.entryValues
+            if (e == null || e.isEmpty() || v == null || v.isEmpty()) {
+                Log.e("ZakoDebug", "ListPreference [$key] arrays were null! Forcing reload from resources.")
+                listPref.setEntries(entriesResId)
+                listPref.setEntryValues(valuesResId)
+            } else {
+                Log.d("ZakoDebug", "ListPreference [$key] is safe. Entries: ${e.size}, Values: ${v.size}")
+            }
+        }
     }
 
     private fun setupPreferenceListeners() {
         findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
-            val newTheme = newValue as String
-            appPreferenceManager.saveTheme(newTheme)
-
-            // 切换主题时，检查是否需要禁用 Monet
-            updateAccentColorOptions(newTheme)
-
+            val theme = newValue as String
+            appPreferenceManager.saveTheme(theme)
+            // 主题改变，可能影响 Monet 的可用性，重新计算
+            updateAccentColorOptions()
             activity?.recreate()
             true
         }
+
         findPreference<ListPreference>("accent_color")?.setOnPreferenceChangeListener { _, newValue ->
-            appPreferenceManager.saveAccentColor(newValue as String)
+            val color = newValue as String
+            appPreferenceManager.saveAccentColor(color)
+
+            // 如果选了非 MTB 颜色，关闭 MTB 引擎标志位
+            if (color != PreferenceManager.ACCENT_CUSTOM_MTB) {
+                requireContext().getSharedPreferences("zako_prefs", Context.MODE_PRIVATE)
+                    .edit().putBoolean(MtbThemeHelper.PREF_IS_MTB_ENABLED, false).apply()
+            }
             activity?.recreate()
             true
         }
+
+        findPreference<Preference>("import_mtb_theme")?.setOnPreferenceClickListener {
+            importMtbJsonLauncher.launch(arrayOf("application/json", "*/*"))
+            true
+        }
+
         findPreference<Preference>("change_wallpaper")?.setOnPreferenceClickListener {
             pickImageLauncher.launch(arrayOf("image/*"))
             true
         }
+
         findPreference<Preference>("remove_wallpaper")?.setOnPreferenceClickListener {
             appPreferenceManager.saveHomepageWallpaperUri(null)
-            val file = File(requireContext().filesDir, "home_wallpaper_cache.png")
-            if (file.exists()) file.delete()
-            Toast.makeText(requireContext(), "背景图已移除", Toast.LENGTH_SHORT).show()
+            activity?.recreate()
             true
         }
+
         findPreference<ListPreference>("key_scrim_color_mode")?.setOnPreferenceChangeListener { _, newValue ->
             updatePaletteVisibility(newValue as String)
             true
         }
-        findPreference<SeekBarPreference>("key_scrim_alpha")?.setOnPreferenceChangeListener { _, _ -> true }
+    }
+
+    private fun updateThemePreferenceState() {
+        val themePref = findPreference<ListPreference>("theme") ?: return
+        val isCompact = appPreferenceManager.getHomeLayoutMode() == PreferenceManager.HOME_LAYOUT_COMPACT
+        val isLegacyUnlocked = appPreferenceManager.isLegacyThemeUnlockedInCompact()
+
+        if (isCompact && !isLegacyUnlocked) {
+            themePref.isEnabled = false
+            themePref.summary = "紧凑模式强制使用 MD3"
+        } else {
+            themePref.isEnabled = true
+            themePref.summary = themePref.entry
+        }
     }
 
     /**
-     * 根据当前主题和系统版本，动态调整强调色选项
+     * 动态计算并构建“强调色”选项的数组，这是解决崩溃的核心
      */
-    private fun updateAccentColorOptions(currentTheme: String) {
+    private fun updateAccentColorOptions() {
         val accentPref = findPreference<ListPreference>("accent_color") ?: return
 
-        // 允许 Monet 的条件：系统 >= Android 12 且 主题 == M3
-        val isMonetSupported = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) &&
-                (currentTheme == PreferenceManager.THEME_M3)
+        val currentTheme = appPreferenceManager.getTheme()
+        val isMonetSupported = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) && (currentTheme == PreferenceManager.THEME_M3)
+        val isMtbEnabled = requireContext().getSharedPreferences("zako_prefs", Context.MODE_PRIVATE).getBoolean(MtbThemeHelper.PREF_IS_MTB_ENABLED, false)
+
+        val entriesList = mutableListOf<String>()
+        val valuesList = mutableListOf<String>()
 
         if (isMonetSupported) {
-            // 显示所有选项
-            accentPref.entries = arrayOf("跟随壁纸 (Monet)", "活力粉", "天空蓝")
-            accentPref.entryValues = arrayOf(PreferenceManager.ACCENT_MONET, PreferenceManager.ACCENT_PINK, PreferenceManager.ACCENT_BLUE)
-        } else {
-            // 移除 Monet 选项
-            accentPref.entries = arrayOf("活力粉", "天空蓝")
-            accentPref.entryValues = arrayOf(PreferenceManager.ACCENT_PINK, PreferenceManager.ACCENT_BLUE)
-
-            // 如果当前选中的是 Monet，强制切换回 蓝色 (默认)
-            if (accentPref.value == PreferenceManager.ACCENT_MONET) {
-                accentPref.value = PreferenceManager.ACCENT_BLUE
-                appPreferenceManager.saveAccentColor(PreferenceManager.ACCENT_BLUE)
-            }
+            entriesList.add("跟随壁纸 (Monet)")
+            valuesList.add(PreferenceManager.ACCENT_MONET)
         }
+
+        entriesList.add("活力粉")
+        valuesList.add(PreferenceManager.ACCENT_PINK)
+
+        entriesList.add("天空蓝")
+        valuesList.add(PreferenceManager.ACCENT_BLUE)
+
+        if (isMtbEnabled) {
+            entriesList.add("自定义导入的动态主题")
+            valuesList.add(PreferenceManager.ACCENT_CUSTOM_MTB)
+        }
+
+        Log.d("ZakoDebug", "Rebuilding accent_color array. Size: ${entriesList.size}")
+
+        // 核心防御：绝对不能传入空数组
+        if (entriesList.isEmpty() || valuesList.isEmpty()) {
+            Log.e("ZakoDebug", "FATAL: Accent color arrays are empty! Forcing fallback.")
+            entriesList.add("天空蓝")
+            valuesList.add(PreferenceManager.ACCENT_BLUE)
+        }
+
+        // 重新赋值给 ListPreference
+        accentPref.entries = entriesList.toTypedArray()
+        accentPref.entryValues = valuesList.toTypedArray()
+
+        // 检查当前选中的值是否还在新的列表中
+        val currentValue = appPreferenceManager.getAccentColor()
+        if (!valuesList.contains(currentValue)) {
+            val fallbackValue = if (isMtbEnabled) PreferenceManager.ACCENT_CUSTOM_MTB else PreferenceManager.ACCENT_BLUE
+            Log.w("ZakoDebug", "Current accent value [$currentValue] not in list. Falling back to [$fallbackValue]")
+            accentPref.value = fallbackValue
+            appPreferenceManager.saveAccentColor(fallbackValue)
+        } else {
+            // 确保 preference 内部状态同步
+            accentPref.value = currentValue
+        }
+
+        accentPref.summary = accentPref.entry
     }
 
     private fun updatePaletteVisibility(mode: String) {
@@ -183,12 +260,10 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
             val swatchBinding = ItemColorSwatchBinding.inflate(inflater, paletteLayout, false)
             val color = Color.parseColor(colorHex)
             (swatchBinding.colorView.background as GradientDrawable).setColor(color)
-            if (colorHex.equals(currentSelected, ignoreCase = true)) {
-                swatchBinding.checkMark.visibility = View.VISIBLE
-            }
+            if (colorHex.equals(currentSelected, ignoreCase = true)) swatchBinding.checkMark.visibility = View.VISIBLE
             swatchBinding.root.setOnClickListener {
                 appPreferenceManager.saveScrimCustomColor(colorHex)
-                paletteLayout.children.forEach { view -> ItemColorSwatchBinding.bind(view).checkMark.visibility = View.GONE }
+                paletteLayout.children.forEach { ItemColorSwatchBinding.bind(it).checkMark.visibility = View.GONE }
                 swatchBinding.checkMark.visibility = View.VISIBLE
             }
             paletteLayout.addView(swatchBinding.root)

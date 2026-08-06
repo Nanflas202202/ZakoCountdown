@@ -5,6 +5,8 @@ import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Color
+import android.graphics.Canvas
+import android.graphics.drawable.ColorDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -31,6 +33,7 @@ import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentHomeBinding
 import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.snackbar.Snackbar
 import com.google.android.material.tabs.TabLayout
@@ -108,7 +111,15 @@ class HomeFragment : Fragment() {
         adapter.setCompactMode(isCompact)
 
         binding.recyclerViewEvents.adapter = adapter
-        binding.recyclerViewEvents.layoutManager = LinearLayoutManager(context)
+        // --- 【v0.9.0 瀑布流适配】判断屏幕方向，分配列数 ---
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val spanCount = if (isLandscape) 2 else 1
+
+        // 使用 StaggeredGridLayoutManager 实现瀑布流效果（不同高度的卡片交错排列）
+        binding.recyclerViewEvents.layoutManager = androidx.recyclerview.widget.StaggeredGridLayoutManager(
+            spanCount,
+            androidx.recyclerview.widget.StaggeredGridLayoutManager.VERTICAL
+        )
         binding.recyclerViewEvents.itemAnimator = null
 
         // 3. 紧凑模式 UI 与手势
@@ -119,7 +130,7 @@ class HomeFragment : Fragment() {
             setupSwipeToSwitchTabs()
         } else {
             binding.tabLayoutAgenda.visibility = View.GONE
-            setupSwipeToDelete(adapter)
+            setupSwipeGestures(adapter)
         }
 
         // 4. 数据观察
@@ -148,9 +159,11 @@ class HomeFragment : Fragment() {
             val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "添加日程", defaultBookId = defaultBookId)
             findNavController().navigate(action)
         }
+        // MTB 动态主题应用
+        MtbThemeEngine.applyThemeToViewTree(view, requireContext())
     }
 
-    private fun setupSwipeToDelete(adapter: CountdownAdapter) {
+    /*private fun setupSwipeToDelete(adapter: CountdownAdapter) {
         itemTouchHelper?.attachToRecyclerView(null)
         itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
             override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder) = false
@@ -165,7 +178,7 @@ class HomeFragment : Fragment() {
             }
         })
         itemTouchHelper?.attachToRecyclerView(binding.recyclerViewEvents)
-    }
+    }*/
 
     private fun setupSwipeToSwitchTabs() {
         itemTouchHelper?.attachToRecyclerView(null)
@@ -319,25 +332,40 @@ class HomeFragment : Fragment() {
     private fun showContextMenu(event: CountdownEvent, anchorView: View) {
         val popup = PopupMenu(requireContext(), anchorView)
         popup.menuInflater.inflate(R.menu.event_card_context_menu, popup.menu)
+
         val pinMenuItem = popup.menu.findItem(R.id.action_pin)
         pinMenuItem.title = if (event.isPinned) "取消置顶" else "设为置顶"
+
         val importantMenuItem = popup.menu.findItem(R.id.action_mark_important)
         importantMenuItem.title = if (event.isImportant) "取消重点" else "设为重点"
+
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_pin -> { homeViewModel.update(event.copy(isPinned = !event.isPinned)); true }
                 R.id.action_mark_important -> { homeViewModel.update(event.copy(isImportant = !event.isImportant)); true }
+                R.id.action_card_settings -> {
+                    val action = HomeFragmentDirections.actionHomeFragmentToCardSettingsFragment(event.id)
+                    findNavController().navigate(action); true
+                }
                 R.id.action_add_to_calendar -> { addToSystemCalendar(event); true }
                 R.id.action_share_card -> {
                     val action = HomeFragmentDirections.actionHomeFragmentToSharePreviewFragment(event.id)
                     findNavController().navigate(action)
                     true
                 }
-                R.id.action_card_settings -> {
-                    val action = HomeFragmentDirections.actionHomeFragmentToCardSettingsFragment(event.id)
-                    findNavController().navigate(action); true
+                // --- 【v0.9.0 新增：生成 DeepLink 分享链接】 ---
+                R.id.action_share_link -> {
+                    val encodedTitle = java.net.URLEncoder.encode(event.title, "UTF-8")
+                    val colorParam = if(event.colorHex != null) "&color=${java.net.URLEncoder.encode(event.colorHex, "UTF-8")}" else ""
+                    val link = "errorsiayusulif://zakocountdown/import?title=$encodedTitle&date=${event.targetDate.time}$colorParam"
+
+                    val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                    val clip = android.content.ClipData.newPlainText("Zako Countdown Link", "我与你分享了一个倒数日「${event.title}」，点击链接直接导入到 ZakoCountdown：\n$link")
+                    clipboard.setPrimaryClip(clip)
+
+                    Toast.makeText(requireContext(), "分享文本与链接已复制！", Toast.LENGTH_SHORT).show()
+                    true
                 }
-                R.id.action_add_widget -> { pinWidget(event); true }
                 R.id.action_delete -> {
                     homeViewModel.delete(event)
                     Snackbar.make(binding.root, "日程已删除", Snackbar.LENGTH_LONG)
@@ -383,7 +411,139 @@ class HomeFragment : Fragment() {
             }
         }
     }
+    // --- 【v0.9.0 核心重构】动态手势操作 (带首次智能引导) ---
+    private fun setupSwipeGestures(adapter: CountdownAdapter) {
+        val app = requireActivity().application as ZakoCountdownApplication
+        val leftAction = app.preferenceManager.getSwipeLeftAction()
+        val rightAction = app.preferenceManager.getSwipeRightAction()
 
+        var swipeDirs = 0
+        if (leftAction != "none") swipeDirs = swipeDirs or ItemTouchHelper.LEFT
+        if (rightAction != "none") swipeDirs = swipeDirs or ItemTouchHelper.RIGHT
+
+        itemTouchHelper?.attachToRecyclerView(null)
+        if (swipeDirs == 0) return
+
+        itemTouchHelper = ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0, swipeDirs) {
+            override fun onMove(rv: RecyclerView, vh: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean = false
+
+            // 1. 触发操作
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val position = viewHolder.adapterPosition
+                if (position == RecyclerView.NO_POSITION) return
+
+                val event = adapter.currentList[position]
+                val action = if (direction == ItemTouchHelper.LEFT) leftAction else rightAction
+
+                // 【核心逻辑】：判断是否需要触发首次引导
+                // 条件1: 还没有提示过
+                // 条件2: 左右滑动都还是默认的"delete" (如果用户改过了，说明他已经知道可以配置了)
+                val isDefault = leftAction == "delete" && rightAction == "delete"
+
+                if (!app.preferenceManager.hasPromptedSwipeActions() && isDefault) {
+                    app.preferenceManager.setPromptedSwipeActions(true)
+                    adapter.notifyItemChanged(position) // 把卡片弹回去
+
+                    com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+                        .setTitle("💡 滑动操作可自定义")
+                        .setMessage("默认滑动操作为“删除”。您可以在高级设置中将其修改为：置顶、重点、个性化或分享等快捷功能！\n\n是否现在去配置？")
+                        .setPositiveButton("去配置") { _, _ ->
+                            // 跳转到高级设置
+                            findNavController().navigate(R.id.advancedSettingsFragment)
+                        }
+                        .setNegativeButton("继续删除") { _, _ ->
+                            // 用户不想配置，帮他完成刚才想做的删除操作
+                            executeSwipeAction(action, event, position, adapter)
+                        }
+                        .setCancelable(false) // 强制用户二选一
+                        .show()
+                    return // 拦截本次滑动的原生执行
+                }
+
+                // 如果已经提示过，直接执行
+                executeSwipeAction(action, event, position, adapter)
+            }
+
+            // 2. 动态绘制底部背景色 (沉浸式视觉反馈)
+            override fun onChildDraw(
+                c: android.graphics.Canvas,
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                dX: Float,
+                dY: Float,
+                actionState: Int,
+                isCurrentlyActive: Boolean
+            ) {
+                val itemView = viewHolder.itemView
+                val background = android.graphics.drawable.ColorDrawable()
+
+                val currentAction = if (dX < 0) leftAction else rightAction
+
+                if (dX != 0f) {
+                    when (currentAction) {
+                        "delete" -> background.color = Color.parseColor("#E53935")
+                        "pin" -> background.color = Color.parseColor("#1E88E5")
+                        "important" -> background.color = Color.parseColor("#FB8C00")
+                        "edit" -> background.color = Color.parseColor("#43A047")
+                        "personalize" -> background.color = Color.parseColor("#8E24AA")
+                        "share" -> background.color = Color.parseColor("#00897B")
+                        else -> background.color = Color.TRANSPARENT
+                    }
+
+                    if (dX > 0) {
+                        background.setBounds(itemView.left, itemView.top, itemView.left + dX.toInt(), itemView.bottom)
+                    } else {
+                        background.setBounds(itemView.right + dX.toInt(), itemView.top, itemView.right, itemView.bottom)
+                    }
+                    background.draw(c)
+                }
+
+                super.onChildDraw(c, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive)
+            }
+        })
+        itemTouchHelper?.attachToRecyclerView(binding.recyclerViewEvents)
+    }
+
+    // --- 【新增】将执行逻辑独立出来，方便引导弹窗复用 ---
+    private fun executeSwipeAction(action: String, event: CountdownEvent, position: Int, adapter: CountdownAdapter) {
+        when (action) {
+            "delete" -> {
+                homeViewModel.delete(event)
+                Snackbar.make(binding.root, "日程已删除", Snackbar.LENGTH_LONG)
+                    .setAction("撤销") { homeViewModel.insert(event) }.show()
+            }
+            "pin" -> {
+                homeViewModel.update(event.copy(isPinned = !event.isPinned))
+                adapter.notifyItemChanged(position)
+                val status = if (!event.isPinned) "已置顶" else "已取消置顶"
+                Toast.makeText(requireContext(), status, Toast.LENGTH_SHORT).show()
+            }
+            "important" -> {
+                homeViewModel.update(event.copy(isImportant = !event.isImportant))
+                adapter.notifyItemChanged(position)
+                val status = if (!event.isImportant) "已设为重点" else "已取消重点"
+                Toast.makeText(requireContext(), status, Toast.LENGTH_SHORT).show()
+            }
+            "edit" -> {
+                adapter.notifyItemChanged(position)
+                val navAction = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(
+                    title = "编辑日程",
+                    eventId = event.id
+                )
+                findNavController().navigate(navAction)
+            }
+            "personalize" -> {
+                adapter.notifyItemChanged(position)
+                val navAction = HomeFragmentDirections.actionHomeFragmentToCardSettingsFragment(event.id)
+                findNavController().navigate(navAction)
+            }
+            "share" -> {
+                adapter.notifyItemChanged(position)
+                val navAction = HomeFragmentDirections.actionHomeFragmentToSharePreviewFragment(event.id)
+                findNavController().navigate(navAction)
+            }
+        }
+    }
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null

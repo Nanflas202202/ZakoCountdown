@@ -23,7 +23,10 @@ import com.errorsiayusulif.zakocountdown.utils.PermissionUtils
 import com.errorsiayusulif.zakocountdown.utils.SystemUtils
 
 class PermissionsFragment : PreferenceFragmentCompat() {
-
+    override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine.applyToPreferenceFragment(this)
+    }
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.sharedPreferencesName = "zako_prefs"
         setPreferencesFromResource(R.xml.permissions_preferences, rootKey)

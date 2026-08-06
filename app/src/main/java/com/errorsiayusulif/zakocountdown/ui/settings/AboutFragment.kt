@@ -9,11 +9,13 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import com.errorsiayusulif.zakocountdown.BuildConfig
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAboutBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemAboutRowBinding
+import kotlinx.coroutines.launch
 
 class AboutFragment : Fragment() {
 
@@ -44,25 +46,31 @@ class AboutFragment : Fragment() {
 
         // 联系方式分组
         setupRow(binding.rowContact, "联系作者 (邮箱)", isClickable = true) {
-            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("feedback@elysianrealm.xyz")) // 替换为你的邮箱
+            val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("elysian-realm@hotmail.com"))
             startActivitySafely(intent, "未找到邮件应用")
         }
         setupRow(binding.rowWebsite, "访问官网", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://proxy.yusulif.xyz/yusulifstudio/ZakoCountdown.html")) // 替换为你的官网
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://nanflas202202-github-io.pages.dev/yusulifstudio/ZakoCountdown.html"))
             startActivitySafely(intent, "未找到浏览器")
         }
         setupRow(binding.rowGithub, "访问Github仓库の主页", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nanflas202202/zakocountdown")) // 替换为你的Github主页
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nanflas202202/zakocountdown"))
             startActivitySafely(intent, "未找到浏览器")
         }
         // --- 【UI优化】将所有联系方式分组 ---
         setupRow(binding.rowContactTelegram, "加入Telegram群组", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/TsukiKenga")) // 替换为你的群组链接
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/errorsiayusulif"))
             startActivitySafely(intent, "未找到应用打开链接")
         }
         setupRow(binding.rowContactBilibili, "访问Bilibili频道", isClickable = true) {
-            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://space.bilibili.com/1132328502")) // 替换为你的B站主页
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://space.bilibili.com/1132328502"))
             startActivitySafely(intent, "未找到应用打开链接")
+        }
+        // 绑定手动检查更新
+        setupRow(binding.rowVersionName, "检查更新", "当前版本 ${BuildConfig.VERSION_NAME}", isClickable = true) {
+            viewLifecycleOwner.lifecycleScope.launch {
+                com.errorsiayusulif.zakocountdown.utils.UpdateManager.checkUpdate(requireContext(), showToastIfLatest = true)
+            }
         }
     }
 

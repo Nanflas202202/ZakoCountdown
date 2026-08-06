@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".ZakoCountdownApplication"
@@ -25,26 +26,61 @@
         <!-- 专门为小米手机桌面卸载添加了提示，提升用户体验 -->
         <meta-data
             android:name="app_description_title"
-            android:resource="@string/sbui_uninstall_title" />
+            android:resource="@string/SBUI_SyBerOS_uninstall_title" />
         <meta-data
             android:name="app_description_content"
-            android:resource="@string/sbui_uninstall_content" />
+            android:resource="@string/SBUI_SyBerOS_uninstall_content" />
         <!-- Activities -->
+        <!-- ============================================== -->
+        <!-- 1. 真实的 MainActivity，永远保持启用，处理所有跳转 -->
+        <!-- ============================================== -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
+            <!-- ⚠️移除 LAUNCHER 类别，这样它自身不会在桌面显示 -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- 保留所有的 DeepLink，不受更换图标的影响 -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="errorsiayusulif" android:host="zakocountdown" />
             </intent-filter>
-            <!--  ↑↑↑  为Deep Link添加新的 intent-filter  ↑↑↑ -->
         </activity>
+
+
+        <!-- ============================================== -->
+        <!-- 2. 桌面别名：负责显示图标，真正被切换的组件 -->
+        <!-- ============================================== -->
+        <!-- 默认图标别名 (必须新建这个) -->
+        <activity-alias
+            android:name="com.errorsiayusulif.zakocountdown.MainActivityAliasDefault"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 深色图标别名 -->
+        <activity-alias
+            android:name="com.errorsiayusulif.zakocountdown.MainActivityAliasNew"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_new"
+            android:roundIcon="@mipmap/ic_launcher_new_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name=".ui.popup.PopupReminderActivity"
             android:exported="false"
@@ -57,7 +93,11 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
             </intent-filter>
         </activity>
-
+        <!-- OOBE 引导页 -->
+        <activity
+            android:name=".ui.settings.OobeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ZakoCountdown" />
         <!-- Services -->
         <service
             android:name=".services.CountdownService"

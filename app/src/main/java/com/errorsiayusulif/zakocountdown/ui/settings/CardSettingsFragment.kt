@@ -24,6 +24,7 @@ import com.errorsiayusulif.zakocountdown.databinding.FragmentCardSettingsBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
 import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModel
 import com.errorsiayusulif.zakocountdown.ui.home.HomeViewModelFactory
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import kotlinx.coroutines.launch
 
 class CardSettingsFragment : Fragment() {
@@ -94,6 +95,8 @@ class CardSettingsFragment : Fragment() {
                 setupWallpaperOptions(event)
             }
         }
+        // MTB 动态主题应用
+        MtbThemeEngine.applyThemeToViewTree(view, requireContext())
     }
 
     private fun setupInitialState(event: CountdownEvent) {

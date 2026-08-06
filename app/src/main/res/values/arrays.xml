@@ -89,4 +89,37 @@
         <item>standard</item>
         <item>compact</item>
     </string-array>
+    <!--  ↓↓↓  修改：应用图标选项  ↓↓↓  -->
+    <string-array name="app_icon_entries">
+        <item>旧版图标</item>
+        <item>新版图标</item>
+    </string-array>
+
+    <string-array name="app_icon_values">
+        <!-- ⚠️ 这里从 MainActivity 改为了 MainActivityAliasDefault -->
+        <item>com.errorsiayusulif.zakocountdown.MainActivityAliasDefault</item>
+        <item>com.errorsiayusulif.zakocountdown.MainActivityAliasNew</item>
+    </string-array>
+    <!--  ↑↑↑  修改：应用图标选项  ↑↑↑  -->
+    <!--  ↓↓↓  新增：滑动操作选项  ↓↓↓  -->
+    <string-array name="swipe_action_entries">
+        <item>删除日程</item>
+        <item>编辑日程详细信息</item>
+        <item>卡片个性化设置</item>
+        <item>设为 / 取消置顶</item>
+        <item>设为 / 取消重点</item>
+        <item>生成分享卡片</item>
+        <item>无操作 (禁用滑动)</item>
+    </string-array>
+
+    <string-array name="swipe_action_values">
+        <item>delete</item>
+        <item>edit</item>
+        <item>personalize</item>
+        <item>pin</item>
+        <item>important</item>
+        <item>share</item>
+        <item>none</item>
+    </string-array>
+    <!--  ↑↑↑  新增：滑动操作选项  ↑↑↑  -->
 </resources>

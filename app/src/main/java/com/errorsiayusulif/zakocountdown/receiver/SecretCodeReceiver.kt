@@ -12,43 +12,22 @@ class SecretCodeReceiver : BroadcastReceiver() {
 
     companion object {
         const val NAVIGATE_TO_DEV_OPTIONS = "navigate_to_dev_options"
-        const val NAVIGATE_TO_LOG_READER = "navigate_to_log_reader" // 新增
+        const val NAVIGATE_TO_LOG_READER = "navigate_to_log_reader"
     }
 
     override fun onReceive(context: Context, intent: Intent) {
-        // 检查广播的Action是否是我们关心的“秘密代码”
         if ("android.provider.Telephony.SECRET_CODE" == intent.action) {
-            // 获取用户输入的代码 (例如 "20160627")
             val secretCode = intent.data?.host ?: return
 
             when (secretCode) {
                 "20160627" -> {
-                    // 当用户输入 *#*#20160627#*#* 时
-                    Toast.makeText(context, "正在进入深层开发者选项...", Toast.LENGTH_SHORT).show()
-
-                    // 创建一个意图来启动我们的主Activity
-                    val launchIntent = Intent(context, MainActivity::class.java).apply {
-                        // 设置标志，因为我们是从广播接收器启动Activity
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        // 【关键】携带一个“信物”，告诉MainActivity要去哪里
-                        putExtra(NAVIGATE_TO_DEV_OPTIONS, true)
-                    }
-                    context.startActivity(launchIntent)
+                    Toast.makeText(context, "正在进入调试选项...", Toast.LENGTH_SHORT).show()
+                    launchMainActivitySafely(context, NAVIGATE_TO_DEV_OPTIONS)
                 }
-                "20220238" -> {
-                    // 当用户输入 *#*#20220238#*#* 时
-                    // TODO: 在这里修改PreferenceManager中的日志级别为Info
-                    Toast.makeText(context, "日志级别已设为 INFO", Toast.LENGTH_SHORT).show()
-                }
-                "20250528" -> {
-                    // 当用户输入 *#*#20250528#*#* 时
-                    // TODO: 在这里修改PreferenceManager中的日志级别为关闭
-                    Toast.makeText(context, "日志记录已关闭", Toast.LENGTH_SHORT).show()
-                }
-                "63572202" -> { // 日志阅读器
-                    launchMainActivity(context, NAVIGATE_TO_LOG_READER)
-                }
-                "6357921606" -> { // 开启开发者模式权限
+                "20220238" -> Toast.makeText(context, "日志级别已设为 INFO", Toast.LENGTH_SHORT).show()
+                "20250528" -> Toast.makeText(context, "日志记录已关闭", Toast.LENGTH_SHORT).show()
+                "63572202" -> launchMainActivitySafely(context, NAVIGATE_TO_LOG_READER)
+                "6357921606" -> {
                     val prefs = PreferenceManager(context)
                     val newState = !prefs.isEnableEnterDevMode()
                     prefs.setEnableEnterDevMode(newState)
@@ -56,14 +35,21 @@ class SecretCodeReceiver : BroadcastReceiver() {
                     Toast.makeText(context, "开发者模式触发权限已$status", Toast.LENGTH_LONG).show()
                 }
             }
-
         }
     }
-    private fun launchMainActivity(context: Context, extraKey: String) {
-        val launchIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra(extraKey, true)
+
+    // 【核心优化】安全的启动器
+    private fun launchMainActivitySafely(context: Context, extraKey: String) {
+        // 1. 尝试获取系统当前激活的桌面入口 (Alias)
+        var launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+
+        // 2. 极端情况兜底：如果找不到，就直接显式调用真实的 MainActivity
+        if (launchIntent == null) {
+            launchIntent = Intent(context, MainActivity::class.java)
         }
+
+        launchIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        launchIntent.putExtra(extraKey, true)
         context.startActivity(launchIntent)
     }
 }

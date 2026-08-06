@@ -52,5 +52,29 @@
             app:summary="在导航栏显示日程本入口 (Alpha)"
             app:defaultValue="false" />
     </PreferenceCategory>
+    <PreferenceCategory app:title="调试与重置">
+        <Preference
+            app:key="force_relaunch_oobe"
+            app:title="重新进入开箱引导 (OOBE)"
+            app:summary="强制跳转到初次启动的引导页面" />
 
+        <Preference
+            app:key="clear_all_preferences"
+            app:title="清除所有本地设置 (危险)"
+            app:summary="恢复所有个性化与高级选项为默认值，并重启应用" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="更新源配置 (OTA引擎)">
+        <SwitchPreferenceCompat
+            app:key="key_sync_update_urls"
+            app:title="在线同步备用更新源"
+            app:summary="每次检查更新前，尝试从主服务器拉取最新的节点列表"
+            app:defaultValue="true" />
+
+        <EditTextPreference
+            app:key="key_custom_update_urls"
+            app:title="自定义更新节点池"
+            app:summary="编辑直链URL，每行一个。优先级按行递减。"
+            app:dialogTitle="编辑更新源 (按回车换行)"
+            app:dialogMessage="请确保链接返回标准的 update.json 格式"/>
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="界面与布局">
+        <Preference
+            app:key="oobe_wallpaper"
+            app:title="设置主页壁纸"
+            app:summary="选择一张您喜欢的图片作为主页背景" />
+
+        <ListPreference
+            app:key="key_home_layout_mode"
+            app:title="主页布局模式"
+            app:summary="当前: %s"
+            app:entries="@array/home_layout_entries"
+            app:entryValues="@array/home_layout_values"
+            app:defaultValue="standard" />
+
+        <ListPreference
+            app:key="key_nav_mode"
+            app:title="导航栏样式"
+            app:summary="当前: %s"
+            app:entries="@array/nav_mode_entries"
+            app:entryValues="@array/nav_mode_values"
+            app:defaultValue="drawer" />
+        <ListPreference
+            app:key="key_app_icon"
+            app:title="更换应用图标"
+            app:summary="更改在手机桌面上的图标样式"
+            app:entries="@array/app_icon_entries"
+            app:entryValues="@array/app_icon_values"
+            app:defaultValue="com.errorsiayusulif.zakocountdown.MainActivity" />
+    </PreferenceCategory>
+    <!-- 新增：将主页手势自定义加入 OOBE -->
+    <PreferenceCategory app:title="主页滑动交互">
+        <ListPreference
+            app:key="key_swipe_left_action"
+            app:title="向左滑动卡片"
+            app:summary="设置左滑时执行的快捷操作"
+            app:entries="@array/swipe_action_entries"
+            app:entryValues="@array/swipe_action_values"
+            app:defaultValue="delete" />
+
+        <ListPreference
+            app:key="key_swipe_right_action"
+            app:title="向右滑动卡片"
+            app:summary="设置右滑时执行的快捷操作"
+            app:entries="@array/swipe_action_entries"
+            app:entryValues="@array/swipe_action_values"
+            app:defaultValue="delete" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="主题与色彩">
+        <ListPreference
+            app:key="accent_color"
+            app:title="全局强调色"
+            app:summary="选择ZakoCountdown的强调色"
+            app:entries="@array/color_entries"
+            app:entryValues="@array/color_values"
+            app:defaultValue="MONET" />
+
+        <Preference
+            app:key="oobe_import_mtb"
+            app:title="导入 MTB 动态主题"
+            app:summary="选择 material-theme.json 文件"
+            app:isPreferenceVisible="false" />
+
+        <ListPreference
+            app:key="key_scrim_color_mode"
+            app:title="背景遮罩颜色"
+            app:entries="@array/scrim_color_entries"
+            app:entryValues="@array/scrim_color_values"
+            app:defaultValue="theme" />
+
+        <SeekBarPreference
+            app:key="key_scrim_alpha"
+            app:title="背景遮罩浓度"
+            app:defaultValue="25"
+            app:min="0"
+            android:max="100"
+            app:showSeekBarValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="功能与提醒" app:key="cat_features">
+        <SwitchPreferenceCompat
+            app:key="enable_popup_reminder"
+            app:title="开启开屏弹窗"
+            app:summary="启动指定应用时骑脸提醒 (需授予无障碍权限)"
+            app:defaultValue="true" />
+
+        <SeekBarPreference
+            app:key="key_popup_duration"
+            app:title="弹窗显示时长 (秒)"
+            app:defaultValue="5"
+            app:min="1"
+            android:max="30"
+            app:showSeekBarValue="true"
+            app:dependency="enable_popup_reminder" />
+
+        <SwitchPreferenceCompat
+            app:key="enable_permanent_notification"
+            app:title="开启常驻通知"
+            app:summary="在通知栏显示一个常驻的倒计时状态"
+            app:defaultValue="false" />
+
+        <SwitchPreferenceCompat
+            app:key="key_auto_update"
+            app:title="自动检查更新"
+            app:summary="允许应用在后台获取最新版本信息"
+            app:defaultValue="true" />
+    </PreferenceCategory>
+</PreferenceScreen>

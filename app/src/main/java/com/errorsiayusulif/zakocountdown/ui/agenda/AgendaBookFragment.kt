@@ -140,7 +140,18 @@ class AgendaBookFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        val layoutManager = if (isGridView) GridLayoutManager(context, 2) else LinearLayoutManager(context)
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+
+        // 横屏状态下，网格视图给 4 列，列表视图给 2 列
+        val gridSpans = if (isLandscape) 4 else 2
+        val listSpans = if (isLandscape) 2 else 1
+
+        val layoutManager = if (isGridView) {
+            GridLayoutManager(context, gridSpans)
+        } else {
+            GridLayoutManager(context, listSpans) // 使用 GridLayoutManager 代替 LinearLayoutManager 以支持多列列表
+        }
+
         binding.recyclerViewBooks.layoutManager = layoutManager
 
         val adapter = BookAdapter()

@@ -1,6 +1,7 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/ui/home/CountdownAdapter.kt
 package com.errorsiayusulif.zakocountdown.ui.home
 
+import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
@@ -20,11 +21,16 @@ import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.AgendaBook
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
-import com.errorsiayusulif.zakocountdown.databinding.*
+import com.errorsiayusulif.zakocountdown.databinding.ItemCountdownCardCompactBinding
+import com.errorsiayusulif.zakocountdown.databinding.ItemCountdownCardDetailedBinding
+import com.errorsiayusulif.zakocountdown.databinding.ItemCountdownCardFullBinding
+import com.errorsiayusulif.zakocountdown.databinding.ItemCountdownCardHeroBinding
+import com.errorsiayusulif.zakocountdown.databinding.ItemCountdownCardSimpleBinding
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.color.MaterialColors
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class CountdownAdapter(
     private val onItemClicked: (CountdownEvent) -> Unit,
@@ -35,15 +41,11 @@ class CountdownAdapter(
     private var isCompactMode: Boolean = false
     var preferenceManager: PreferenceManager? = null
 
-    // --- 方法名必须是这个：setAgendaBooks ---
     fun setAgendaBooks(books: List<AgendaBook>, prefs: PreferenceManager) {
         this.agendaBookMap = books.associateBy { it.id }
         this.preferenceManager = prefs
         notifyDataSetChanged()
     }
-
-    // 为了防止部分旧代码报错，保留一个空实现
-    fun setBookColorMap(map: Map<Long, String>) {}
 
     fun setCompactMode(isCompact: Boolean) {
         this.isCompactMode = isCompact
@@ -94,6 +96,11 @@ class CountdownAdapter(
         val current = getItem(position)
         holder.itemView.setOnClickListener { onItemClicked(current) }
         holder.itemView.setOnLongClickListener { view -> onLongItemClicked(current, view) }
+
+        // MtbThemeEngine 已经在 onViewCreated 或者 Activity 挂载时染过了
+        // 但对于新弹出的 ViewHolder，我们在 bind 的时候进行一次强制渲染（针对非紧凑模式）
+        MtbThemeEngine.applyThemeToViewTree(holder.itemView, holder.itemView.context)
+
         holder.bind(current)
     }
 
@@ -103,9 +110,9 @@ class CountdownAdapter(
     }
 
     sealed class CountdownViewHolder(
-        binding: ViewBinding,
+        val bindingRoot: ViewBinding,
         protected val adapter: CountdownAdapter
-    ) : RecyclerView.ViewHolder(binding.root) {
+    ) : RecyclerView.ViewHolder(bindingRoot.root) {
 
         abstract fun bind(event: CountdownEvent)
         open fun stopTimer() {}
@@ -116,36 +123,33 @@ class CountdownAdapter(
             return try { Color.parseColor(hex) } catch (e: Exception) { null }
         }
 
-        protected fun getBookName(bookId: Long?): String? {
-            return adapter.agendaBookMap[bookId]?.name
-        }
-
         protected fun applyTitleColor(textView: TextView, event: CountdownEvent) {
             if (event.isImportant) {
-                textView.setTextColor(itemView.context.getColor(R.color.m3_error))
-                return
-            }
-            val color = getBookColor(event.bookId)
-            if (color != null) {
-                textView.setTextColor(color)
+                val errColor = MtbThemeEngine.getResolvedColor(itemView.context, "error", com.google.android.material.R.attr.colorError, android.R.attr.textColorPrimary, "#B3261E")
+                textView.setTextColor(errColor)
             } else {
-                val attrs = intArrayOf(android.R.attr.textColorPrimary)
-                val typedArray = itemView.context.obtainStyledAttributes(attrs)
-                textView.setTextColor(typedArray.getColor(0, Color.BLACK))
-                typedArray.recycle()
+                val color = getBookColor(event.bookId)
+                if (color != null) {
+                    textView.setTextColor(color)
+                } else {
+                    val defaultColor = MtbThemeEngine.getResolvedColor(itemView.context, "onSurface", com.google.android.material.R.attr.colorOnSurface, android.R.attr.textColorPrimary, "#1C1B1F")
+                    textView.setTextColor(defaultColor)
+                }
             }
         }
 
         protected fun applyCardColor(event: CountdownEvent) {
-            val card = itemView as MaterialCardView
+            val card = itemView as? MaterialCardView ?: return
             if (event.colorHex != null) {
-                card.setCardBackgroundColor(Color.parseColor(event.colorHex))
+                try {
+                    card.setCardBackgroundColor(Color.parseColor(event.colorHex))
+                } catch (e: Exception) {
+                    val fallbackColor = MtbThemeEngine.getResolvedColor(itemView.context, "surface", com.google.android.material.R.attr.colorSurface, android.R.attr.windowBackground, "#FFFBFE")
+                    card.setCardBackgroundColor(fallbackColor)
+                }
             } else {
-                val attrs = intArrayOf(com.google.android.material.R.attr.colorSurface)
-                val typedArray = card.context.obtainStyledAttributes(attrs)
-                val defaultColor = typedArray.getColor(0, Color.WHITE)
-                typedArray.recycle()
-                card.setCardBackgroundColor(defaultColor)
+                val cardColor = MtbThemeEngine.getResolvedColor(itemView.context, "surface", com.google.android.material.R.attr.colorSurface, android.R.attr.windowBackground, "#FFFBFE")
+                card.setCardBackgroundColor(cardColor)
             }
         }
 
@@ -157,7 +161,6 @@ class CountdownAdapter(
         class CompactViewHolder(private val binding: ItemCountdownCardCompactBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
 
-            // --- 修复：添加缺失的变量声明 ---
             private var timerHandler: Handler? = null
             private var timerRunnable: Runnable? = null
 
@@ -169,17 +172,21 @@ class CountdownAdapter(
 
             override fun bind(event: CountdownEvent) {
                 stopTimer()
-
                 binding.tvCompactTitle.text = event.title
 
-                val prefs = adapter.preferenceManager ?: PreferenceManager(itemView.context)
+                val context = itemView.context
+                val prefs = adapter.preferenceManager ?: PreferenceManager(context)
                 val isImportant = event.isImportant
                 val isCustomBook = event.bookId != null && event.bookId!! > 0L
 
-                var coverUri: String? = null
-                var bookColorInt: Int = Color.DKGRAY
-                var bookNameText = "未知"
-                var finalAlpha = 1.0f
+                val coverUri: String?
+                val bookColorInt: Int
+                val bookNameText: String
+                val finalAlpha: Float
+
+                val errorColor = MtbThemeEngine.getResolvedColor(context, "error", com.google.android.material.R.attr.colorError, android.R.attr.colorError, "#B3261E")
+                val primaryColor = MtbThemeEngine.getResolvedColor(context, "primary", com.google.android.material.R.attr.colorPrimary, android.R.attr.colorPrimary, "#37693D")
+                val onSurfaceColor = MtbThemeEngine.getResolvedColor(context, "onSurface", com.google.android.material.R.attr.colorOnSurface, android.R.attr.textColorPrimary, "#1C1B1F")
 
                 if (isCustomBook) {
                     val book = adapter.agendaBookMap[event.bookId]
@@ -189,12 +196,12 @@ class CountdownAdapter(
                     finalAlpha = book?.cardAlpha ?: 1.0f
                 } else if (isImportant) {
                     coverUri = prefs.getDefaultBookCover(isImportantBook = true)
-                    bookColorInt = itemView.context.getColor(R.color.m3_error)
+                    bookColorInt = errorColor
                     bookNameText = "重点日程"
                     finalAlpha = prefs.getDefaultBookAlpha(isImportantBook = true)
                 } else {
                     coverUri = prefs.getDefaultBookCover(isImportantBook = false)
-                    bookColorInt = Color.parseColor("#212121")
+                    bookColorInt = primaryColor
                     bookNameText = "默认日程"
                     finalAlpha = prefs.getDefaultBookAlpha(isImportantBook = false)
                 }
@@ -214,12 +221,20 @@ class CountdownAdapter(
                     binding.ivCompactCover.alpha = finalAlpha
                 }
 
+                // 动态设置卡片背景色与文字颜色
+                val cardSurface = MtbThemeEngine.getResolvedColor(context, "surface", com.google.android.material.R.attr.colorSurface, android.R.attr.windowBackground, "#FFFBFE")
+                val onSurfaceVariant = MtbThemeEngine.getResolvedColor(context, "onSurfaceVariant", com.google.android.material.R.attr.colorOnSurfaceVariant, android.R.attr.textColorSecondary, "#49454F")
+
+                (itemView as? MaterialCardView)?.setCardBackgroundColor(cardSurface)
+                binding.tvCompactTitle.setTextColor(onSurfaceColor)
+                binding.tvCompactDate.setTextColor(onSurfaceVariant)
+
                 if (isImportant) {
                     binding.tvImportantTag.visibility = View.VISIBLE
                     val shape = GradientDrawable()
                     shape.shape = GradientDrawable.RECTANGLE
                     shape.cornerRadius = 8f
-                    shape.setColor(itemView.context.getColor(R.color.m3_error))
+                    shape.setColor(errorColor)
                     binding.tvImportantTag.background = shape
                 } else {
                     binding.tvImportantTag.visibility = View.GONE
@@ -245,16 +260,15 @@ class CountdownAdapter(
                     binding.llTagsContainer.visibility = View.VISIBLE
                 }
 
-                startCompactTimer(event)
-
+                startCompactTimer(event, errorColor, primaryColor)
                 val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault())
                 binding.tvCompactDate.text = sdf.format(event.targetDate)
 
                 applyCardAlpha(event)
             }
 
-            private fun startCompactTimer(event: CountdownEvent) {
-                stopTimer() // 确保之前的被取消
+            private fun startCompactTimer(event: CountdownEvent, errorColor: Int, primaryColor: Int) {
+                stopTimer()
                 timerHandler = Handler(Looper.getMainLooper())
                 timerRunnable = object : Runnable {
                     override fun run() {
@@ -278,13 +292,7 @@ class CountdownAdapter(
                         }
 
                         binding.tvCompactTimeMain.text = "$status $timeText"
-
-                        if (event.isImportant) {
-                            binding.tvCompactTimeMain.setTextColor(itemView.context.getColor(R.color.m3_error))
-                        } else {
-                            val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
-                            binding.tvCompactTimeMain.setTextColor(colorPrimary)
-                        }
+                        binding.tvCompactTimeMain.setTextColor(if (event.isImportant) errorColor else primaryColor)
 
                         timerHandler?.postDelayed(this, 1000)
                     }
@@ -302,6 +310,10 @@ class CountdownAdapter(
                 val diff = TimeCalculator.calculateDifference(event.targetDate)
                 binding.textViewLabel.text = if (diff.isPast) "已过" else "还有"
                 binding.textViewDays.text = diff.totalDays.toString()
+
+                val primaryColor = MtbThemeEngine.getResolvedColor(itemView.context, "primary", com.google.android.material.R.attr.colorPrimary, android.R.attr.colorPrimary, "#37693D")
+                binding.textViewDays.setTextColor(primaryColor)
+
                 applyCardAlpha(event)
             }
         }
@@ -324,6 +336,12 @@ class CountdownAdapter(
             }
             private fun startTimer(targetDate: Date) {
                 stopTimer()
+                val primaryColor = MtbThemeEngine.getResolvedColor(itemView.context, "primary", com.google.android.material.R.attr.colorPrimary, android.R.attr.colorPrimary, "#37693D")
+                binding.timeDaysValue.setTextColor(primaryColor)
+                binding.timeHoursValue.setTextColor(primaryColor)
+                binding.timeMinutesValue.setTextColor(primaryColor)
+                binding.timeSecondsValue.setTextColor(primaryColor)
+
                 timerHandler = Handler(Looper.getMainLooper())
                 timerRunnable = object : Runnable {
                     override fun run() {
@@ -358,6 +376,14 @@ class CountdownAdapter(
             }
             private fun startTimer(targetDate: Date) {
                 stopTimer()
+                val primaryColor = MtbThemeEngine.getResolvedColor(itemView.context, "primary", com.google.android.material.R.attr.colorPrimary, android.R.attr.colorPrimary, "#37693D")
+                binding.timeYearsValue.setTextColor(primaryColor)
+                binding.timeMonthsValue.setTextColor(primaryColor)
+                binding.timeWeeksValue.setTextColor(primaryColor)
+                binding.timeDaysInWeekValue.setTextColor(primaryColor)
+                binding.timeMinutesValueFull.setTextColor(primaryColor)
+                binding.timeSecondsValueFull.setTextColor(primaryColor)
+
                 timerHandler = Handler(Looper.getMainLooper())
                 timerRunnable = object : Runnable {
                     override fun run() {
@@ -378,11 +404,14 @@ class CountdownAdapter(
 
         class HeroViewHolder(private val binding: ItemCountdownCardHeroBinding, adapter: CountdownAdapter)
             : CountdownViewHolder(binding, adapter) {
+            override fun stopTimer() {}
             override fun bind(event: CountdownEvent) {
+                applyTitleColor(binding.heroTitle, event)
+
                 if (event.backgroundUri != null) {
                     binding.heroBackgroundImage.load(Uri.parse(event.backgroundUri))
                     binding.heroScrim.visibility = View.VISIBLE
-                    val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+                    val colorPrimary = MtbThemeEngine.getResolvedColor(itemView.context, "primary", com.google.android.material.R.attr.colorPrimary, android.R.attr.colorPrimary, "#37693D")
                     val scrimColor = ColorUtils.setAlphaComponent(colorPrimary, 102)
                     binding.heroScrim.setBackgroundColor(scrimColor)
 
@@ -395,16 +424,14 @@ class CountdownAdapter(
                     binding.heroScrim.visibility = View.GONE
                     applyCardColor(event)
 
-                    applyTitleColor(binding.heroTitle, event)
-
-                    val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+                    val colorPrimary = MtbThemeEngine.getResolvedColor(itemView.context, "primary", com.google.android.material.R.attr.colorPrimary, android.R.attr.colorPrimary, "#37693D")
+                    binding.heroTitle.setTextColor(colorPrimary)
                     binding.heroDays.setTextColor(colorPrimary)
 
-                    val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
+                    val colorOnSurface = MtbThemeEngine.getResolvedColor(itemView.context, "onSurface", com.google.android.material.R.attr.colorOnSurface, android.R.attr.textColorPrimary, "#1C1B1F")
                     binding.heroLabelPrefix.setTextColor(colorOnSurface)
                     binding.heroLabelSuffix.setTextColor(colorOnSurface)
                 }
-
                 val diff = TimeCalculator.calculateDifference(event.targetDate)
                 binding.heroTitle.text = "距离 ${event.title}"
                 binding.heroDays.text = diff.totalDays.toString()

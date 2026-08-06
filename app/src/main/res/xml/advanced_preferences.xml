@@ -77,4 +77,35 @@
         app:entries="@array/home_layout_entries"
         app:entryValues="@array/home_layout_values"
         app:defaultValue="standard" />
+    <ListPreference
+        app:key="key_app_icon"
+        app:title="更换应用图标"
+        app:summary="更改在手机桌面上的图标样式"
+        app:entries="@array/app_icon_entries"
+        app:entryValues="@array/app_icon_values"
+        app:defaultValue="com.errorsiayusulif.zakocountdown.MainActivity" />
+    <PreferenceCategory app:title="主页交互">
+        <ListPreference
+            app:key="key_swipe_left_action"
+            app:title="向左滑动卡片"
+            app:summary="当前操作: %s"
+            app:entries="@array/swipe_action_entries"
+            app:entryValues="@array/swipe_action_values"
+            app:defaultValue="delete" />
+
+        <ListPreference
+            app:key="key_swipe_right_action"
+            app:title="向右滑动卡片"
+            app:summary="当前操作: %s"
+            app:entries="@array/swipe_action_entries"
+            app:entryValues="@array/swipe_action_values"
+            app:defaultValue="delete" />
+    </PreferenceCategory>
+    <PreferenceCategory app:title="联网与更新">
+        <SwitchPreferenceCompat
+            app:key="key_auto_update"
+            app:title="自动检查更新"
+            app:summary="每次冷启动应用时自动连接服务器检查新版本"
+            app:defaultValue="true" />
+    </PreferenceCategory>
 </PreferenceScreen>

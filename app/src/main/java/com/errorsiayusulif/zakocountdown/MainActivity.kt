@@ -1,5 +1,6 @@
 package com.errorsiayusulif.zakocountdown
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
@@ -15,8 +16,10 @@ import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -25,11 +28,15 @@ import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import com.errorsiayusulif.zakocountdown.data.AgendaBook
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityMainBinding
 import com.errorsiayusulif.zakocountdown.receiver.SecretCodeReceiver
 import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.MaterialColors
 
@@ -45,9 +52,21 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         preferenceManager = PreferenceManager(this)
-        applySelectedTheme()
 
+        // --- 【v0.9.0 核心拦截】检查是否完成 OOBE ---
+        if (!preferenceManager.isOobeCompleted()) {
+            super.onCreate(savedInstanceState) // 必须调用，防止 Fragment 状态恢复崩溃
+            val intent =
+                Intent(this, com.errorsiayusulif.zakocountdown.ui.settings.OobeActivity::class.java)
+            startActivity(intent)
+            finish()
+            return // 直接返回，不加载主界面
+        }
+
+        // 应用主题
+        applySelectedTheme()
         super.onCreate(savedInstanceState)
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -62,12 +81,63 @@ class MainActivity : AppCompatActivity() {
 
         // 冷启动立即初始化导航模式
         setupNavigationMode()
+
+        // --- 【v0.9.0 新增：自动检查更新】 ---
+        if (preferenceManager.isAutoUpdateEnabled()) {
+            lifecycleScope.launch {
+                com.errorsiayusulif.zakocountdown.utils.UpdateManager.checkUpdate(
+                    this@MainActivity,
+                    showToastIfLatest = false
+                )
+            }
+        }
+        // --- 替换废弃的 onBackPressed ---
+        onBackPressedDispatcher.addCallback(this, object : androidx.activity.OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (binding.drawerLayout.isDrawerOpen(androidx.core.view.GravityCompat.START)) {
+                    binding.drawerLayout.closeDrawer(androidx.core.view.GravityCompat.START)
+                } else if (binding.drawerLayout.isDrawerOpen(androidx.core.view.GravityCompat.END)) {
+                    binding.drawerLayout.closeDrawer(androidx.core.view.GravityCompat.END)
+                } else {
+                    // 如果抽屉都没开，交给系统处理（比如退出应用或返回上一页）
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                    isEnabled = true
+                }
+            }
+        })
     }
 
     override fun onResume() {
         super.onResume()
         setupNavigationMode()
-        checkAccessibilityAndPopup() // 新增
+        checkAccessibilityAndPopup()
+        // --- 核心修复：更名为通用染色引擎调用 ---
+        applyUniversalDynamicTheme()
+    }
+
+    private fun applyUniversalDynamicTheme() {
+        val engine = com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
+
+        // 1. 获取高度自适应的 Surface 和 Primary 颜色
+        val surface = engine.getResolvedColor(this, "surface", com.google.android.material.R.attr.colorSurface, android.R.attr.windowBackground, "#F7FBF2")
+        val primary = engine.getResolvedColor(this, "primary", com.google.android.material.R.attr.colorPrimary, com.google.android.material.R.attr.colorPrimary, "#37693D")
+        val onPrimary = engine.getResolvedColor(this, "onPrimary", com.google.android.material.R.attr.colorOnPrimary, android.R.attr.textColorPrimaryInverse, "#FFFFFF")
+
+        // 2. 全局染色 Window 状态栏 & 导航栏
+        window.statusBarColor = surface
+        window.navigationBarColor = surface
+
+        // 3. 染色左侧 Drawer Header (nav_header.xml)
+        if (binding.navView.headerCount > 0) {
+            val headerView = binding.navView.getHeaderView(0)
+            headerView.setBackgroundColor(primary)
+            headerView.findViewById<android.widget.TextView>(R.id.drawer_app_name)?.setTextColor(onPrimary)
+            headerView.findViewById<android.widget.ImageView>(R.id.drawer_logo)?.imageTintList = android.content.res.ColorStateList.valueOf(onPrimary)
+        }
+
+        // 4. 深度染色整个界面的 View 树 (覆盖 Toolbar, BottomNav, FAB 等)
+        engine.applyThemeToViewTree(binding.root, this)
     }
 
     private fun checkAccessibilityAndPopup() {
@@ -283,23 +353,68 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleIntent(intent: Intent?) {
+        // 1. 处理暗码调试入口
         if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS, false) == true) {
-            Handler(Looper.getMainLooper()).postDelayed({ navController.navigate(R.id.action_global_deepDeveloperFragment) }, 100)
+            Handler(Looper.getMainLooper()).postDelayed({
+                navController.navigate(R.id.action_global_deepDeveloperFragment)
+            }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_DEV_OPTIONS)
         }
         if (intent?.getBooleanExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER, false) == true) {
-            Handler(Looper.getMainLooper()).postDelayed({ navController.navigate(R.id.action_global_logReaderFragment) }, 100)
+            Handler(Looper.getMainLooper()).postDelayed({
+                navController.navigate(R.id.action_global_logReaderFragment)
+            }, 100)
             intent.removeExtra(SecretCodeReceiver.NAVIGATE_TO_LOG_READER)
         }
+
+        // --- 2. 【v0.9.0 核心】拦截并处理外部唤醒的 DeepLink 日程导入 ---
+        if (intent?.action == Intent.ACTION_VIEW) {
+            val uri = intent.data
+            if (uri != null && uri.scheme == "errorsiayusulif" && uri.host == "zakocountdown" && uri.path == "/import") {
+                handleImportFromUri(uri)
+            }
+        }
+    }
+
+    private fun handleImportFromUri(uri: android.net.Uri) {
+        val title = uri.getQueryParameter("title") ?: "未命名共享日程"
+        val dateStr = uri.getQueryParameter("date") ?: return
+        val targetDateMillis = dateStr.toLongOrNull() ?: return
+        val colorHex = uri.getQueryParameter("color")
+
+        val sdf = java.text.SimpleDateFormat("yyyy年MM月dd日 HH:mm", java.util.Locale.getDefault())
+        val dateFormatted = sdf.format(java.util.Date(targetDateMillis))
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle("导入分享的日程")
+            .setMessage("您收到了一个日程分享：\n\n 标题：$title\n 目标日：$dateFormatted\n\n是否立即将其导入到您的 ZakoCountdown？")
+            .setPositiveButton("导入") { _, _ ->
+                val event = com.errorsiayusulif.zakocountdown.data.CountdownEvent(
+                    title = title,
+                    targetDate = java.util.Date(targetDateMillis),
+                    colorHex = colorHex
+                )
+                // 借助 Repository 写入数据库
+                lifecycleScope.launch(Dispatchers.IO) {
+                    val app = application as ZakoCountdownApplication
+                    app.repository.insert(event)
+                    withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(this@MainActivity, "日程「$title」已成功导入！", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("取消", null)
+            .setCancelable(false)
+            .show()
     }
 
     override fun onSupportNavigateUp(): Boolean = NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp()
 
-    override fun onBackPressed() {
+    /*override fun onBackPressed() {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) binding.drawerLayout.closeDrawer(GravityCompat.START)
         else if (binding.drawerLayout.isDrawerOpen(GravityCompat.END)) binding.drawerLayout.closeDrawer(GravityCompat.END)
         else super.onBackPressed()
-    }
+    }*/
 
     data class AgendaItem(val id: Long, val name: String, val colorHex: String)
     inner class AgendaAdapter(private val items: List<AgendaItem>, private val onClick: (Long) -> Unit) : RecyclerView.Adapter<AgendaAdapter.ViewHolder>() {

@@ -16,6 +16,7 @@ import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAddEditEventBinding
 import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -56,6 +57,8 @@ class AddEditEventFragment : Fragment() {
         setupObservers()
         setupAgendaSelector()
         setupClickListeners()
+        // MTB 动态主题应用
+        MtbThemeEngine.applyThemeToViewTree(view, requireContext())
     }
 
     private fun setupObservers() {

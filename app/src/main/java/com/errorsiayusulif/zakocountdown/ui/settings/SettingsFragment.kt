@@ -8,6 +8,10 @@ import androidx.preference.PreferenceFragmentCompat
 import com.errorsiayusulif.zakocountdown.R
 
 class SettingsFragment : PreferenceFragmentCompat() {
+    override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine.applyToPreferenceFragment(this)
+    }
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         // 不再需要设置 sharedPreferencesName，因为这个页面没有可保存的设置了
         setPreferencesFromResource(R.xml.root_preferences, rootKey)

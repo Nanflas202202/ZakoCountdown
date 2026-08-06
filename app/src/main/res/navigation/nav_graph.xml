@@ -148,7 +148,7 @@
     <fragment
         android:id="@+id/deepDeveloperFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeepDeveloperFragment"
-        android:label="深层开发者选项">
+        android:label="调试选项">
         <action
             android:id="@+id/action_deepDeveloperFragment_to_logReaderFragment"
             app:destination="@id/logReaderFragment" />

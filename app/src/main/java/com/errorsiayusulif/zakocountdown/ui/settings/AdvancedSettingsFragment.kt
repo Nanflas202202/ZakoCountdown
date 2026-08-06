@@ -2,6 +2,7 @@
 package com.errorsiayusulif.zakocountdown.ui.settings
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.navigation.fragment.findNavController
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -13,24 +14,29 @@ import com.errorsiayusulif.zakocountdown.utils.AccessibilityStatusHelper
 class AdvancedSettingsFragment : PreferenceFragmentCompat() {
     private lateinit var appPreferenceManager: PreferenceManager
 
-
+    override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine.applyToPreferenceFragment(this)
+    }
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         preferenceManager.sharedPreferencesName = "zako_prefs"
         setPreferencesFromResource(R.xml.advanced_preferences, rootKey)
         appPreferenceManager = PreferenceManager(requireContext())
 
-        // [新增] 导航模式切换监听
+        // 1. 导航模式切换监听
         findPreference<ListPreference>("key_nav_mode")?.setOnPreferenceChangeListener { _, newValue ->
             appPreferenceManager.saveNavMode(newValue as String)
             activity?.recreate()
             true
         }
 
+        // 2. 选择应用名单
         findPreference<Preference>("select_important_apps")?.setOnPreferenceClickListener {
             findNavController().navigate(R.id.action_advancedSettingsFragment_to_appSelectorFragment)
             true
         }
 
+        // 3. 权限入口 (统一导航)
         findPreference<Preference>("permission_accessibility")?.setOnPreferenceClickListener {
             findNavController().navigate(R.id.action_global_permissionsFragment)
             true
@@ -39,9 +45,27 @@ class AdvancedSettingsFragment : PreferenceFragmentCompat() {
             findNavController().navigate(R.id.action_global_permissionsFragment)
             true
         }
+
+        // 4. 布局模式切换监听
         findPreference<ListPreference>("key_home_layout_mode")?.setOnPreferenceChangeListener { _, _ ->
             // 切换布局模式后，必须重启 Activity 才能重新应用 Drawer/BottomNav 的显隐状态
             activity?.recreate()
+            true
+        }
+
+        // ==========================================
+        // 5. 新增：更换应用桌面图标监听
+        // ==========================================
+        findPreference<ListPreference>("key_app_icon")?.setOnPreferenceChangeListener { _, newValue ->
+            val aliasName = newValue as String
+            // 调用我们写的 IconSwitchHelper
+            com.errorsiayusulif.zakocountdown.utils.IconSwitchHelper.switchIcon(requireContext(), aliasName)
+
+            android.widget.Toast.makeText(
+                requireContext(),
+                "图标已更改！部分手机桌面可能会短暂闪烁或重启，请稍候...",
+                android.widget.Toast.LENGTH_LONG
+            ).show()
             true
         }
     }

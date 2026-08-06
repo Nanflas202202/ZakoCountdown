@@ -7,18 +7,13 @@ import android.content.pm.PackageManager
 
 object IconSwitchHelper {
 
-    // 定义与 AndroidManifest.xml 中一致的别名类名
+    // 这里的别名必须和 AndroidManifest.xml 中声明的一字不差！
     const val ALIAS_DEFAULT = "com.errorsiayusulif.zakocountdown.MainActivityAliasDefault"
-    const val ALIAS_DARK = "com.errorsiayusulif.zakocountdown.MainActivityAliasDark"
-    const val ALIAS_SPECIAL = "com.errorsiayusulif.zakocountdown.MainActivityAliasSpecial"
+    const val ALIAS_NEW = "com.errorsiayusulif.zakocountdown.MainActivityAliasNew"
 
-    private val ALL_ALIASES = listOf(ALIAS_DEFAULT, ALIAS_DARK, ALIAS_SPECIAL)
+    // 将所有你在清单文件里写的别名放进这个列表
+    private val ALL_ALIASES = listOf(ALIAS_DEFAULT, ALIAS_NEW)
 
-    /**
-     * 切换桌面图标
-     * @param context 上下文
-     * @param targetAliasName 要启用的别名全限定名
-     */
     fun switchIcon(context: Context, targetAliasName: String) {
         val pm = context.packageManager
 
@@ -26,10 +21,10 @@ object IconSwitchHelper {
         pm.setComponentEnabledSetting(
             ComponentName(context, targetAliasName),
             PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
-            PackageManager.DONT_KILL_APP // 尽量不要立即杀死应用 (但部分Launcher依然会重载桌面导致闪屏)
+            PackageManager.DONT_KILL_APP
         )
 
-        // 2. 禁用其他所有别名
+        // 2. 禁用其他所有别名 (真实的 MainActivity 安全无恙，不受影响)
         for (alias in ALL_ALIASES) {
             if (alias != targetAliasName) {
                 pm.setComponentEnabledSetting(

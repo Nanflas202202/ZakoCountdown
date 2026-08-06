@@ -309,6 +309,83 @@ class PreferenceManager(context: Context) {
         val key = if (isImportantBook) "alpha_book_important" else "alpha_book_all"
         return prefs.getFloat(key, 1.0f) // 默认不透明
     }
+
+// ==========================================
+    // v0.9.0 新增：OOBE、EULA 与更新检查设置
+    // ==========================================
+
+    fun setOobeCompleted(completed: Boolean) {
+        prefs.edit().putBoolean(KEY_OOBE_COMPLETED, completed).apply()
+    }
+
+    fun isOobeCompleted(): Boolean {
+        // 默认 false，强制新用户进入 OOBE
+        return prefs.getBoolean(KEY_OOBE_COMPLETED, false)
+    }
+
+    fun setEulaAccepted(accepted: Boolean) {
+        prefs.edit().putBoolean(KEY_EULA_ACCEPTED, accepted).apply()
+    }
+
+    fun isEulaAccepted(): Boolean {
+        return prefs.getBoolean(KEY_EULA_ACCEPTED, false)
+    }
+
+    fun setAutoUpdateEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_AUTO_UPDATE, enabled).apply()
+    }
+
+    fun isAutoUpdateEnabled(): Boolean {
+        // 默认开启检查更新
+        return prefs.getBoolean(KEY_AUTO_UPDATE, true)
+    }
+    fun setPopupReminderEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("enable_popup_reminder", enabled).apply()
+    }
+    // ==========================================
+    // v0.9.0 新增：主页手势自定义
+    // ==========================================
+    fun getSwipeLeftAction(): String {
+        return prefs.getString("key_swipe_left_action", "delete") ?: "delete"
+    }
+
+    fun getSwipeRightAction(): String {
+        return prefs.getString("key_swipe_right_action", "delete") ?: "delete"
+    }
+
+    fun setPromptedSwipeActions(prompted: Boolean) {
+        prefs.edit().putBoolean("key_has_prompted_swipe", prompted).apply()
+    }
+
+    fun hasPromptedSwipeActions(): Boolean {
+        return prefs.getBoolean("key_has_prompted_swipe", false)
+    }
+    // ==========================================
+    // v0.9.0 新增：多备用更新源引擎设置
+    // ==========================================
+    fun getUpdateUrls(): List<String> {
+        val urlsString = prefs.getString("key_custom_update_urls", "")
+        if (urlsString.isNullOrBlank()) {
+            // 如果本地为空，返回默认的高可用源（Github + Gitee 备用）
+            return listOf(
+                "https://raw.githubusercontent.com/Nanflas202202/Nanflas202202.github.io/refs/heads/main/update/zakolatest.json",
+                "https://nanflas202202.github.io/update/zakolatest.json",
+                "https://nanflas202202-github-io.pages.dev/update/zakolatest.json"
+            )
+        }
+        // 按行分割，过滤掉空白行
+        return urlsString.split("\n").map { it.trim() }.filter { it.isNotEmpty() }
+    }
+
+    fun setUpdateUrls(urlsString: String) {
+        prefs.edit().putString("key_custom_update_urls", urlsString).apply()
+    }
+
+    fun isSyncUpdateUrlsEnabled(): Boolean {
+        // 默认不开启，仅在开发者选项中开启
+        return prefs.getBoolean("key_sync_update_urls", true)
+    }
+    // 请在 companion object 的末尾添加对应的 KEY 常量：
     companion object {
         private const val PREFS_NAME = "zako_prefs"
         private const val KEY_THEME = "key_theme"
@@ -365,5 +442,10 @@ class PreferenceManager(context: Context) {
         const val HOME_LAYOUT_STANDARD = "standard"
         const val HOME_LAYOUT_COMPACT = "compact"
         private const val KEY_HAS_PROMPTED_ACCESSIBILITY = "key_has_prompted_accessibility"
+        const val ACCENT_CUSTOM_MTB = "CUSTOM_MTB" // 新增常量
+        private const val KEY_OOBE_COMPLETED = "key_oobe_completed"
+        private const val KEY_EULA_ACCEPTED = "key_eula_accepted"
+        private const val KEY_AUTO_UPDATE = "key_auto_update"
+
     }
 }

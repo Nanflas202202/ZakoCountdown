@@ -34,7 +34,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.8.11-nightly"
+        versionName = "0.9.0-debug"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")

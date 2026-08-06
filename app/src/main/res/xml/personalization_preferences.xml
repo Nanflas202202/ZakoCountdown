@@ -18,6 +18,12 @@
             app:entries="@array/color_entries"
             app:entryValues="@array/color_values"
             app:defaultValue="MONET" />
+
+        <!-- 正确！必须使用普通的 Preference -->
+        <Preference
+            app:key="import_mtb_theme"
+            app:title="导入动态主题"
+            app:summary="支持从 Material Theme Builder 导出的 JSON 文件"/>
     </PreferenceCategory>
 
     <PreferenceCategory app:title="背景">

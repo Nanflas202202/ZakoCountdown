@@ -24,6 +24,10 @@
         android:title="生成分享卡片"
         android:icon="@drawable/ic_share" /> <!-- 假设你有 ic_share 图标，没有可用 android 自带的 -->
     <item
+        android:id="@+id/action_share_link"
+        android:title="生成并复制分享链接"
+        android:icon="@drawable/ic_share" />
+    <item
         android:id="@+id/action_delete"
         android:title="删除"
         android:icon="@drawable/ic_delete"/>

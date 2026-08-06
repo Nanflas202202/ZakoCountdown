@@ -76,6 +76,7 @@
                 android:id="@+id/row_website"/>
             <include layout="@layout/item_about_row"
                 android:id="@+id/row_github"/>
+            <include layout="@layout/item_about_row" android:id="@+id/row_version_name"/>
             <include layout="@layout/item_about_row" android:id="@+id/row_contact_telegram"/>
             <include layout="@layout/item_about_row" android:id="@+id/row_contact_bilibili"/>
 

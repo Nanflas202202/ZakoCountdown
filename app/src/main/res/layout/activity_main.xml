@@ -14,7 +14,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <!-- Toolbar -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
@@ -22,17 +21,31 @@
             app:title="@string/app_name"
             style="?attr/toolbarStyle" />
 
-        <!-- Fragment 容器 -->
-        <androidx.fragment.app.FragmentContainerView
-            android:id="@+id/nav_host_fragment"
-            android:name="androidx.navigation.fragment.NavHostFragment"
+        <!-- 核心修改：横向容器，用于容纳侧边导航轨和Fragment -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            app:defaultNavHost="true"
-            app:navGraph="@navigation/nav_graph" />
+            android:orientation="horizontal">
 
-        <!-- 底部导航栏 -->
+            <!-- MD3 规范：横屏/平板专属的 Navigation Rail -->
+            <com.google.android.material.navigationrail.NavigationRailView
+                android:id="@+id/nav_rail_view"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                app:menu="@menu/bottom_nav_menu"
+                android:visibility="gone" />
+
+            <androidx.fragment.app.FragmentContainerView
+                android:id="@+id/nav_host_fragment"
+                android:name="androidx.navigation.fragment.NavHostFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                app:defaultNavHost="true"
+                app:navGraph="@navigation/nav_graph" />
+        </LinearLayout>
+
+        <!-- 手机竖屏专属的底部导航栏 -->
         <com.google.android.material.bottomnavigation.BottomNavigationView
             android:id="@+id/bottom_nav_view"
             android:layout_width="match_parent"
@@ -40,10 +53,8 @@
             android:background="?attr/colorSurface"
             app:menu="@menu/bottom_nav_menu"
             android:visibility="gone"/>
-
     </LinearLayout>
 
-    <!-- 左侧侧滑栏 -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -52,15 +63,12 @@
         app:headerLayout="@layout/nav_header"
         app:menu="@menu/nav_menu" />
 
-    <!-- 新增：右侧侧滑栏 (日程本筛选) -->
-    <!-- 使用 LinearLayout 作为容器，里面放 Header 和 RecyclerView -->
     <!-- 右侧侧滑栏 (日程本筛选) -->
     <LinearLayout
         android:id="@+id/right_drawer_container"
         style="@style/Widget.Zako.RightDrawer"
         android:orientation="vertical">
 
-        <!-- Header -->
         <include
             android:id="@+id/right_header"
             layout="@layout/nav_header_right" />
@@ -71,7 +79,6 @@
             android:layout_height="match_parent"
             android:paddingTop="8dp"
             android:scrollbars="vertical"/>
-
     </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

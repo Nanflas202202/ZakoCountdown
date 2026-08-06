@@ -25,6 +25,7 @@ import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.databinding.FragmentAddEditAgendaBookBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
 import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
+import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
@@ -172,6 +173,8 @@ class AddEditAgendaBookFragment : Fragment() {
             )
             findNavController().navigateUp()
         }
+        // MTB 动态主题应用
+        MtbThemeEngine.applyThemeToViewTree(view, requireContext())
     }
 
     private fun initColors() {
