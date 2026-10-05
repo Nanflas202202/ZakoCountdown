@@ -56,8 +56,8 @@ class AgendaBookFragment : Fragment() {
         registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
             uri?.let { sourceUri ->
                 val bookId = editingBookId ?: return@let
+                val context = requireContext()
                 try {
-                    val context = requireContext()
                     val inputStream = context.contentResolver.openInputStream(sourceUri)
                     if (inputStream != null) {
                         val dir = File(context.filesDir, "covers")
@@ -76,10 +76,10 @@ class AgendaBookFragment : Fragment() {
                             // 保存自定义本子的封面
                             agendaViewModel.updateBookCover(bookId, finalUri)
                         }
-                        android.widget.Toast.makeText(requireContext(), "封面已更新", android.widget.Toast.LENGTH_SHORT).show()
+                        android.widget.Toast.makeText(requireContext(), R.string.agenda_cover_updated, android.widget.Toast.LENGTH_SHORT).show()
                     }
                 } catch (e: Exception) {
-                    android.widget.Toast.makeText(context, "设置失败", android.widget.Toast.LENGTH_SHORT).show()
+                    android.widget.Toast.makeText(context, R.string.agenda_cover_failed, android.widget.Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -116,7 +116,7 @@ class AgendaBookFragment : Fragment() {
         requireActivity().addMenuProvider(object : MenuProvider {
             override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
                 val iconRes = if (isGridView) R.drawable.ic_list else R.drawable.ic_grid_view
-                val item = menu.add(0, 1001, 0, "切换视图")
+                val item = menu.add(0, 1001, 0, R.string.agenda_switch_view)
                 item.setIcon(iconRes)
                 item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
             }
@@ -228,12 +228,12 @@ class AgendaBookFragment : Fragment() {
             val alpha: Float
 
             if (position == 0) {
-                bookId = -1L; name = "全部日程"; colorHex = "#212121"
+                bookId = -1L; name = getString(R.string.nav_filter_all); colorHex = "#212121"
                 coverUri = preferenceManager.getDefaultBookCover(false)
                 alpha = preferenceManager.getDefaultBookAlpha(false)
                 count = currentEvents.size
             } else if (position == 1) {
-                bookId = -2L; name = "重点日程"; colorHex = "#F44336"
+                bookId = -2L; name = getString(R.string.nav_filter_important); colorHex = "#F44336"
                 coverUri = preferenceManager.getDefaultBookCover(true)
                 alpha = preferenceManager.getDefaultBookAlpha(true)
                 count = currentEvents.count { it.isImportant }
@@ -245,7 +245,7 @@ class AgendaBookFragment : Fragment() {
             }
 
             holder.binding.tvBookName.text = name
-            holder.binding.tvCount.text = "${count}项"
+            holder.binding.tvCount.text = getString(R.string.agenda_event_count, count)
 
             try {
                 val color = Color.parseColor(colorHex)
@@ -291,9 +291,9 @@ class AgendaBookFragment : Fragment() {
 
         // 【新增】：带有透明度滑块的默认日程本设置对话框
         private fun showDefaultBookOptions(isImportantBook: Boolean) {
-            val options = arrayOf("设置封面", "移除封面", "调整透明度")
+            val options = arrayOf(getString(R.string.agenda_set_cover), getString(R.string.agenda_remove_cover), getString(R.string.agenda_adjust_alpha))
             MaterialAlertDialogBuilder(requireContext())
-                .setTitle(if (isImportantBook) "重点日程" else "全部日程")
+                .setTitle(if (isImportantBook) getString(R.string.nav_filter_important) else getString(R.string.nav_filter_all))
                 .setItems(options) { _, which ->
                     when (which) {
                         0 -> {
@@ -314,9 +314,9 @@ class AgendaBookFragment : Fragment() {
                                 setPadding(48, 48, 48, 48)
                             }
                             MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("调整封面透明度")
+                                .setTitle(R.string.agenda_cover_alpha_title)
                                 .setView(slider)
-                                .setPositiveButton("保存") { _, _ ->
+                                .setPositiveButton(R.string.common_save) { _, _ ->
                                     preferenceManager.saveDefaultBookAlpha(isImportantBook, slider.value)
                                     binding.recyclerViewBooks.adapter?.notifyDataSetChanged()
                                 }
@@ -333,9 +333,9 @@ class AgendaBookFragment : Fragment() {
             val count: Int
 
             if (position == 0) {
-                bookId = -1L; name = "全部日程"; colorHex = "#212121"; count = currentEvents.size
+                bookId = -1L; name = getString(R.string.nav_filter_all); colorHex = "#212121"; count = currentEvents.size
             } else if (position == 1) {
-                bookId = -2L; name = "重点日程"; colorHex = "#F44336"; count = currentEvents.count { it.isImportant }
+                bookId = -2L; name = getString(R.string.nav_filter_important); colorHex = "#F44336"; count = currentEvents.count { it.isImportant }
             } else {
                 val book = books[position - 2]
                 bookId = book.id; name = book.name; colorHex = book.colorHex
@@ -352,14 +352,14 @@ class AgendaBookFragment : Fragment() {
             val nextEvent = eventsInBook.filter { it.targetDate.time >= System.currentTimeMillis() }
                 .minByOrNull { it.targetDate }
 
-            val statsText = StringBuilder("$count 项")
+            val statsText = StringBuilder(getString(R.string.agenda_event_count, count))
             if (nextEvent != null) {
                 val diff = TimeCalculator.calculateDifference(nextEvent.targetDate)
-                statsText.append(" · 最近: ${nextEvent.title} (还有${diff.totalDays}天)")
+                statsText.append(getString(R.string.agenda_stats_latest, nextEvent.title, getString(R.string.countdown_remaining) + diff.totalDays + getString(R.string.unit_day)))
             } else if (count > 0 && eventsInBook.isNotEmpty()) {
-                statsText.append(" · 全部已过期")
+                statsText.append(getString(R.string.agenda_stats_all_expired))
             } else {
-                statsText.append(" · 暂无日程")
+                statsText.append(getString(R.string.agenda_stats_empty))
             }
             holder.binding.tvStats.text = statsText.toString()
 
@@ -382,9 +382,9 @@ class AgendaBookFragment : Fragment() {
     }
 
     private fun showDefaultBookOptions(isImportantBook: Boolean) {
-        val options = arrayOf("设置封面", "移除封面")
+        val options = arrayOf(getString(R.string.agenda_set_cover), getString(R.string.agenda_remove_cover))
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle(if (isImportantBook) "重点日程" else "全部日程")
+            .setTitle(if (isImportantBook) getString(R.string.nav_filter_important) else getString(R.string.nav_filter_all))
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> {
@@ -400,7 +400,7 @@ class AgendaBookFragment : Fragment() {
     }
 
     private fun showOptions(book: AgendaBook) {
-        val options = arrayOf("编辑详情", "删除日程本")
+        val options = arrayOf(getString(R.string.agenda_edit_details), getString(R.string.agenda_delete_book))
         MaterialAlertDialogBuilder(requireContext())
             .setTitle(book.name)
             .setItems(options) { _, which ->
@@ -408,7 +408,7 @@ class AgendaBookFragment : Fragment() {
                     0 -> {
                         val action = AgendaBookFragmentDirections.actionAgendaBookFragmentToAddEditAgendaBookFragment(
                             bookId = book.id,
-                            title = "编辑日程本"
+                            title = getString(R.string.agenda_edit_book)
                         )
                         findNavController().navigate(action)
                     }
@@ -419,10 +419,10 @@ class AgendaBookFragment : Fragment() {
 
     private fun deleteBook(book: AgendaBook) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("确认删除？")
-            .setMessage("日程本删除后，其中的日程将移回“全部日程”，不会被删除。")
-            .setPositiveButton("删除") { _, _ -> agendaViewModel.deleteBook(book) }
-            .setNegativeButton("取消", null)
+            .setTitle(R.string.agenda_confirm_delete_title)
+            .setMessage(R.string.agenda_confirm_delete_message)
+            .setPositiveButton(R.string.common_delete) { _, _ -> agendaViewModel.deleteBook(book) }
+            .setNegativeButton(R.string.common_cancel, null)
             .show()
     }
 

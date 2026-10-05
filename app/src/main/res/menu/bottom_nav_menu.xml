@@ -3,17 +3,17 @@
     <item
         android:id="@+id/homeFragment"
         android:icon="@drawable/ic_home"
-        android:title="首页" />
+        android:title="@string/nav_menu_home" />
 
     <!-- 默认设为 visible="false"，由代码控制显示 -->
     <item
         android:id="@+id/agendaBookFragment"
         android:icon="@drawable/ic_collections_bookmark"
-        android:title="日程本"
+        android:title="@string/nav_menu_agenda"
         android:visible="true" />
 
     <item
         android:id="@+id/settingsFragment"
         android:icon="@drawable/ic_settings"
-        android:title="设置" />
+        android:title="@string/nav_menu_settings" />
 </menu>

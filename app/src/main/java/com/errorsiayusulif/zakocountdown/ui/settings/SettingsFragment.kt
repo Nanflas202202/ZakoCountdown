@@ -7,7 +7,7 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.errorsiayusulif.zakocountdown.R
 
-class SettingsFragment : PreferenceFragmentCompat() {
+class SettingsFragment : ZakoPreferenceFragment() {
     override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine.applyToPreferenceFragment(this)
@@ -18,6 +18,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         findPreference<Preference>("nav_to_personalization")?.setOnPreferenceClickListener {
             findNavController().navigate(R.id.action_settingsFragment_to_personalizationFragment)
+            true
+        }
+        findPreference<Preference>("nav_to_language")?.setOnPreferenceClickListener {
+            findNavController().navigate(R.id.action_settingsFragment_to_languageSettingsFragment)
             true
         }
         findPreference<Preference>("nav_to_notifications")?.setOnPreferenceClickListener {

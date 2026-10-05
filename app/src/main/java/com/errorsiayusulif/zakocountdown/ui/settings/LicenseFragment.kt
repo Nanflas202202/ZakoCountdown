@@ -25,8 +25,8 @@ class LicenseFragment : Fragment() {
         binding.toggleButtonGroup.addOnButtonCheckedListener { group, checkedId, isChecked ->
             if (isChecked) {
                 when (checkedId) {
-                    R.id.button_license_zh -> loadLicense(R.raw.license_zh)
-                    R.id.button_license_mpl_en -> loadLicense(R.raw.license_en) // <-- 添加新逻辑
+                    R.id.button_license_zh -> loadLicense(R.raw.license_mpl_zh)
+                    R.id.button_license_en -> loadLicense(R.raw.license_mpl_en)
                     R.id.button_license_eys -> loadLicense(R.raw.eula)
                 }
             }
@@ -42,7 +42,7 @@ class LicenseFragment : Fragment() {
             val text = inputStream.bufferedReader().use { it.readText() }
             binding.licenseTextView.text = text
         } catch (e: Exception) {
-            binding.licenseTextView.text = "无法加载许可证文件 (ID: $resourceId)。请确保文件已放置在 res/raw 目录下。"
+            binding.licenseTextView.text = getString(R.string.about_license_load_failed_detail, resourceId)
         }
     }
 

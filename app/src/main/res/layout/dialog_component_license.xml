@@ -20,14 +20,14 @@
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="中文翻译版" />
+            android:text="@string/license_tab_chinese" />
 
         <Button
             android:id="@+id/btn_lang_en"
             style="?attr/materialButtonOutlinedStyle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="English (Official)" />
+            android:text="@string/license_tab_english_official" />
 
     </com.google.android.material.button.MaterialButtonToggleGroup>
 

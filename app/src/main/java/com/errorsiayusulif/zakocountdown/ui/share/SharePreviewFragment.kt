@@ -148,7 +148,7 @@ class SharePreviewFragment : Fragment() {
             val repo = (requireActivity().application as ZakoCountdownApplication).repository
             currentEvent = repo.getEventById(args.eventId)
             if (currentEvent == null) {
-                Toast.makeText(context, "无法加载日程数据", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.share_load_failed, Toast.LENGTH_SHORT).show()
                 findNavController().navigateUp()
                 return@launch
             }
@@ -224,17 +224,17 @@ class SharePreviewFragment : Fragment() {
         when (selectedLayoutId) {
             R.layout.layout_share_template_card -> {
                 binding.containerCardSettings.visibility = View.VISIBLE
-                binding.tvCardColorLabel.text = "卡片颜色"
-                binding.tvAlphaLabel.text = "卡片不透明度"
+                binding.tvCardColorLabel.text = getString(R.string.card_color_label)
+                binding.tvAlphaLabel.text = getString(R.string.card_opacity_label)
             }
             R.layout.layout_share_template_minimal -> {
                 binding.containerCardSettings.visibility = View.GONE
-                binding.tvAlphaLabel.text = "背景遮罩浓度"
+                binding.tvAlphaLabel.text = getString(R.string.card_scrim_alpha_label)
             }
             R.layout.layout_share_template_hero -> {
                 binding.containerCardSettings.visibility = View.VISIBLE
-                binding.tvCardColorLabel.text = "下方信息区颜色"
-                binding.tvAlphaLabel.text = "上方图片遮罩浓度"
+                binding.tvCardColorLabel.text = getString(R.string.card_info_area_color)
+                binding.tvAlphaLabel.text = getString(R.string.card_image_scrim_alpha)
             }
         }
     }
@@ -298,24 +298,24 @@ class SharePreviewFragment : Fragment() {
         view.findViewById<TextView>(R.id.tv_title)?.text = event.title
         val diff = TimeCalculator.calculateDifference(event.targetDate)
 
-        view.findViewById<TextView>(R.id.tv_status)?.text = if (diff.isPast) "已过" else "还有"
-        view.findViewById<TextView>(R.id.tv_title_prefix)?.text = "距离"
+        view.findViewById<TextView>(R.id.tv_status)?.text = if (diff.isPast) getString(R.string.countdown_passed) else getString(R.string.countdown_remaining)
+        view.findViewById<TextView>(R.id.tv_title_prefix)?.text = getString(R.string.countdown_distance)
 
         val tvDays = view.findViewById<TextView>(R.id.tv_days)
         val tvSuffix = view.findViewById<TextView>(R.id.tv_suffix)
 
         when (dateMode) {
             MODE_DETAILED -> {
-                tvDays?.text = "${diff.totalDays}天${String.format("%02d", diff.hours)}时${String.format("%02d", diff.minutes)}分${String.format("%02d", diff.seconds)}秒"
+                tvDays?.text = String.format(getString(R.string.duration_dhms_short), diff.totalDays, diff.hours, diff.minutes, diff.seconds)
                 tvSuffix?.visibility = View.GONE
             }
             MODE_FULL -> {
                 val sb = StringBuilder()
-                if (diff.years > 0) sb.append("${diff.years}年")
-                if (diff.months > 0) sb.append("${diff.months}月")
-                if (diff.weeks > 0) sb.append("${diff.weeks}周")
-                sb.append("${diff.daysInWeek}天")
-                tvDays?.text = sb.toString().ifBlank { "0天" }
+                if (diff.years > 0) sb.append(diff.years.toString() + getString(R.string.unit_year))
+                if (diff.months > 0) sb.append(diff.months.toString() + getString(R.string.unit_month))
+                if (diff.weeks > 0) sb.append(diff.weeks.toString() + getString(R.string.unit_week))
+                sb.append(diff.daysInWeek.toString() + getString(R.string.unit_day))
+                tvDays?.text = sb.toString().ifBlank { getString(R.string.duration_zero) }
                 tvSuffix?.visibility = View.GONE
             }
             else -> {
@@ -325,7 +325,11 @@ class SharePreviewFragment : Fragment() {
         }
         view.findViewById<TextView>(R.id.tv_target_date)?.apply {
             visibility = if (isShowTargetDate) View.VISIBLE else View.GONE
-            if (isShowTargetDate) text = SimpleDateFormat("yyyy年MM月dd日 EEEE", Locale.getDefault()).format(event.targetDate)
+            if (isShowTargetDate) {
+                // 日期格式跟随语言（中文用「年月日」，其他语言用 ISO 风格）
+                text = SimpleDateFormat(getString(R.string.share_target_date_format), Locale.getDefault())
+                    .format(event.targetDate)
+            }
         }
     }
 
@@ -411,7 +415,7 @@ class SharePreviewFragment : Fragment() {
                     }
                     withContext(Dispatchers.Main) {
                         binding.loadingIndicator.visibility = View.GONE
-                        startActivity(Intent.createChooser(intent, "分享图片"))
+                        startActivity(Intent.createChooser(intent, getString(R.string.share_chooser_image)))
                     }
                 } else {
                     saveToGallery(context, bitmap)
@@ -419,7 +423,7 @@ class SharePreviewFragment : Fragment() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     binding.loadingIndicator.visibility = View.GONE
-                    Toast.makeText(context, "操作失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, getString(R.string.common_failed, e.message ?: ""), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -447,7 +451,7 @@ class SharePreviewFragment : Fragment() {
         }
         withContext(Dispatchers.Main) {
             binding.loadingIndicator.visibility = View.GONE
-            Toast.makeText(context, "图片已保存至相册", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.share_saved_to_gallery, Toast.LENGTH_SHORT).show()
         }
     }
 

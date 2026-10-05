@@ -1,111 +1,118 @@
-<!-- file: res/xml/advanced_preferences.xml -->
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="开屏弹窗">
+    <PreferenceCategory app:title="@string/adv_category_popup">
         <SwitchPreferenceCompat
-            app:key="enable_popup_reminder"
-            app:title="开启开屏弹窗"
-            app:summary="在启动指定应用时，弹出重点日程提醒"
+            app:key="popup_reminder_enabled"
+            app:title="@string/adv_enable_popup"
+            app:summary="@string/adv_enable_popup_summary"
             app:defaultValue="true" />
 
         <Preference
             app:key="select_important_apps"
-            app:title="选择应用"
-            app:summary="选择要触发弹窗的应用"
-            app:dependency="enable_popup_reminder"/>
+            app:title="@string/adv_select_apps"
+            app:summary="@string/adv_select_apps_summary"
+            app:dependency="popup_reminder_enabled"/>
 
-        <!-- 新增设置项 -->
         <SeekBarPreference
-            app:key="key_popup_duration"
-            app:title="弹窗显示时长 (秒)"
-            app:summary="倒计时结束后自动关闭"
+            app:key="popup_duration_seconds"
+            app:title="@string/adv_popup_duration"
+            app:summary="@string/adv_popup_duration_summary"
             app:defaultValue="5"
             app:min="1"
             android:max="30"
             app:showSeekBarValue="true"
-            app:dependency="enable_popup_reminder"/>
+            app:dependency="popup_reminder_enabled"/>
 
         <SwitchPreferenceCompat
-            app:key="key_popup_skippable"
-            app:title="允许手动关闭"
-            app:summary="显示关闭按钮"
+            app:key="popup_skippable"
+            app:title="@string/adv_popup_skippable"
+            app:summary="@string/adv_popup_skippable_summary"
             app:defaultValue="true"
-            app:dependency="enable_popup_reminder"/>
+            app:dependency="popup_reminder_enabled"/>
 
         <SeekBarPreference
-            app:key="key_popup_skip_delay"
-            app:title="关闭按钮延迟 (秒)"
-            app:summary="强制观看一段时间后才显示关闭按钮"
+            app:key="popup_skip_delay_seconds"
+            app:title="@string/adv_popup_skip_delay"
+            app:summary="@string/adv_popup_skip_delay_summary"
             app:defaultValue="0"
             app:min="0"
             android:max="10"
             app:showSeekBarValue="true"
-            app:dependency="key_popup_skippable"/>
+            app:dependency="popup_skippable"/>
 
     </PreferenceCategory>
 
 
-    <PreferenceCategory app:title="相关权限">
+    <PreferenceCategory app:title="@string/adv_category_permissions">
         <Preference
             app:key="permission_accessibility"
-            app:title="无障碍服务"
-            app:summary="必要权限，点击开启"/>
+            app:title="@string/adv_permission_accessibility"
+            app:summary="@string/adv_permission_accessibility_summary"/>
         <Preference
             app:key="permission_overlay"
-            app:title="悬浮窗权限"
-            app:summary="在定制系统上建议开启，确保弹窗正常"/>
+            app:title="@string/adv_permission_overlay"
+            app:summary="@string/adv_permission_overlay_summary"/>
     </PreferenceCategory>
-    <PreferenceCategory app:title="个性化设置">
+    <PreferenceCategory app:title="@string/adv_category_personalization">
         <SwitchPreferenceCompat
-            app:key="key_unlock_global_alpha"
-            app:title="解锁所有卡片透明度"
-            app:summary="开启后，允许调节非置顶卡片的透明度"
+            app:key="card_alpha_unlocked"
+            app:title="@string/adv_unlock_global_alpha"
+            app:summary="@string/adv_unlock_global_alpha_summary"
             app:defaultValue="false" />
         <ListPreference
-            app:key="key_nav_mode"
-            app:title="导航栏样式"
-            app:summary="切换侧滑抽屉或底部导航栏"
+            app:key="app_layout_mode"
+            app:title="@string/adv_nav_mode"
+            app:summary="@string/adv_nav_mode_summary"
             app:entries="@array/nav_mode_entries"
             app:entryValues="@array/nav_mode_values"
-            app:defaultValue="drawer" />
+            app:defaultValue="bottom" />
+        <!--
+            只在「导航方式 = 底部导航栏」时才显示（见 AdvancedSettingsFragment）。
+            它是底部导航栏的子开关，不是独立的导航形态。
+        -->
+        <SwitchPreferenceCompat
+            app:key="auto_hide_nav_bar"
+            app:title="@string/adv_auto_hide_nav"
+            app:summary="@string/adv_auto_hide_nav_summary"
+            app:defaultValue="true" />
     </PreferenceCategory>
     <ListPreference
-        app:key="key_home_layout_mode"
-        app:title="主页布局风格"
-        app:summary="切换标准视图或紧凑视图"
+        app:key="home_layout_mode"
+        app:title="@string/adv_home_layout"
+        app:summary="@string/adv_home_layout_summary"
         app:entries="@array/home_layout_entries"
         app:entryValues="@array/home_layout_values"
         app:defaultValue="standard" />
     <ListPreference
-        app:key="key_app_icon"
-        app:title="更换应用图标"
-        app:summary="更改在手机桌面上的图标样式"
+        app:key="app_icon_alias"
+        app:title="@string/adv_app_icon"
+        app:summary="@string/adv_app_icon_summary"
         app:entries="@array/app_icon_entries"
         app:entryValues="@array/app_icon_values"
         app:defaultValue="com.errorsiayusulif.zakocountdown.MainActivity" />
-    <PreferenceCategory app:title="主页交互">
+    <PreferenceCategory app:title="@string/adv_category_swipe">
         <ListPreference
-            app:key="key_swipe_left_action"
-            app:title="向左滑动卡片"
-            app:summary="当前操作: %s"
+            app:key="swipe_left_action"
+            app:title="@string/adv_swipe_left"
+            app:summary="@string/adv_swipe_current"
             app:entries="@array/swipe_action_entries"
             app:entryValues="@array/swipe_action_values"
             app:defaultValue="delete" />
 
         <ListPreference
-            app:key="key_swipe_right_action"
-            app:title="向右滑动卡片"
-            app:summary="当前操作: %s"
+            app:key="swipe_right_action"
+            app:title="@string/adv_swipe_right"
+            app:summary="@string/adv_swipe_current"
             app:entries="@array/swipe_action_entries"
             app:entryValues="@array/swipe_action_values"
             app:defaultValue="delete" />
     </PreferenceCategory>
-    <PreferenceCategory app:title="联网与更新">
+    <PreferenceCategory app:title="@string/adv_category_network">
         <SwitchPreferenceCompat
-            app:key="key_auto_update"
-            app:title="自动检查更新"
-            app:summary="每次冷启动应用时自动连接服务器检查新版本"
+            app:key="auto_update_enabled"
+            app:title="@string/adv_auto_update"
+            app:summary="@string/adv_auto_update_summary"
             app:defaultValue="true" />
     </PreferenceCategory>
 </PreferenceScreen>

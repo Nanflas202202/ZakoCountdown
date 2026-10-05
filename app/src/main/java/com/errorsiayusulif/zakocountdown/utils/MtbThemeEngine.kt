@@ -16,19 +16,19 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.graphics.ColorUtils
 import androidx.preference.PreferenceFragmentCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
+import com.errorsiayusulif.zakocountdown.data.ImportedPalette
 import com.errorsiayusulif.zakocountdown.data.MtbColorScheme
+import com.errorsiayusulif.zakocountdown.data.ThemeArchive
 import com.errorsiayusulif.zakocountdown.data.MtbThemeData
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
-import com.google.android.material.checkbox.MaterialCheckBox
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.navigationrail.NavigationRailView
-import com.google.android.material.radiobutton.MaterialRadioButton
 import com.google.android.material.slider.Slider
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.textfield.TextInputLayout
@@ -40,54 +40,133 @@ import java.io.InputStreamReader
 object MtbThemeEngine {
 
     const val TAG = "MtbThemeEngine"
-    const val PREF_IS_MTB_ENABLED = "is_mtb_theme_enabled"
-    private const val PREF_PREFIX_LIGHT = "mtb_light_"
-    private const val PREF_PREFIX_DARK = "mtb_dark_"
+    const val PREF_IS_MTB_ENABLED = PreferenceKeys.MTB_THEME_ENABLED
+    /**
+     * 偏好键前缀。**唯一来源是 [ThemeArchive]** ——
+     * 写入和读取必须用同一套前缀，所以这里只做转发，不另立常量。
+     */
+    private val PREF_PREFIX_LIGHT = ThemeArchive.PREF_PREFIX_LIGHT
+    private val PREF_PREFIX_DARK = ThemeArchive.PREF_PREFIX_DARK
 
     fun isMtbActive(context: Context): Boolean {
-        val prefs = context.getSharedPreferences("zako_prefs", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(PreferenceKeys.PREFS_FILE, Context.MODE_PRIVATE)
         return prefs.getBoolean(PREF_IS_MTB_ENABLED, false) &&
-                prefs.getString("key_accent_color", "") == "CUSTOM_MTB"
+                prefs.getString(PreferenceKeys.ACCENT_COLOR, "") ==
+                com.errorsiayusulif.zakocountdown.data.PreferenceManager.ACCENT_CUSTOM_MTB
     }
 
-    suspend fun importThemeJson(context: Context, uri: Uri): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val inputStream = context.contentResolver.openInputStream(uri) ?: return@withContext false
-            val reader = InputStreamReader(inputStream)
-            val themeData = Gson().fromJson(reader, MtbThemeData::class.java)
-            val prefs = context.getSharedPreferences("zako_prefs", Context.MODE_PRIVATE).edit()
+    /**
+     * 导入 `material-theme.json`：解析 + 写入偏好，并把配色交回调用方供存档。
+     *
+     * 写入统一走 [ThemeArchive.applyColors]，不再在本类里另写一套键名拼接 ——
+     * 之前 ZIP 与 JSON 两条路径各自写键，很容易悄悄漂移。
+     *
+     * @return 解析失败返回 null
+     */
+    suspend fun importThemeJson(context: Context, uri: Uri): ImportedPalette? = withContext(Dispatchers.IO) {
+        val palette = parseThemeJson(context, uri) ?: return@withContext null
+        ThemeArchive.applyColors(context, palette.light, palette.dark)
+        palette
+    }
 
-            themeData.schemes?.light?.let { saveScheme(prefs, PREF_PREFIX_LIGHT, it) }
-            themeData.schemes?.dark?.let { saveScheme(prefs, PREF_PREFIX_DARK, it) }
+    /**
+     * 把 `material-theme.json` 解析成两套配色表，供 [com.errorsiayusulif.zakocountdown.data.ThemeArchive] 存档。
+     *
+     * 与 [importThemeJson] 分开是有意的：
+     *   · [importThemeJson] 负责「写进偏好」这件事（保持原有行为不动）
+     *   · 本方法只负责「读出数据」
+     * 两者各自读一遍文件 —— MTB 导出的 JSON 只有几 KB，重复读取的代价可以忽略，
+     * 换来的是两条路径互不干扰、都容易单独测试。
+     *
+     * @return 解析失败返回 null
+     */
+    fun parseThemeJson(context: Context, uri: Uri): ImportedPalette? {
+        return try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                val themeData = Gson().fromJson(InputStreamReader(input), MtbThemeData::class.java)
+                    ?: return null
 
-            prefs.putBoolean(PREF_IS_MTB_ENABLED, true)
-            prefs.putString("key_accent_color", "CUSTOM_MTB")
-            prefs.apply()
-
-            reader.close()
-            return@withContext true
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to parse MTB JSON", e)
-            return@withContext false
+                val light = themeData.schemes?.light.toColorMap()
+                val dark = themeData.schemes?.dark.toColorMap()
+                if (light.isEmpty() && dark.isEmpty()) null
+                else ImportedPalette(light = light, dark = dark)
+            }
+        } catch (t: Throwable) {
+            Log.e(TAG, "解析 MTB JSON 失败", t)
+            null
         }
     }
 
-    private fun saveScheme(prefs: android.content.SharedPreferences.Editor, prefix: String, scheme: MtbColorScheme) {
-        val map = mapOf(
-            "primary" to scheme.primary, "onPrimary" to scheme.onPrimary,
-            "primaryContainer" to scheme.primaryContainer, "onPrimaryContainer" to scheme.onPrimaryContainer,
-            "secondary" to scheme.secondary, "onSecondary" to scheme.onSecondary,
-            "secondaryContainer" to scheme.secondaryContainer, "onSecondaryContainer" to scheme.onSecondaryContainer,
-            "surface" to scheme.surface, "onSurface" to scheme.onSurface,
-            "surfaceVariant" to scheme.surfaceVariant, "onSurfaceVariant" to scheme.onSurfaceVariant,
-            "outline" to scheme.outline, "outlineVariant" to scheme.outlineVariant
+    /**
+     * 把整个 [MtbColorScheme] 转成「角色 → 色值」表。
+     *
+     * 之所以逐字段列出而不是用反射：字段名到角色名的映射是**契约**
+     * （必须与 [MtbZipImporter] 解析 zip 时得到的键名完全一致），
+     * 用反射一旦有人改字段名就会静默失配，这里显式写出来，编译期就能发现遗漏。
+     */
+    private fun MtbColorScheme?.toColorMap(): Map<String, String> {
+        if (this == null) return emptyMap()
+        val pairs = listOf(
+            "primary" to primary,
+            "onPrimary" to onPrimary,
+            "primaryContainer" to primaryContainer,
+            "onPrimaryContainer" to onPrimaryContainer,
+            "secondary" to secondary,
+            "onSecondary" to onSecondary,
+            "secondaryContainer" to secondaryContainer,
+            "onSecondaryContainer" to onSecondaryContainer,
+            "tertiary" to tertiary,
+            "onTertiary" to onTertiary,
+            "tertiaryContainer" to tertiaryContainer,
+            "onTertiaryContainer" to onTertiaryContainer,
+            "error" to error,
+            "onError" to onError,
+            "errorContainer" to errorContainer,
+            "onErrorContainer" to onErrorContainer,
+            "background" to background,
+            "onBackground" to onBackground,
+            "surface" to surface,
+            "onSurface" to onSurface,
+            "surfaceVariant" to surfaceVariant,
+            "onSurfaceVariant" to onSurfaceVariant,
+            "outline" to outline,
+            "outlineVariant" to outlineVariant,
+            "scrim" to scrim,
+            "inverseSurface" to inverseSurface,
+            "inverseOnSurface" to inverseOnSurface,
+            "inversePrimary" to inversePrimary,
+            "primaryFixed" to primaryFixed,
+            "onPrimaryFixed" to onPrimaryFixed,
+            "primaryFixedDim" to primaryFixedDim,
+            "onPrimaryFixedVariant" to onPrimaryFixedVariant,
+            "secondaryFixed" to secondaryFixed,
+            "onSecondaryFixed" to onSecondaryFixed,
+            "secondaryFixedDim" to secondaryFixedDim,
+            "onSecondaryFixedVariant" to onSecondaryFixedVariant,
+            "tertiaryFixed" to tertiaryFixed,
+            "onTertiaryFixed" to onTertiaryFixed,
+            "tertiaryFixedDim" to tertiaryFixedDim,
+            "onTertiaryFixedVariant" to onTertiaryFixedVariant,
+            "surfaceDim" to surfaceDim,
+            "surfaceBright" to surfaceBright,
+            "surfaceContainerLowest" to surfaceContainerLowest,
+            "surfaceContainerLow" to surfaceContainerLow,
+            "surfaceContainer" to surfaceContainer,
+            "surfaceContainerHigh" to surfaceContainerHigh,
+            "surfaceContainerHighest" to surfaceContainerHighest
         )
-        map.forEach { (key, value) -> if (value != null) prefs.putString("$prefix$key", value) }
+        return pairs.mapNotNull { (role, value) -> value?.let { role to it } }.toMap()
     }
 
     fun isDarkMode(context: Context): Boolean {
         val currentNightMode = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
         return currentNightMode == Configuration.UI_MODE_NIGHT_YES
+    }
+
+    /** 当前生效的导入主题名；没导入过则返回空串。 */
+    fun currentThemeName(context: Context): String {
+        val prefs = context.getSharedPreferences(PreferenceKeys.PREFS_FILE, Context.MODE_PRIVATE)
+        return prefs.getString(PreferenceKeys.MTB_THEME_NAME, "").orEmpty()
     }
 
     /**
@@ -141,7 +220,7 @@ object MtbThemeEngine {
         if (rootView == null) return
 
         // 全量提取最适配的颜色（即使是内建粉色、蓝色、Monet 也能被准确提取出来）
-        val primary = getResolvedColor(context, "primary", com.google.android.material.R.attr.colorPrimary, com.google.android.material.R.attr.colorPrimary, "#6750A4")
+        val primary = getResolvedColor(context, "primary", android.R.attr.colorPrimary, android.R.attr.textColorPrimary, "#6750A4")
         val onPrimary = getResolvedColor(context, "onPrimary", com.google.android.material.R.attr.colorOnPrimary, android.R.attr.textColorPrimaryInverse, "#FFFFFF")
         val primaryContainer = getResolvedColor(context, "primaryContainer", com.google.android.material.R.attr.colorPrimaryContainer, com.google.android.material.R.attr.colorSurfaceVariant, "#EADDFF")
         val onPrimaryContainer = getResolvedColor(context, "onPrimaryContainer", com.google.android.material.R.attr.colorOnPrimaryContainer, com.google.android.material.R.attr.colorOnSurface, "#21005D")
@@ -153,10 +232,12 @@ object MtbThemeEngine {
         val onSurfaceVariant = getResolvedColor(context, "onSurfaceVariant", com.google.android.material.R.attr.colorOnSurfaceVariant, android.R.attr.textColorSecondary, "#49454F")
         val outline = getResolvedColor(context, "outline", com.google.android.material.R.attr.colorOutline, android.R.attr.textColorSecondary, "#79747E")
         val outlineVariant = getResolvedColor(context, "outlineVariant", com.google.android.material.R.attr.colorOutlineVariant, android.R.attr.textColorSecondary, "#CAC4D0")
+        val secondary = getResolvedColor(context, "secondary", com.google.android.material.R.attr.colorSecondary, android.R.attr.colorPrimary, "#625B71")
+        val onSecondary = getResolvedColor(context, "onSecondary", com.google.android.material.R.attr.colorOnSecondary, com.google.android.material.R.attr.colorOnPrimary, "#FFFFFF")
 
         val navStateList = ColorStateList(
             arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf(-android.R.attr.state_checked)),
-            intArrayOf(onSecondaryContainer, ColorUtils.setAlphaComponent(onSurface, 160))
+            intArrayOf(primary, ColorUtils.setAlphaComponent(onSurface, 160))
         )
 
         val primaryStateList = ColorStateList(
@@ -164,14 +245,16 @@ object MtbThemeEngine {
             intArrayOf(primary, ColorUtils.setAlphaComponent(onSurface, 120))
         )
 
-        if (rootView.background == null && rootView.id != android.R.id.content) {
+        // 只给「确实没有任何背景」的容器兜底上 Surface 色，
+        // 已经带了背景（图片、自定义色、shape drawable）的视图保持原样，避免吞掉用户自定义外观。
+        if (rootView.background == null) {
             rootView.setBackgroundColor(surface)
         }
 
         traverseView(
             rootView, primary, onPrimary, primaryContainer, onPrimaryContainer,
-            secondaryContainer, onSecondaryContainer, surface, onSurface,
-            surfaceVariant, onSurfaceVariant, outline, outlineVariant,
+            secondary, onSecondary, secondaryContainer, onSecondaryContainer,
+            surface, onSurface, surfaceVariant, onSurfaceVariant, outline, outlineVariant,
             navStateList, primaryStateList
         )
     }
@@ -179,95 +262,107 @@ object MtbThemeEngine {
     private fun traverseView(
         v: View,
         primary: Int, onPrimary: Int, primaryContainer: Int, onPrimaryContainer: Int,
+        secondary: Int, onSecondary: Int,
         secondaryContainer: Int, onSecondaryContainer: Int, surface: Int, onSurface: Int,
         surfaceVariant: Int, onSurfaceVariant: Int, outline: Int, outlineVariant: Int,
         navStateList: ColorStateList, primaryStateList: ColorStateList
     ) {
         when (v) {
             is Toolbar -> {
-                v.setBackgroundColor(surface)
+                // MD1 的 Toolbar 样式显式设置了 colorPrimary 背景；只有在没有背景时才兜底，
+                // 否则会把旧版主题的彩色标题栏刷成纯 Surface，丢掉设计差异。
+                if (v.background == null) v.setBackgroundColor(surface)
                 v.setTitleTextColor(onSurface)
                 v.setSubtitleTextColor(onSurfaceVariant)
                 v.navigationIcon?.setTint(onSurface)
             }
+
             is FloatingActionButton -> {
                 v.backgroundTintList = ColorStateList.valueOf(primaryContainer)
                 v.imageTintList = ColorStateList.valueOf(onPrimaryContainer)
             }
+
             is ExtendedFloatingActionButton -> {
                 v.backgroundTintList = ColorStateList.valueOf(primaryContainer)
                 v.setTextColor(onPrimaryContainer)
                 v.iconTint = ColorStateList.valueOf(onPrimaryContainer)
             }
+
+            // ------------------------------------------------------------------
+            // 【核心修复】不再强制改写 MaterialButton 的底色。
+            // backgroundTint 从 XML 样式解析后可能是 null（outlined/tonal/text 都如此），
+            // 旧代码把 null 当成「填充按钮」并强制涂成 Primary，
+            // 导致 Outlined / Tonal / Text 按钮以及 MD1/MD2 下的按钮外观全部错乱。
+            // 现在只保证「已经明确着色」的按钮有可读的前景色。
+            // ------------------------------------------------------------------
             is MaterialButton -> {
-                if (v.strokeWidth > 0) {
-                    v.strokeColor = ColorStateList.valueOf(outline)
-                    v.setTextColor(primary)
-                    v.iconTint = ColorStateList.valueOf(primary)
-                } else if (v.backgroundTintList == null || v.backgroundTintList == ColorStateList.valueOf(Color.TRANSPARENT)) {
+                val tint = v.backgroundTintList
+                if (tint == null) {
+                    // 真正的透明/文字按钮：用当前主题的 Primary 保证可见
                     v.setTextColor(primary)
                     v.iconTint = ColorStateList.valueOf(primary)
                 } else {
-                    v.backgroundTintList = ColorStateList.valueOf(primary)
-                    v.setTextColor(onPrimary)
-                    v.iconTint = ColorStateList.valueOf(onPrimary)
+                    // 有底色：根据底色亮度自动选择黑或白前景，任何主题下都有对比度
+                    v.setTextColor(contrastForegroundFor(tint.defaultColor, primary, onPrimary, onSurface))
+                    v.iconTint = ColorStateList.valueOf(v.currentTextColor)
                 }
             }
+
+            // 卡片背景交给主题属性 / 用户自定义色，这里只统一描边
             is MaterialCardView -> {
-                v.setCardBackgroundColor(surface)
-                v.strokeColor = outlineVariant
+                if (v.strokeWidth > 0) v.strokeColor = outlineVariant
             }
+
             is BottomNavigationView -> {
                 v.setBackgroundColor(surface)
                 v.itemActiveIndicatorColor = ColorStateList.valueOf(secondaryContainer)
                 v.itemIconTintList = navStateList
                 v.itemTextColor = navStateList
             }
+
             is NavigationRailView -> {
                 v.setBackgroundColor(surface)
                 v.itemActiveIndicatorColor = ColorStateList.valueOf(secondaryContainer)
                 v.itemIconTintList = navStateList
                 v.itemTextColor = navStateList
             }
+
             is NavigationView -> {
                 v.setBackgroundColor(surface)
                 v.itemIconTintList = navStateList
                 v.itemTextColor = navStateList
             }
+
             is TabLayout -> {
-                v.setBackgroundColor(surface)
+                if (v.background == null) v.setBackgroundColor(surface)
                 v.setSelectedTabIndicatorColor(primary)
                 v.setTabTextColors(ColorUtils.setAlphaComponent(onSurface, 150), primary)
             }
-            is MaterialSwitch -> {
-                val trackColors = ColorStateList(
-                    arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf(-android.R.attr.state_checked)),
-                    intArrayOf(primaryContainer, surfaceVariant)
-                )
-                val thumbColors = ColorStateList(
-                    arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf(-android.R.attr.state_checked)),
-                    intArrayOf(primary, outline)
-                )
-                v.trackTintList = trackColors
-                v.thumbTintList = thumbColors
-            }
-            is RadioButton, is MaterialRadioButton -> {
-                (v as android.widget.CompoundButton).buttonTintList = primaryStateList
-            }
-            is CheckBox, is MaterialCheckBox -> {
-                (v as android.widget.CompoundButton).buttonTintList = primaryStateList
-            }
+
+            // 开关 / 单选 / 复选 / 滑杆：交给主题属性解析（MD1/MD2/MD3 各自正确）
             is Slider -> {
                 v.thumbTintList = ColorStateList.valueOf(primary)
                 v.trackActiveTintList = ColorStateList.valueOf(primary)
                 v.trackInactiveTintList = ColorStateList.valueOf(surfaceVariant)
             }
+
+            is RadioButton -> {
+                (v as android.widget.CompoundButton).buttonTintList = primaryStateList
+            }
+
+            is CheckBox -> {
+                (v as android.widget.CompoundButton).buttonTintList = primaryStateList
+            }
+
             is TextInputLayout -> {
-                v.boxStrokeColor = primary
-                v.setHintTextColor(ColorStateList.valueOf(primary))
+                // 只在描边本来就是主题色时同步为 Primary，避免覆盖自定义描边
+                v.setHintTextColor(ColorStateList.valueOf(onSurfaceVariant))
                 v.defaultHintTextColor = ColorStateList.valueOf(onSurfaceVariant)
             }
+
             is TextView -> {
+                // 只处理 Preference 行标题/摘要，其他 TextView 完全交给 XML/主题，
+                // 避免把用户自定义的颜色（如日程卡片标题色）覆盖掉。
                 if (v.id == android.R.id.title || v.id == com.errorsiayusulif.zakocountdown.R.id.row_title) {
                     v.setTextColor(onSurface)
                 } else if (v.id == android.R.id.summary || v.id == com.errorsiayusulif.zakocountdown.R.id.row_value) {
@@ -280,10 +375,27 @@ object MtbThemeEngine {
             for (i in 0 until v.childCount) {
                 traverseView(
                     v.getChildAt(i), primary, onPrimary, primaryContainer, onPrimaryContainer,
-                    secondaryContainer, onSecondaryContainer, surface, onSurface,
-                    surfaceVariant, onSurfaceVariant, outline, outlineVariant, navStateList, primaryStateList
+                    secondary, onSecondary, secondaryContainer, onSecondaryContainer,
+                    surface, onSurface, surfaceVariant, onSurfaceVariant, outline, outlineVariant,
+                    navStateList, primaryStateList
                 )
             }
+        }
+    }
+
+    /**
+     * 根据按钮底色的亮度挑一个可读的前景色。
+     * 这样无论用户选的是 Monet、内建粉/蓝、还是 MTB 导入的动态色，
+     * 按钮文字都不会出现"深底深字/浅底浅字"的情况。
+     */
+    private fun contrastForegroundFor(background: Int, primary: Int, onPrimary: Int, onSurface: Int): Int {
+        if (background == Color.TRANSPARENT) return primary
+        return if (ColorUtils.calculateLuminance(background) > 0.5) {
+            // 浅色底 → 用深色前景
+            if (ColorUtils.calculateLuminance(onSurface) < 0.5) onSurface else Color.BLACK
+        } else {
+            // 深色底 → 用浅色前景
+            if (ColorUtils.calculateLuminance(onPrimary) > 0.5) onPrimary else Color.WHITE
         }
     }
 }

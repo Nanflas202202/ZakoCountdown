@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory app:title="关键权限 (已授予的将自动隐藏)">
+    <PreferenceCategory app:title="@string/oobe_permissions_title">
         <Preference
             app:key="oobe_perm_notif"
-            app:title="通知权限"
-            app:summary="用于发送常驻通知和倒数日到期提醒"
+            app:title="@string/oobe_perm_notification"
+            app:summary="@string/oobe_perm_notification_summary"
             app:icon="@drawable/ic_notifications" />
 
         <Preference
             app:key="oobe_perm_alarm"
-            app:title="精确闹钟权限"
-            app:summary="确保倒数日到期时能准时向您发送提醒"
+            app:title="@string/oobe_perm_alarm"
+            app:summary="@string/oobe_perm_alarm_summary"
             app:icon="@drawable/ic_info" />
 
         <Preference
             app:key="oobe_perm_acc"
-            app:title="无障碍服务"
-            app:summary="用于在您打开指定应用时检测并触发开屏弹窗"
+            app:title="@string/oobe_perm_accessibility"
+            app:summary="@string/oobe_perm_accessibility_summary"
             app:icon="@drawable/ic_security" />
 
         <Preference
             app:key="oobe_perm_overlay"
-            app:title="悬浮窗权限"
-            app:summary="确保开屏弹窗能在其他应用上方正确显示"
+            app:title="@string/oobe_perm_overlay"
+            app:summary="@string/oobe_perm_overlay_summary"
             app:icon="@drawable/ic_collections_bookmark" />
     </PreferenceCategory>
 </PreferenceScreen>

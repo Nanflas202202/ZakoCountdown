@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 简体中文 (zh-CN) 数组资源。数组名必须与 values/arrays.xml 保持一致。 -->
+<resources>
+    <!-- 主题（M3E 暂时下线，见 values/arrays.xml 的说明） -->
+    <string-array name="theme_entries">
+        <item>Material Design 3 (推荐)</item>
+        <item>Material Design 2 (经典)</item>
+        <item>Material Design 1 (怀旧)</item>
+    </string-array>
+
+    <!-- 不包含 MD1 的稳定版主题列表 -->
+    <string-array name="theme_entries_stable">
+        <item>Material Design 3</item>
+        <item>Material Design 2 (经典)</item>
+    </string-array>
+
+    <!-- 强调色 -->
+    <string-array name="color_entries">
+        <item>跟随壁纸 (Monet)</item>
+        <item>活力粉</item>
+        <item>天空蓝</item>
+    </string-array>
+
+    <!-- 弹窗模式 -->
+    <string-array name="popup_mode_entries">
+        <item>自动 (推荐)</item>
+        <item>Activity 模式</item>
+        <item>悬浮窗模式</item>
+    </string-array>
+
+    <!-- 提醒时间 -->
+    <string-array name="reminder_time_entries">
+        <item>不提醒</item>
+        <item>提前 1 天</item>
+        <item>提前 3 天</item>
+        <item>提前 1 周</item>
+    </string-array>
+
+    <!-- 遮罩颜色 -->
+    <string-array name="scrim_color_entries">
+        <item>主题色 (默认)</item>
+        <item>纯黑</item>
+        <item>纯白</item>
+        <item>自定义颜色</item>
+    </string-array>
+
+    <!-- 导航栏样式（取值见 values/arrays.xml；「悬浮」已改为底部导航栏的自动隐藏开关） -->
+    <string-array name="nav_mode_entries">
+        <item>底部导航栏</item>
+        <item>侧滑抽屉</item>
+    </string-array>
+
+    <!-- 主页布局 -->
+    <string-array name="home_layout_entries">
+        <item>标准模式 (默认)</item>
+        <item>紧凑模式 (单页)</item>
+    </string-array>
+
+    <!-- 应用图标 -->
+    <string-array name="app_icon_entries">
+        <item>旧版图标</item>
+        <item>新版图标</item>
+    </string-array>
+
+    <!-- 滑动操作 -->
+    <string-array name="swipe_action_entries">
+        <item>删除日程</item>
+        <item>编辑日程详细信息</item>
+        <item>卡片个性化设置</item>
+        <item>设为 / 取消置顶</item>
+        <item>设为 / 取消重点</item>
+        <item>生成分享卡片</item>
+        <item>无操作 (禁用滑动)</item>
+    </string-array>
+
+    <!-- 应用语言 -->
+    <string-array name="language_entries">
+        <item>跟随系统</item>
+        <item>English</item>
+        <item>简体中文</item>
+    </string-array>
+</resources>

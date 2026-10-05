@@ -13,7 +13,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="构建信息"
+            android:text="@string/about_build_info"
             android:textAppearance="?attr/textAppearanceTitleMedium"/>
 
         <!-- 构建信息容器 -->
@@ -27,7 +27,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="主要依赖库"
+            android:text="@string/about_main_dependencies"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:layout_marginTop="24dp"/>
 

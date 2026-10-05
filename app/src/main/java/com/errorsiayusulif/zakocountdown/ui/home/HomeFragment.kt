@@ -76,6 +76,9 @@ class HomeFragment : Fragment() {
                 } else if (prefs.isAgendaBookEnabled()) {
                     menuInflater.inflate(R.menu.home_menu, menu)
                 }
+                // 注意：不要在这里隐藏 R.id.action_filter。
+                // 它打开的是**右侧筛选抽屉**（按日程本过滤），和左侧导航抽屉是两回事 ——
+                // 无论用哪种导航方式，它都是这个功能的唯一入口，隐藏了就彻底用不了了。
             }
             override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                 return when (menuItem.itemId) {
@@ -100,7 +103,7 @@ class HomeFragment : Fragment() {
         // 2. 初始化 Adapter
         val adapter = CountdownAdapter(
             onItemClicked = { event ->
-                val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "编辑日程", eventId = event.id)
+                val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = getString(R.string.home_title_edit_event), eventId = event.id)
                 findNavController().navigate(action)
             },
             onLongItemClicked = { event, anchorView ->
@@ -156,7 +159,7 @@ class HomeFragment : Fragment() {
         binding.fabAddEvent.setOnClickListener {
             val currentFilter = agendaViewModel.currentFilterId.value ?: -1L
             val defaultBookId = if (currentFilter > 0) currentFilter else -1L
-            val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = "添加日程", defaultBookId = defaultBookId)
+            val action = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(title = getString(R.string.home_title_add_event), defaultBookId = defaultBookId)
             findNavController().navigate(action)
         }
         // MTB 动态主题应用
@@ -247,11 +250,11 @@ class HomeFragment : Fragment() {
 
         binding.tabLayoutAgenda.removeAllTabs()
 
-        val tabAll = binding.tabLayoutAgenda.newTab().setText("全部").setTag(-1L)
+        val tabAll = binding.tabLayoutAgenda.newTab().setText(getString(R.string.home_tab_all)).setTag(-1L)
         binding.tabLayoutAgenda.addTab(tabAll)
         if (currentFilter == -1L) tabAll.select()
 
-        val tabImp = binding.tabLayoutAgenda.newTab().setText("重点").setTag(-2L)
+        val tabImp = binding.tabLayoutAgenda.newTab().setText(getString(R.string.home_tab_important)).setTag(-2L)
         binding.tabLayoutAgenda.addTab(tabImp)
         if (currentFilter == -2L) tabImp.select()
 
@@ -305,7 +308,7 @@ class HomeFragment : Fragment() {
             PreferenceManager.SCRIM_MODE_CUSTOM -> {
                 try { Color.parseColor(app.preferenceManager.getScrimCustomColor()) } catch (e: Exception) { Color.DKGRAY }
             }
-            else -> MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+            else -> MaterialColors.getColor(binding.root, android.R.attr.colorPrimary)
         }
         val finalScrimColor = ColorUtils.setAlphaComponent(baseColor, scrimAlphaInt)
         if (wallpaperUriString != null) {
@@ -323,7 +326,7 @@ class HomeFragment : Fragment() {
         if (!app.preferenceManager.isEnableEnterDevMode()) return
         val devModeEvents = events.filter { it.title == "EnterDevMode" }
         if (devModeEvents.size >= 5) {
-            Toast.makeText(requireContext(), "开发者选项已开启！", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.home_dev_mode_unlocked, Toast.LENGTH_SHORT).show()
             findNavController().navigate(R.id.action_global_developerSettingsFragment)
             homeViewModel.deleteDevModeEvents()
         }
@@ -334,10 +337,10 @@ class HomeFragment : Fragment() {
         popup.menuInflater.inflate(R.menu.event_card_context_menu, popup.menu)
 
         val pinMenuItem = popup.menu.findItem(R.id.action_pin)
-        pinMenuItem.title = if (event.isPinned) "取消置顶" else "设为置顶"
+        pinMenuItem.title = if (event.isPinned) getString(R.string.home_unpin) else getString(R.string.home_pin)
 
         val importantMenuItem = popup.menu.findItem(R.id.action_mark_important)
-        importantMenuItem.title = if (event.isImportant) "取消重点" else "设为重点"
+        importantMenuItem.title = if (event.isImportant) getString(R.string.home_unmark_important) else getString(R.string.home_mark_important)
 
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -360,16 +363,16 @@ class HomeFragment : Fragment() {
                     val link = "errorsiayusulif://zakocountdown/import?title=$encodedTitle&date=${event.targetDate.time}$colorParam"
 
                     val clipboard = requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
-                    val clip = android.content.ClipData.newPlainText("Zako Countdown Link", "我与你分享了一个倒数日「${event.title}」，点击链接直接导入到 ZakoCountdown：\n$link")
+                    val clip = android.content.ClipData.newPlainText("Zako Countdown Link", getString(R.string.home_share_link_text, event.title, link))
                     clipboard.setPrimaryClip(clip)
 
-                    Toast.makeText(requireContext(), "分享文本与链接已复制！", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.home_share_link_copied, Toast.LENGTH_SHORT).show()
                     true
                 }
                 R.id.action_delete -> {
                     homeViewModel.delete(event)
-                    Snackbar.make(binding.root, "日程已删除", Snackbar.LENGTH_LONG)
-                        .setAction("撤销") { homeViewModel.insert(event) }.show()
+                    Snackbar.make(binding.root, R.string.home_event_deleted, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.common_undo) { homeViewModel.insert(event) }.show()
                     true
                 }
                 else -> false
@@ -387,11 +390,11 @@ class HomeFragment : Fragment() {
                 putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, startMillis)
                 putExtra(CalendarContract.EXTRA_EVENT_END_TIME, startMillis + 3600000)
                 putExtra(CalendarContract.EXTRA_EVENT_ALL_DAY, true)
-                putExtra(CalendarContract.Events.DESCRIPTION, "来自 ZakoCountdown 的提醒")
+                putExtra(CalendarContract.Events.DESCRIPTION, getString(R.string.home_added_to_calendar_desc))
             }
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(requireContext(), "未找到日历应用", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.home_no_calendar_app, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -407,7 +410,7 @@ class HomeFragment : Fragment() {
                 extras.putLong("preselected_event_id", event.id)
                 extras.putBoolean("is_shortcut_creation", true)
                 appWidgetManager.requestPinAppWidget(myProvider, extras, null)
-                Toast.makeText(requireContext(), "请求已发送", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.home_widget_request_sent, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -445,13 +448,13 @@ class HomeFragment : Fragment() {
                     adapter.notifyItemChanged(position) // 把卡片弹回去
 
                     com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
-                        .setTitle("💡 滑动操作可自定义")
-                        .setMessage("默认滑动操作为“删除”。您可以在高级设置中将其修改为：置顶、重点、个性化或分享等快捷功能！\n\n是否现在去配置？")
-                        .setPositiveButton("去配置") { _, _ ->
+                        .setTitle(getString(R.string.home_swipe_guide_title))
+                        .setMessage(getString(R.string.home_swipe_guide_message))
+                        .setPositiveButton(getString(R.string.home_swipe_guide_configure)) { _, _ ->
                             // 跳转到高级设置
                             findNavController().navigate(R.id.advancedSettingsFragment)
                         }
-                        .setNegativeButton("继续删除") { _, _ ->
+                        .setNegativeButton(getString(R.string.home_swipe_guide_keep_delete)) { _, _ ->
                             // 用户不想配置，帮他完成刚才想做的删除操作
                             executeSwipeAction(action, event, position, adapter)
                         }
@@ -509,25 +512,25 @@ class HomeFragment : Fragment() {
         when (action) {
             "delete" -> {
                 homeViewModel.delete(event)
-                Snackbar.make(binding.root, "日程已删除", Snackbar.LENGTH_LONG)
-                    .setAction("撤销") { homeViewModel.insert(event) }.show()
+                Snackbar.make(binding.root, R.string.home_event_deleted, Snackbar.LENGTH_LONG)
+                    .setAction(R.string.common_undo) { homeViewModel.insert(event) }.show()
             }
             "pin" -> {
                 homeViewModel.update(event.copy(isPinned = !event.isPinned))
                 adapter.notifyItemChanged(position)
-                val status = if (!event.isPinned) "已置顶" else "已取消置顶"
+                val status = if (!event.isPinned) getString(R.string.home_event_pinned) else getString(R.string.home_event_unpinned)
                 Toast.makeText(requireContext(), status, Toast.LENGTH_SHORT).show()
             }
             "important" -> {
                 homeViewModel.update(event.copy(isImportant = !event.isImportant))
                 adapter.notifyItemChanged(position)
-                val status = if (!event.isImportant) "已设为重点" else "已取消重点"
+                val status = if (!event.isImportant) getString(R.string.home_event_marked_important) else getString(R.string.home_event_unmarked_important)
                 Toast.makeText(requireContext(), status, Toast.LENGTH_SHORT).show()
             }
             "edit" -> {
                 adapter.notifyItemChanged(position)
                 val navAction = HomeFragmentDirections.actionHomeFragmentToAddEditEventFragment(
-                    title = "编辑日程",
+                    title = getString(R.string.home_title_edit_event),
                     eventId = event.id
                 )
                 findNavController().navigate(navAction)

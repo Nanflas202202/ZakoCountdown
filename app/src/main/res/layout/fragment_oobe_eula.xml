@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="用户许可协议"
+        android:text="@string/oobe_eula_title"
         android:textAppearance="?attr/textAppearanceHeadlineSmall"
         android:textStyle="bold" />
 
@@ -31,21 +31,21 @@
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="工作室协议" />
+                android:text="@string/oobe_eula_studio_agreement" />
 
             <Button
                 android:id="@+id/btn_eula_zh"
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GNU (中文)" />
+                android:text="@string/oobe_eula_mpl_zh" />
 
             <Button
                 android:id="@+id/btn_eula_en"
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GNU (EN)" />
+                android:text="@string/oobe_eula_mpl_en" />
         </com.google.android.material.button.MaterialButtonToggleGroup>
     </HorizontalScrollView>
 
@@ -70,5 +70,5 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:text="我已阅读并完全同意上述协议的所有条款" />
+        android:text="@string/oobe_eula_accept" />
 </LinearLayout>

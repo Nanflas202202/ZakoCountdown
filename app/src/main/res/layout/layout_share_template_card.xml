@@ -44,7 +44,7 @@
                     android:id="@+id/tv_title_prefix"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="距离"
+                    android:text="@string/countdown_distance"
                     android:textColor="#757575"
                     android:textSize="42px" />
                 <TextView
@@ -55,7 +55,7 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="日程标题"
+                    tools:text="@string/widget_event_title_placeholder"
                     android:textColor="#212121"
                     android:textSize="60px"
                     android:textStyle="bold" />
@@ -76,7 +76,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="50px"
-                android:text="还有"
+                android:text="@string/countdown_remaining"
                 android:textColor="#757575"
                 android:textSize="42px" />
 
@@ -95,7 +95,7 @@
                     android:layout_weight="1"
                     android:fontFamily="sans-serif-black"
                     android:includeFontPadding="false"
-                    android:text="XXX"
+                    tools:text="0"
                     android:textColor="#212121"
                     android:textSize="240px"
                     android:maxLines="1"
@@ -111,7 +111,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="30px"
                     android:layout_marginStart="10px"
-                    android:text="天"
+                    android:text="@string/unit_day"
                     android:textColor="#212121"
                     android:textSize="50px" />
             </LinearLayout>
@@ -121,7 +121,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40px"
-                android:text="2026年1月25日"
+                tools:text="2026-01-25"
                 android:textColor="#757575"
                 android:textSize="36px"
                 android:visibility="gone"

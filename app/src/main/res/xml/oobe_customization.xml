@@ -2,110 +2,115 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="界面与布局">
+    <PreferenceCategory app:title="@string/oobe_customization_ui_category">
         <Preference
             app:key="oobe_wallpaper"
-            app:title="设置主页壁纸"
-            app:summary="选择一张您喜欢的图片作为主页背景" />
+            app:title="@string/oobe_customization_wallpaper"
+            app:summary="@string/oobe_customization_wallpaper_summary" />
 
         <ListPreference
-            app:key="key_home_layout_mode"
-            app:title="主页布局模式"
-            app:summary="当前: %s"
+            app:key="home_layout_mode"
+            app:title="@string/oobe_customization_layout"
+            app:summary="@string/oobe_customization_layout_summary"
             app:entries="@array/home_layout_entries"
             app:entryValues="@array/home_layout_values"
             app:defaultValue="standard" />
 
         <ListPreference
-            app:key="key_nav_mode"
-            app:title="导航栏样式"
-            app:summary="当前: %s"
+            app:key="app_layout_mode"
+            app:title="@string/oobe_customization_nav"
+            app:summary="@string/oobe_customization_nav_summary"
             app:entries="@array/nav_mode_entries"
             app:entryValues="@array/nav_mode_values"
             app:defaultValue="drawer" />
+        <SwitchPreferenceCompat
+            app:key="auto_hide_nav_bar"
+            app:title="@string/adv_auto_hide_nav"
+            app:summary="@string/adv_auto_hide_nav_summary"
+            app:defaultValue="true" />
         <ListPreference
-            app:key="key_app_icon"
-            app:title="更换应用图标"
-            app:summary="更改在手机桌面上的图标样式"
+            app:key="app_icon_alias"
+            app:title="@string/oobe_customization_icon"
+            app:summary="@string/oobe_customization_icon_summary"
             app:entries="@array/app_icon_entries"
             app:entryValues="@array/app_icon_values"
             app:defaultValue="com.errorsiayusulif.zakocountdown.MainActivity" />
     </PreferenceCategory>
     <!-- 新增：将主页手势自定义加入 OOBE -->
-    <PreferenceCategory app:title="主页滑动交互">
+    <PreferenceCategory app:title="@string/oobe_customization_swipe_category">
         <ListPreference
-            app:key="key_swipe_left_action"
-            app:title="向左滑动卡片"
-            app:summary="设置左滑时执行的快捷操作"
+            app:key="swipe_left_action"
+            app:title="@string/oobe_customization_swipe_left"
+            app:summary="@string/oobe_customization_swipe_left_summary"
             app:entries="@array/swipe_action_entries"
             app:entryValues="@array/swipe_action_values"
             app:defaultValue="delete" />
 
         <ListPreference
-            app:key="key_swipe_right_action"
-            app:title="向右滑动卡片"
-            app:summary="设置右滑时执行的快捷操作"
+            app:key="swipe_right_action"
+            app:title="@string/oobe_customization_swipe_right"
+            app:summary="@string/oobe_customization_swipe_right_summary"
             app:entries="@array/swipe_action_entries"
             app:entryValues="@array/swipe_action_values"
             app:defaultValue="delete" />
     </PreferenceCategory>
-    <PreferenceCategory app:title="主题与色彩">
+    <PreferenceCategory app:title="@string/oobe_customization_theme_category">
         <ListPreference
             app:key="accent_color"
-            app:title="全局强调色"
-            app:summary="选择ZakoCountdown的强调色"
+            app:title="@string/oobe_customization_accent"
+            app:summary="@string/oobe_customization_accent_summary"
             app:entries="@array/color_entries"
             app:entryValues="@array/color_values"
             app:defaultValue="MONET" />
 
         <Preference
             app:key="oobe_import_mtb"
-            app:title="导入 MTB 动态主题"
-            app:summary="选择 material-theme.json 文件"
+            app:title="@string/oobe_customization_import_mtb"
+            app:summary="@string/oobe_customization_import_mtb_summary"
             app:isPreferenceVisible="false" />
 
         <ListPreference
-            app:key="key_scrim_color_mode"
-            app:title="背景遮罩颜色"
+            app:key="scrim_color_mode"
+            app:title="@string/oobe_customization_scrim_color"
             app:entries="@array/scrim_color_entries"
             app:entryValues="@array/scrim_color_values"
             app:defaultValue="theme" />
 
         <SeekBarPreference
-            app:key="key_scrim_alpha"
-            app:title="背景遮罩浓度"
+            app:key="scrim_alpha"
+            app:title="@string/oobe_customization_scrim_alpha"
             app:defaultValue="25"
             app:min="0"
             android:max="100"
             app:showSeekBarValue="true" />
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="功能与提醒" app:key="cat_features">
+    <PreferenceCategory app:title="@string/oobe_customization_features_category" app:key="oobe_features_category">
         <SwitchPreferenceCompat
-            app:key="enable_popup_reminder"
-            app:title="开启开屏弹窗"
-            app:summary="启动指定应用时骑脸提醒 (需授予无障碍权限)"
+            app:key="popup_reminder_enabled"
+            app:title="@string/oobe_customization_popup"
+            app:summary="@string/oobe_customization_popup_summary"
             app:defaultValue="true" />
 
         <SeekBarPreference
-            app:key="key_popup_duration"
-            app:title="弹窗显示时长 (秒)"
+            app:key="popup_duration_seconds"
+            app:title="@string/oobe_customization_popup_duration"
             app:defaultValue="5"
             app:min="1"
             android:max="30"
             app:showSeekBarValue="true"
-            app:dependency="enable_popup_reminder" />
+            app:dependency="popup_reminder_enabled" />
 
         <SwitchPreferenceCompat
-            app:key="enable_permanent_notification"
-            app:title="开启常驻通知"
-            app:summary="在通知栏显示一个常驻的倒计时状态"
+            app:key="persistent_notification_enabled"
+            app:title="@string/oobe_customization_persistent"
+            app:summary="@string/oobe_customization_persistent_summary"
             app:defaultValue="false" />
 
         <SwitchPreferenceCompat
-            app:key="key_auto_update"
-            app:title="自动检查更新"
-            app:summary="允许应用在后台获取最新版本信息"
+            app:key="auto_update_enabled"
+            app:title="@string/oobe_customization_auto_update"
+            app:summary="@string/oobe_customization_auto_update_summary"
             app:defaultValue="true" />
     </PreferenceCategory>
 </PreferenceScreen>

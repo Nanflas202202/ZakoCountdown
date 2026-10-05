@@ -18,6 +18,7 @@ import androidx.appcompat.view.ContextThemeWrapper
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.databinding.ActivityPopupReminderBinding
+import com.errorsiayusulif.zakocountdown.utils.LocaleHelper
 import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
 import kotlinx.coroutines.*
 import java.util.Date
@@ -30,6 +31,11 @@ class PopupViewService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    /** 让 Service 里的 getString / 通知文案跟随用户选择的语言 */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase))
+    }
+
     override fun onCreate() {
         super.onCreate()
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
@@ -40,7 +46,7 @@ class PopupViewService : Service() {
         Log.i("PopupViewService", ">>> [SERVICE STARTED]")
         if (intent == null) {
             Log.e("PopupViewService", "Intent is NULL!")
-            showPopup("错误：无法接收数据")
+            showPopup(getString(R.string.service_popup_no_data))
             return START_NOT_STICKY
         }
 
@@ -58,7 +64,7 @@ class PopupViewService : Service() {
 
         serviceScope.launch {
             val details = if (eventIds == null || eventIds.isEmpty()) {
-                "没有找到日程信息"
+                getString(R.string.service_no_event_info)
             } else {
                 val repository = (application as ZakoCountdownApplication).repository
                 withContext(Dispatchers.IO) {
@@ -69,8 +75,8 @@ class PopupViewService : Service() {
 
                     events.take(3).joinToString("\n") { event ->
                         val diff = TimeCalculator.calculateDifference(event.targetDate)
-                        if (diff.isPast) "「${event.title}」已过去 ${diff.totalDays} 天"
-                        else "距离「${event.title}」还有 ${diff.totalDays} 天"
+                        if (diff.isPast) getString(R.string.popup_past_event, event.title, diff.totalDays.toInt())
+                        else getString(R.string.popup_future_event, event.title, diff.totalDays.toInt())
                     }
                 }
             }
@@ -86,7 +92,9 @@ class PopupViewService : Service() {
             try { windowManager.removeView(popupView) } catch (e: Exception) {}
         }
 
-        val themedContext = ContextThemeWrapper(this, R.style.Theme_ZakoCountdown)
+        // 与主界面保持一致的主题（以前硬编码 Theme_ZakoCountdown，导致弹窗配色和其他界面不一致）
+        val themeResId = com.errorsiayusulif.zakocountdown.utils.ZakoThemeApplier.resolveThemeResId(this)
+        val themedContext = ContextThemeWrapper(this, themeResId)
         val inflater = LayoutInflater.from(themedContext)
         val binding = ActivityPopupReminderBinding.inflate(inflater)
         popupView = binding.root

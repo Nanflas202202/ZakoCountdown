@@ -15,7 +15,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:text="欢迎使用 ZakoCountdown"
+        android:text="@string/oobe_welcome_title"
         android:textAppearance="?attr/textAppearanceHeadlineMedium"
         android:textStyle="bold" />
 
@@ -24,7 +24,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:gravity="center"
-        android:text="一款兼具极客精神与人文关怀的高级倒数日/日程管理应用。\n\n接下来，我们将花一分钟时间完成基础配置。"
+        android:text="@string/oobe_welcome_message"
         android:textAppearance="?attr/textAppearanceBodyLarge"
         android:textColor="?attr/colorOnSurfaceVariant" />
 </LinearLayout>

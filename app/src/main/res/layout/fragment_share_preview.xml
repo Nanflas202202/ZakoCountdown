@@ -64,7 +64,7 @@
 
             <!-- 布局选择 -->
             <TextView
-                android:text="布局样式"
+                android:text="@string/share_layout_style"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
@@ -77,14 +77,14 @@
                 app:singleSelection="true"
                 app:selectionRequired="true"
                 app:checkedButton="@id/btn_layout_1">
-                <Button android:id="@+id/btn_layout_1" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="经典"/>
-                <Button android:id="@+id/btn_layout_2" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="极简"/>
-                <Button android:id="@+id/btn_layout_3" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="海报"/>
+                <Button android:id="@+id/btn_layout_1" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_layout_classic"/>
+                <Button android:id="@+id/btn_layout_2" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_layout_minimal"/>
+                <Button android:id="@+id/btn_layout_3" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_layout_poster"/>
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <!-- 整体背景 -->
             <TextView
-                android:text="整体背景 (图片/遮罩色)"
+                android:text="@string/share_overall_background"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -95,7 +95,7 @@
                 android:layout_height="wrap_content"
                 android:gravity="center_vertical"
                 android:layout_marginTop="8dp">
-                <Button android:id="@+id/btn_pick_image" style="?attr/materialButtonStyle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="选图"/>
+                <Button android:id="@+id/btn_pick_image" style="?attr/materialButtonStyle" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/common_pick_image"/>
                 <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:scrollbars="none">
                     <LinearLayout android:id="@+id/palette_background" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal"/>
                 </HorizontalScrollView>
@@ -107,7 +107,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-                <TextView android:id="@+id/tv_card_color_label" android:text="内容区颜色" android:textAppearance="?attr/textAppearanceTitleMedium" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp"/>
+                <TextView android:id="@+id/tv_card_color_label" android:text="@string/share_content_color" android:textAppearance="?attr/textAppearanceTitleMedium" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="24dp"/>
                 <HorizontalScrollView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:scrollbars="none">
                     <LinearLayout android:id="@+id/palette_card" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal"/>
                 </HorizontalScrollView>
@@ -116,7 +116,7 @@
             <!-- 透明度 -->
             <TextView
                 android:id="@+id/tv_alpha_label"
-                android:text="透明度"
+                android:text="@string/share_opacity"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -136,13 +136,13 @@
                 android:id="@+id/switch_show_date"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="在卡片中显示日程日期"
+                android:text="@string/share_show_date"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_marginTop="16dp"/>
 
             <!-- 格式选择 -->
             <TextView
-                android:text="显示格式"
+                android:text="@string/share_display_format"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -156,9 +156,9 @@
                 app:singleSelection="true"
                 app:selectionRequired="true"
                 app:checkedButton="@id/btn_mode_simple">
-                <Button android:id="@+id/btn_mode_simple" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="天数"/>
-                <Button android:id="@+id/btn_mode_detailed" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="详细"/>
-                <Button android:id="@+id/btn_mode_full" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="完整"/>
+                <Button android:id="@+id/btn_mode_simple" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_format_days"/>
+                <Button android:id="@+id/btn_mode_detailed" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_format_detailed"/>
+                <Button android:id="@+id/btn_mode_full" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_format_full"/>
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
         </LinearLayout>
@@ -180,7 +180,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="重置"/>
+            android:text="@string/common_reset"/>
 
         <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
@@ -190,7 +190,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.2"
-            android:text="分享图片"/>
+            android:text="@string/share_share_image"/>
 
         <Space android:layout_width="8dp" android:layout_height="wrap_content"/>
 
@@ -200,7 +200,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.2"
-            android:text="保存到相册"/>
+            android:text="@string/share_save_to_gallery"/>
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

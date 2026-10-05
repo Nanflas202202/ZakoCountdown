@@ -16,7 +16,7 @@
             android:id="@+id/text_view_prefix_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="距离"
+            android:text="@string/countdown_distance"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -58,7 +58,7 @@
             android:id="@+id/time_days_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="天"
+            android:text="@string/unit_day"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_days_value"
             app:layout_constraintStart_toEndOf="@id/time_days_value"/>
@@ -78,7 +78,7 @@
             android:id="@+id/time_hours_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="时"
+            android:text="@string/unit_hour"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_hours_value"
             app:layout_constraintStart_toEndOf="@id/time_hours_value"/>
@@ -98,7 +98,7 @@
             android:id="@+id/time_minutes_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="分"
+            android:text="@string/unit_minute"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_minutes_value"
             app:layout_constraintStart_toEndOf="@id/time_minutes_value"/>
@@ -118,7 +118,7 @@
             android:id="@+id/time_seconds_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="秒"
+            android:text="@string/unit_second"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_seconds_value"
             app:layout_constraintStart_toEndOf="@id/time_seconds_value"/>

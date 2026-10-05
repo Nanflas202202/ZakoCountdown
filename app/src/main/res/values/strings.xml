@@ -1,7 +1,808 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ============================================================================
+  Default (English) string catalog for ZakoCountdown.
+  ============================================================================
+  HOW TO ADD A LANGUAGE
+    1. Create res/values-<locale>/strings.xml (e.g. values-ja, values-zh-rTW)
+       and translate only the <string>/<string-array> entries you have ready.
+    2. Add the locale to res/xml/locales_config.xml so Android 13+ shows it in
+       the system "App language" picker.
+  NAMING CONVENTION (keep it, it keeps the catalog navigable)
+    common_*        shared buttons / words reused across screens
+    oobe_*          first-run onboarding flow
+    settings_*      settings screens      nav_*       navigation destinations
+    home_*          home screen          card_*      countdown card settings
+    event_*         event add/edit       agenda_*    agenda book feature
+    backup_*        EYF backup & restore update_*    OTA engine
+    share_*         share card renderer  widget_*    home-screen widgets
+    perm_*          permissions center   log_*       log reader
+    notify_*        notifications & popups
+  RULES
+    * Never hard-code user-visible text in layouts or Kotlin; reference here.
+    * Use positional format specifiers (%1$s) so translators can reorder.
+    * Mark brand / non-translatable entries with translatable="false".
+  ============================================================================
+-->
 <resources>
-    <string name="app_name">ZakoCountdown</string>
-    <string name="add_new_event">添加新日程</string>
-    <string name="accessibility_service_description">用于在您打开指定应用时，提醒您重要的倒数日日程。ZakoCountdown需要此权限来检测前台应用的变化，以便及时弹出提醒。我们承诺不会收集您的任何个人信息。</string>
-    <string name="SBUI_SyBerOS_uninstall_title">卸⚡载⚡你⚡大⚡坝</string>
-    <string name="SBUI_SyBerOS_uninstall_content">您在卸载后将无法继续获得日程提示，您确定要卸载吗？\n该软件由于开发阶段，很多功能暂不完善，我们对您不好的体验深感抱歉。\n如果您有更好的意见或发现了bug，您可以前往官方GitHub仓库或Telegram群组反馈。\nErrorsia Yusulif Studio\n~~Exception Ignites Evolution~~\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n</string>
+
+    <!-- ===== Brand ===== -->
+    <string name="app_name" translatable="false">ZakoCountdown</string>
+    <string name="studio_name" translatable="false">Errorsia Yusulif Studio</string>
+    <string name="studio_slogan" translatable="false">~~Exception Ignites Evolution~~</string>
+
+    <!-- ===== Common ===== -->
+    <string name="common_ok">OK</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_confirm">Confirm</string>
+    <string name="common_yes">Yes</string>
+    <string name="common_no">No</string>
+    <string name="common_save">Save</string>
+    <string name="common_close">Close</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_edit">Edit</string>
+    <string name="common_share">Share</string>
+    <string name="common_reset">Reset</string>
+    <string name="common_refresh">Refresh</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_undo">Undo</string>
+    <string name="common_done">Done</string>
+    <string name="common_skip">Skip</string>
+    <string name="common_next">Next</string>
+    <string name="common_back">Back</string>
+    <string name="common_previous">Previous</string>
+    <string name="common_add">Add</string>
+    <string name="common_create">Create</string>
+    <string name="common_remove">Remove</string>
+    <string name="common_apply">Apply</string>
+    <string name="common_pick_image">Choose image</string>
+    <string name="common_clear">Clear</string>
+    <string name="common_all">All</string>
+    <string name="common_none">None</string>
+    <string name="common_default">Default</string>
+    <string name="common_enabled">Enabled</string>
+    <string name="common_disabled">Disabled</string>
+    <string name="common_on">On</string>
+    <string name="common_off">Off</string>
+    <string name="common_loading">Loading…</string>
+    <string name="common_processing">Working…</string>
+    <string name="common_failed">Operation failed: %1$s</string>
+    <string name="common_not_found">Not found</string>
+    <string name="common_copied">Copied to clipboard</string>
+    <string name="common_coming_soon">Coming soon</string>
+    <string name="common_enable">Enable</string>
+    <string name="common_disable">Disable</string>
+    <string name="common_add_to_calendar">Add to calendar</string>
+    <string name="common_important">Important</string>
+    <string name="common_pinned">Pinned</string>
+    <string name="common_default_all">Default / All</string>
+    <string name="common_copy_link">Copy share link</string>
+    <string name="common_time_years">Years</string>
+    <string name="common_time_months">Months</string>
+    <string name="common_time_weeks">Weeks</string>
+    <string name="common_time_days">Days</string>
+    <string name="common_time_hours">Hours</string>
+    <string name="common_time_minutes">Minutes</string>
+    <string name="common_time_seconds">Seconds</string>
+    <string name="common_target_date">Target date</string>
+    <string name="common_app_agenda">Agenda book</string>
+    <string name="common_more_options">More options</string>
+    <string name="common_select_all">Select all</string>
+    <string name="common_deselect_all">Clear all</string>
+    <string name="common_file">File</string>
+    <string name="common_size">Size</string>
+    <string name="common_date">Date</string>
+    <string name="common_target_version">Target version</string>
+    <string name="common_unknown_error">Unknown error</string>
+    <string name="common_operation_success">Done</string>
+    <string name="common_permission_denied">Permission denied</string>
+    <string name="common_restart_required">Restart required</string>
+    <string name="common_restart_now">Restart now</string>
+    <string name="common_export">Export</string>
+    <string name="common_import">Import</string>
+    <string name="common_pick_color">Custom color</string>
+    <string name="common_pinned_only">Pinned cards only</string>
+    <string name="license_tab_chinese">Chinese translation</string>
+    <string name="license_tab_english_official">English (Official)</string>
+
+    <!-- ===== Time units & countdown wording ===== -->
+    <string name="unit_day">days</string>
+    <string name="unit_hour">hr</string>
+    <string name="unit_minute">min</string>
+    <string name="unit_second">sec</string>
+    <string name="unit_week">wk</string>
+    <string name="unit_month">mo</string>
+    <string name="unit_year">yr</string>
+    <!-- %1$s = the number, %2$s = the unit, e.g. "12 days" -->
+    <string name="unit_value">%1$s %2$s</string>
+    <string name="countdown_remaining">Remaining</string>
+    <string name="countdown_since">Since</string>
+    <string name="countdown_distance">Time until</string>
+    <string name="countdown_time_left">left</string>
+    <string name="countdown_passed">Passed</string>
+    <string name="countdown_today">Today</string>
+    <string name="countdown_tomorrow">Tomorrow</string>
+    <string name="countdown_yesterday">Yesterday</string>
+
+    <!-- ===== Navigation ===== -->
+    <string name="nav_home">Home</string>
+    <string name="nav_agenda_books">Agenda books</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_filter_agenda">Agenda books (filter)</string>
+    <string name="nav_filter_all">All events</string>
+    <string name="nav_filter_important">Important</string>
+    <string name="nav_manage_agenda">Manage agenda books</string>
+    <string name="nav_menu_home">Home</string>
+    <string name="nav_menu_agenda">Agenda books</string>
+    <string name="nav_menu_settings">Settings</string>
+    <string name="nav_log_detail">Log detail</string>
+    <string name="nav_log_files">Archived log files</string>
+    <string name="nav_share_preview">Create share card</string>
+    <string name="nav_agenda_detail">Agenda book detail</string>
+    <string name="nav_new_agenda_book">New agenda book</string>
+    <string name="nav_developer_options">Developer options</string>
+    <string name="nav_debug_options">Debug options</string>
+    <string name="nav_notification_settings">Notification settings</string>
+
+    <!-- ===== Home ===== -->
+    <string name="home_add_new_event">New countdown</string>
+    <string name="home_title_add_event">Add event</string>
+    <string name="home_title_edit_event">Edit event</string>
+    <string name="home_tab_all">All</string>
+    <string name="home_tab_important">Important</string>
+    <string name="home_empty_title">No countdowns yet</string>
+    <string name="home_empty_hint">Tap the + button to create your first countdown.</string>
+    <string name="home_event_deleted">Event deleted</string>
+    <string name="home_event_pinned">Pinned</string>
+    <string name="home_event_unpinned">Unpinned</string>
+    <string name="home_event_marked_important">Marked as important</string>
+    <string name="home_event_unmarked_important">Removed from important</string>
+    <string name="home_pin">Pin</string>
+    <string name="home_unpin">Unpin</string>
+    <string name="home_mark_important">Mark as important</string>
+    <string name="home_unmark_important">Remove important mark</string>
+    <string name="home_dev_mode_unlocked">Developer options unlocked!</string>
+    <string name="home_share_link_copied">Share text and link copied!</string>
+    <string name="home_share_link_text">I shared a countdown "%1$s" with you. Tap the link to import it into ZakoCountdown:\n%2$s</string>
+    <string name="home_no_calendar_app">No calendar app found</string>
+    <string name="home_widget_request_sent">Request sent</string>
+    <string name="home_added_to_calendar_desc">Reminder from ZakoCountdown</string>
+    <string name="home_swipe_guide_title">💡 Swipe actions are customizable</string>
+    <string name="home_swipe_guide_message">Swiping currently deletes the card. You can change it in Advanced settings to pin, mark important, personalize or share instead.\n\nConfigure it now?</string>
+    <string name="home_swipe_guide_configure">Configure now</string>
+    <string name="home_swipe_guide_keep_delete">Keep deleting</string>
+
+    <!-- ===== Event editor ===== -->
+    <string name="event_target_date">Target date</string>
+    <string name="event_target_time">Target time</string>
+    <string name="event_title_label">Title</string>
+    <string name="event_title_hint">Event title</string>
+    <string name="event_title_empty">Title cannot be empty</string>
+    <string name="event_pick_date">Pick target date</string>
+    <string name="event_pick_time">Pick target time</string>
+    <string name="event_book_default">Default / All</string>
+    <string name="event_book_label">Agenda book</string>
+    <string name="event_color_label">Color</string>
+    <string name="event_note_label">Notes</string>
+
+    <!-- ===== Card customization ===== -->
+    <string name="card_display_mode">Display mode</string>
+    <string name="card_mode_simple">Simple (days only)</string>
+    <string name="card_mode_detailed">Detailed (d:hh:mm:ss)</string>
+    <string name="card_mode_full">Full (y:m:w:d…)</string>
+    <string name="card_custom_color">Custom color</string>
+    <string name="card_custom_background">Custom background (pinned cards only)</string>
+    <string name="card_pick_image">Choose image</string>
+    <string name="card_remove_image">Remove image</string>
+    <string name="card_opacity">Card opacity</string>
+    <string name="card_background_set">Background image applied</string>
+    <string name="card_background_removed">Background image removed</string>
+    <string name="card_image_permission_failed">Cannot access that image, please try another one</string>
+
+    <!-- ===== Agenda books ===== -->
+    <string name="agenda_new_book">New agenda book</string>
+    <string name="agenda_book_name">Agenda book name</string>
+    <string name="agenda_book_name_hint">Agenda book name</string>
+    <string name="agenda_book_name_empty">Please enter a name</string>
+    <string name="agenda_marker_color">Label color</string>
+    <string name="agenda_cover_and_alpha">Cover &amp; opacity</string>
+    <string name="agenda_included_events">Included events</string>
+    <string name="agenda_included_events_hint">Check to include (events already in another book will be moved here)</string>
+    <string name="agenda_event_count">%1$d items</string>
+    <string name="agenda_book_summary">%1$d events · Latest: %2$s (%3$s)</string>
+    <string name="agenda_cover_updated">Cover updated</string>
+    <string name="agenda_cover_failed">Could not apply</string>
+    <string name="agenda_image_load_failed">Failed to load image</string>
+    <string name="agenda_cover_alpha_title">Adjust cover opacity</string>
+    <string name="agenda_confirm_delete_title">Delete this agenda book?</string>
+    <string name="agenda_confirm_delete_message">Events inside will move back to "All events" and will not be deleted.</string>
+
+    <!-- ===== Settings: root ===== -->
+    <string name="settings_personalization">Personalization</string>
+    <string name="settings_personalization_summary">Theme, colors, background image</string>
+    <string name="settings_notifications">Notifications &amp; reminders</string>
+    <string name="settings_notifications_summary">Persistent notification, scheduled reminders</string>
+    <string name="settings_permissions">Permission center</string>
+    <string name="settings_permissions_summary">Review and grant all required background and special permissions</string>
+    <string name="settings_backup">Backup &amp; migration</string>
+    <string name="settings_backup_summary">Export or import EYF data packages</string>
+    <string name="settings_advanced">Advanced features</string>
+    <string name="settings_advanced_summary">Launch popup, widgets</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_summary">Version info, developer</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_language_summary">Choose the app display language</string>
+    <string name="settings_language_system">Follow system</string>
+    <string name="language_restart_hint">About language switching</string>
+    <string name="language_restart_hint_summary">The new language applies to every screen immediately. On Android 13 and newer you can also change it from System settings → Apps → ZakoCountdown → Language.</string>
+    <string name="language_changed">Language updated</string>
+
+    <!-- ===== Settings: personalization ===== -->
+    <string name="personalization_theme_category">Theme &amp; colors</string>
+    <string name="personalization_app_theme">App theme</string>
+    <string name="personalization_app_theme_summary">Switch between Material Design 1 / 2 / 3</string>
+    <string name="personalization_accent_color">Accent color</string>
+    <string name="personalization_accent_color_summary">Pick the ZakoCountdown accent color</string>
+    <string name="personalization_import_mtb">Import dynamic theme</string>
+    <string name="personalization_import_mtb_summary">Supports Material Theme Builder exports: Android theme package (.zip) and material-theme.json</string>
+    <string name="personalization_theme_imported_named">Imported and saved: %1$s</string>
+    <string name="oobe_theme_imported_named">Imported and saved: %1$s</string>
+    <string name="personalization_saved_themes">Saved themes</string>
+    <string name="personalization_saved_themes_summary">%1$d theme(s) saved · tap to switch</string>
+    <string name="personalization_saved_themes_summary_empty">No imported theme saved yet</string>
+    <string name="personalization_saved_themes_title">Saved themes</string>
+    <string name="personalization_saved_themes_empty">Import a Material Theme Builder package first; each import is saved here automatically.</string>
+    <string name="personalization_saved_theme_active">In use</string>
+    <string name="personalization_saved_theme_delete">Delete</string>
+    <string name="personalization_saved_theme_applied">Switched to %1$s</string>
+    <string name="personalization_saved_theme_deleted">Deleted %1$s</string>
+    <string name="personalization_saved_theme_already_active">%1$s is already in use</string>
+    <string name="personalization_saved_theme_rename">Rename</string>
+    <string name="personalization_saved_theme_delete_confirm">Delete “%1$s”? This only removes the saved copy.</string>
+    <string name="personalization_saved_themes_empty_title">No saved themes</string>
+    <string name="personalization_background_category">Background</string>
+    <string name="personalization_change_wallpaper">Change home background</string>
+    <string name="personalization_change_wallpaper_summary">Pick an image as the home background</string>
+    <string name="personalization_remove_wallpaper">Remove home background</string>
+    <string name="personalization_remove_wallpaper_summary">Restore the default background</string>
+    <string name="personalization_scrim_color">Background scrim color</string>
+    <string name="personalization_scrim_color_summary">Color layer drawn over the background image</string>
+    <string name="personalization_scrim_alpha">Scrim strength</string>
+    <string name="personalization_scrim_alpha_summary">Adjust the scrim opacity</string>
+    <string name="personalization_drawer_header_category">Navigation drawer header</string>
+    <string name="personalization_drawer_header_show">Show custom header image</string>
+    <string name="personalization_drawer_header_show_summary">Turn off to fall back to the plain coloured brand header</string>
+    <string name="personalization_drawer_header_pick">Choose drawer header image</string>
+    <string name="personalization_drawer_header_pick_summary">Shown at the top of the navigation drawer</string>
+    <string name="personalization_drawer_header_clear">Remove drawer header image</string>
+    <string name="personalization_drawer_header_clear_summary">Restore the default brand header</string>
+    <string name="personalization_drawer_header_set">Drawer header image updated</string>
+    <string name="personalization_drawer_header_cleared">Drawer header image removed</string>
+    <string name="personalization_wallpaper_set">Wallpaper applied</string>
+    <string name="personalization_theme_imported">Dynamic theme imported</string>
+    <string name="personalization_theme_import_failed">Import failed: not a valid Material Theme Builder export</string>
+
+    <!-- ===== Settings: notifications ===== -->
+    <string name="notify_persistent_category">Persistent notification</string>
+    <string name="notify_enable_persistent">Enable persistent notification</string>
+    <string name="notify_enable_persistent_summary">Show an always-on countdown reminder in the notification shade</string>
+    <string name="notify_scheduled_category">Scheduled reminders</string>
+    <string name="notify_reminder_time">Reminder lead time</string>
+    <string name="notify_reminder_time_summary">Send a notification a set time before the event arrives</string>
+    <string name="notify_permissions_category">Permissions &amp; background</string>
+    <string name="notify_permission_notification">Notification permission</string>
+    <string name="notify_permission_notification_summary">Allow the app to post notifications</string>
+    <string name="notify_permission_exact_alarm">Exact alarm permission</string>
+    <string name="notify_permission_exact_alarm_summary">Allow the app to remind you at exactly the right time</string>
+    <string name="notify_permission_autostart">Autostart permission</string>
+    <string name="notify_permission_autostart_summary">Make sure reminders resume automatically after a reboot</string>
+    <string name="notify_permission_battery">Background running</string>
+    <string name="notify_permission_battery_summary">Keep background tasks from being killed by the system</string>
+    <string name="notify_permission_needed">Notification permission is required for the persistent notification</string>
+
+    <!-- ===== Settings: permissions ===== -->
+    <string name="perm_category_basic">Basic permissions</string>
+    <string name="perm_category_background">Background &amp; reminders</string>
+    <string name="perm_category_advanced">Feature permissions</string>
+    <string name="perm_category_oem">OEM-specific permissions</string>
+    <string name="perm_notification">Notification permission</string>
+    <string name="perm_notification_summary">Allow the app to post the persistent notification and scheduled reminders</string>
+    <string name="perm_exact_alarm">Exact alarm permission</string>
+    <string name="perm_exact_alarm_summary">[Recommended] Let the app remind and refresh precisely</string>
+    <string name="perm_battery_optimization">Battery optimization exemption</string>
+    <string name="perm_battery_optimization_summary">[Recommended] Keep background tasks from being killed</string>
+    <string name="perm_accessibility">Accessibility service (for launch popups)</string>
+    <string name="perm_accessibility_summary">[Required] Tap to enable</string>
+    <string name="perm_overlay">Display over other apps</string>
+    <string name="perm_overlay_summary">[Recommended] Keeps popups working on customized ROMs</string>
+    <string name="perm_autostart">Autostart permission</string>
+    <string name="perm_autostart_summary">Make sure services resume after a reboot</string>
+    <string name="perm_miui_background">Background pop-up (Xiaomi / HyperOS)</string>
+    <string name="perm_miui_background_summary">Core permission for the launch popup feature</string>
+    <string name="perm_status_enabled">Enabled</string>
+    <string name="perm_status_disabled">Not enabled — tap to open the permission center</string>
+    <string name="perm_no_manual_grant">Your system version does not require granting this manually</string>
+    <string name="perm_miui_page_unavailable">Could not open the MIUI permission page</string>
+    <string name="perm_accessibility_dialog_title">Accessibility permission required</string>
+    <string name="perm_accessibility_dialog_message">To show countdown reminders when you open a selected app, the accessibility service must be enabled.</string>
+    <string name="perm_accessibility_dialog_positive">Open settings</string>
+    <string name="perm_accessibility_dialog_negative">Cancel and disable popups</string>
+
+    <!-- ===== Settings: advanced ===== -->
+    <string name="adv_category_popup">Launch popup</string>
+    <string name="adv_enable_popup">Enable launch popup</string>
+    <string name="adv_enable_popup_summary">Show important countdowns when a selected app starts</string>
+    <string name="adv_select_apps">Select apps</string>
+    <string name="adv_select_apps_summary">Choose which apps trigger the popup</string>
+    <string name="adv_popup_duration">Popup duration (seconds)</string>
+    <string name="adv_popup_duration_summary">Closes automatically when the countdown ends</string>
+    <string name="adv_popup_skippable">Allow manual dismissal</string>
+    <string name="adv_popup_skippable_summary">Show the close button</string>
+    <string name="adv_popup_skip_delay">Close button delay (seconds)</string>
+    <string name="adv_popup_skip_delay_summary">Force a viewing period before the close button appears</string>
+    <string name="adv_category_permissions">Related permissions</string>
+    <string name="adv_permission_accessibility">Accessibility service</string>
+    <string name="adv_permission_accessibility_summary">Required — tap to enable</string>
+    <string name="adv_permission_overlay">Display over other apps</string>
+    <string name="adv_permission_overlay_summary">Recommended on customized ROMs so popups display correctly</string>
+    <string name="adv_category_personalization">Personalization</string>
+    <string name="adv_unlock_global_alpha">Unlock opacity for all cards</string>
+    <string name="adv_unlock_global_alpha_summary">Allow adjusting the opacity of non-pinned cards</string>
+    <string name="adv_nav_mode">Navigation style</string>
+    <string name="adv_nav_mode_summary">Switch between the navigation drawer and the bottom bar</string>
+    <string name="adv_nav_mode_compact_locked">Compact mode does not use a navigation bar</string>
+    <string name="adv_auto_hide_nav">Auto-hide navigation bar</string>
+    <string name="adv_auto_hide_nav_summary">Hide the bar when you scroll down, bring it back when you scroll up</string>
+    <string name="adv_home_layout">Home layout</string>
+    <string name="adv_home_layout_summary">Switch between standard and compact layout</string>
+    <string name="adv_app_icon">App icon</string>
+    <string name="adv_app_icon_summary">Change the icon shown on your home screen</string>
+    <string name="adv_app_icon_changed">Icon changed! Some launchers may flicker or restart briefly.</string>
+    <string name="adv_category_swipe">Home gestures</string>
+    <string name="adv_swipe_left">Swipe card left</string>
+    <string name="adv_swipe_right">Swipe card right</string>
+    <string name="adv_swipe_current">Current action: %1$s</string>
+    <string name="adv_category_network">Network &amp; updates</string>
+    <string name="adv_auto_update">Automatically check for updates</string>
+    <string name="adv_auto_update_summary">Contact the server for a new version on every cold start</string>
+
+    <!-- ===== Settings: developer ===== -->
+    <string name="dev_category_theme">Theme &amp; display</string>
+    <string name="dev_unlock_legacy_theme_compact">Unlock legacy themes in compact mode</string>
+    <string name="dev_unlock_legacy_theme_compact_summary">Allow MD1/MD2 themes in compact mode (forced to MD3 by default)</string>
+    <string name="dev_show_system_apps">Show system apps in the app list</string>
+    <string name="dev_show_system_apps_summary">Include all system apps in the "Select apps" list</string>
+    <string name="dev_category_compat">Compatibility</string>
+    <string name="dev_miui_fix_override">Disable MIUI compatibility fix</string>
+    <string name="dev_miui_fix_override_summary">Force-enable the MD2 theme option on MIUI devices (may crash)</string>
+    <string name="dev_enable_md1">Enable experimental MD1 theme</string>
+    <string name="dev_enable_md1_summary">Makes MD1 selectable in settings (may be unstable)</string>
+    <string name="dev_category_popup">Popup reminders</string>
+    <string name="dev_current_rom">Current system</string>
+    <string name="dev_unknown">Unknown</string>
+    <string name="dev_clear_preferences_confirm">Clear and restart</string>
+    <string name="dev_force_popup_mode">Force popup mode</string>
+    <string name="dev_force_popup_mode_summary">Currently: %1$s</string>
+    <string name="dev_category_personalization">Personalization</string>
+    <string name="dev_category_feature_test">Feature testing</string>
+    <string name="dev_enable_agenda_book">Enable "Agenda books"</string>
+    <string name="dev_enable_agenda_book_summary">Show the agenda book entry in navigation (Alpha)</string>
+    <string name="dev_category_debug">Debug &amp; reset</string>
+    <string name="dev_force_relaunch_oobe">Re-run first-run onboarding (OOBE)</string>
+    <string name="dev_force_relaunch_oobe_summary">Jump straight to the initial setup flow</string>
+    <string name="dev_clear_preferences">Clear all local settings (dangerous)</string>
+    <string name="dev_clear_preferences_summary">Reset every personalization and advanced option, then restart the app</string>
+    <string name="dev_clear_preferences_dialog_title">⚠ Dangerous operation</string>
+    <string name="dev_clear_preferences_dialog_message">This clears all local theme, layout and popup settings (your events and agenda books are kept).\n\nThe app will restart immediately. Continue?</string>
+    <string name="dev_category_update_nodes">Update sources (OTA engine)</string>
+    <string name="dev_sync_update_urls">Sync backup update sources online</string>
+    <string name="dev_sync_update_urls_summary">Try to pull the latest node list from the primary server before each update check</string>
+    <string name="dev_custom_update_urls">Custom update node pool</string>
+    <string name="dev_custom_update_urls_summary">One direct URL per line. Priority decreases down the list.</string>
+    <string name="dev_custom_update_urls_dialog_title">Edit update sources (one per line)</string>
+    <string name="dev_custom_update_urls_dialog_message">Make sure each URL returns a standard update.json payload</string>
+    <string name="dev_category_build_identity">Build identity</string>
+    <string name="dev_upgrade_code">Upgrade code</string>
+    <string name="dev_upgrade_code_summary">Dedicated value used by the OTA engine; never shown outside developer options</string>
+    <string name="dev_build_id">Build fingerprint</string>
+    <string name="dev_build_id_summary">Identifies this exact compilation; quote it when reporting an issue</string>
+    <string name="dev_upgrade_code_copied">Upgrade code copied</string>
+    <string name="dev_upgrade_code_value">%1$d · %2$s (tap to copy)</string>
+    <string name="dev_upgrade_code_dialog_title">Upgrade code</string>
+    <string name="dev_upgrade_code_dialog_message">Numeric: %1$d\nLabel: %2$s\nFilter hash: %3$s\n\nThis value only exists in developer options. The OTA engine compares it instead of versionCode, so it stays monotonic even when versionCode is re-ordered for a store re-upload.</string>
+    <string name="dev_restore_default_urls">Restore built-in update sources</string>
+    <string name="dev_restore_default_urls_summary">Replace the node pool above with the URLs shipped inside the app</string>
+    <string name="dev_update_urls_count">%1$d entries</string>
+    <string name="dev_update_urls_empty">Not configured</string>
+    <string name="dev_sync_update_urls_summary_count">%1$d entries available</string>
+    <string name="dev_category_logs">Logging</string>
+    <string name="dev_log_level_info">Log level: INFO</string>
+    <string name="dev_log_level_info_summary">Dial *#*#20220238#*#* to trigger</string>
+    <string name="dev_log_level_off">Log level: off</string>
+    <string name="dev_log_level_off_summary">Dial *#*#20250528#*#* to trigger</string>
+    <string name="dev_log_persistence">Persist logs to disk</string>
+    <string name="dev_log_persistence_summary">Write runtime logs to files for later review (uses storage)</string>
+    <string name="dev_category_dev_entry">Developer entry control</string>
+    <string name="dev_enable_enter_dev_mode">Allow entering developer mode</string>
+    <string name="dev_enable_enter_dev_mode_summary">After enabling, creating five "EnterDevMode" events in a row unlocks it</string>
+    <string name="dev_enable_about_easter_egg">Enable the "About" page easter egg</string>
+    <string name="dev_enable_about_easter_egg_summary">After enabling, repeatedly tapping "About" opens developer options</string>
+    <string name="dev_category_log_system">Log system</string>
+    <string name="dev_nav_live_logs">Live log reader</string>
+    <string name="dev_nav_live_logs_summary">View the current runtime Logcat</string>
+    <string name="dev_nav_archived_logs">Archived log files</string>
+    <string name="dev_nav_archived_logs_summary">Browse saved logs by date</string>
+
+    <!-- ===== OOBE ===== -->
+    <string name="oobe_welcome_title">Welcome to ZakoCountdown</string>
+    <string name="oobe_welcome_message">A countdown and agenda manager built with both a geek spirit and human warmth.\n\nIt only takes a minute to finish the basic setup.</string>
+    <string name="oobe_eula_title">End User License Agreement</string>
+    <string name="oobe_eula_studio_agreement">Studio agreement</string>
+    <string name="oobe_eula_mpl_zh">MPL-2.0 (Chinese)</string>
+    <string name="oobe_eula_mpl_en">MPL-2.0 (English)</string>
+    <string name="oobe_eula_accept">I have read and fully agree to all the terms above</string>
+    <string name="oobe_permissions_title">Key permissions (already granted ones are hidden)</string>
+    <string name="oobe_perm_notification">Notification permission</string>
+    <string name="oobe_perm_notification_summary">Used for the persistent notification and countdown due reminders</string>
+    <string name="oobe_perm_alarm">Exact alarm permission</string>
+    <string name="oobe_perm_alarm_summary">Makes sure reminders arrive exactly on time</string>
+    <string name="oobe_perm_accessibility">Accessibility service</string>
+    <string name="oobe_perm_accessibility_summary">Used to detect and trigger the launch popup when you open a selected app</string>
+    <string name="oobe_perm_overlay">Display over other apps</string>
+    <string name="oobe_perm_overlay_summary">Makes sure the launch popup shows correctly above other apps</string>
+    <string name="oobe_customization_ui_category">Interface &amp; layout</string>
+    <string name="oobe_customization_wallpaper">Set home wallpaper</string>
+    <string name="oobe_customization_wallpaper_summary">Pick an image you like as the home background</string>
+    <string name="oobe_customization_layout">Home layout</string>
+    <string name="oobe_customization_layout_summary">Currently: %1$s</string>
+    <string name="oobe_customization_nav">Navigation style</string>
+    <string name="oobe_customization_nav_summary">Currently: %1$s</string>
+    <string name="oobe_customization_icon">App icon</string>
+    <string name="oobe_customization_icon_summary">Change the icon shown on your home screen</string>
+    <string name="oobe_customization_swipe_category">Home swipe gestures</string>
+    <string name="oobe_customization_swipe_left">Swipe card left</string>
+    <string name="oobe_customization_swipe_left_summary">Set the quick action performed on a left swipe</string>
+    <string name="oobe_customization_swipe_right">Swipe card right</string>
+    <string name="oobe_customization_swipe_right_summary">Set the quick action performed on a right swipe</string>
+    <string name="oobe_customization_theme_category">Theme &amp; color</string>
+    <string name="oobe_customization_accent">Global accent color</string>
+    <string name="oobe_customization_accent_summary">Pick the ZakoCountdown accent color</string>
+    <string name="oobe_customization_import_mtb">Import MTB dynamic theme</string>
+    <string name="oobe_customization_import_mtb_summary">Select a material-theme.json file</string>
+    <string name="oobe_customization_scrim_color">Background scrim color</string>
+    <string name="oobe_customization_scrim_alpha">Scrim strength</string>
+    <string name="oobe_customization_features_category">Features &amp; reminders</string>
+    <string name="oobe_customization_popup">Enable launch popup</string>
+    <string name="oobe_customization_popup_summary">In-your-face reminders when a selected app starts (needs accessibility)</string>
+    <string name="oobe_customization_popup_duration">Popup duration (seconds)</string>
+    <string name="oobe_customization_persistent">Enable persistent notification</string>
+    <string name="oobe_customization_persistent_summary">Show an always-on countdown status in the notification shade</string>
+    <string name="oobe_customization_auto_update">Automatically check for updates</string>
+    <string name="oobe_customization_auto_update_summary">Let the app fetch the latest version info in the background</string>
+    <string name="oobe_personalization_scrim_title">Choose scrim color</string>
+    <string name="oobe_tutorial_title">All set!</string>
+    <string name="oobe_tutorial_guide_title">💡 Quick start guide:</string>
+    <string name="oobe_tutorial_body">👉 Long-press a countdown card on the home screen to pin it, set a background or share it as an image.\n\n👉 Open the drawer to manage agenda books and colour-code your events.\n\n👉 Long-press your home screen to add beautiful translucent widgets.</string>
+    <string name="oobe_theme_imported">Dynamic theme imported!</string>
+    <string name="oobe_theme_import_failed">Import failed: not a valid Material Theme Builder export</string>
+    <string name="oobe_next_start">Get started</string>
+    <string name="oobe_next_agree">I agree</string>
+    <string name="oobe_next_enter">Enter the app</string>
+    <string name="oobe_wallpaper_set">Home wallpaper applied</string>
+
+    <!-- ===== Backup & restore (EYF) ===== -->
+    <string name="backup_title">Backup &amp; migration</string>
+    <string name="backup_target_version">Target compatible version: </string>
+    <string name="backup_feature_summary">%1$d features available · %2$d exportable · tap for details</string>
+    <string name="backup_feature_dialog_title">Features in %1$s</string>
+    <string name="backup_feature_dialog_available">Will be included in the exported package:</string>
+    <string name="backup_feature_dialog_skipped">Not available in this target version, so left out:</string>
+    <string name="backup_feature_runtime_only">(runtime capability, no data exported)</string>
+    <string name="import_meta_origin">Package from %1$s</string>
+    <string name="import_meta_upgrade_code">upgrade code %1$s / %2$d</string>
+    <string name="import_meta_features">%1$d features recorded</string>
+    <string name="import_features_title">%1$d features recorded in this package</string>
+    <string name="import_features_subtitle">Target %1$s · %2$s</string>
+    <string name="backup_generate_file">Generate export file</string>
+    <string name="backup_pick_eyf">Choose a .eyf file</string>
+    <string name="backup_confirm_import">Confirm import</string>
+    <string name="backup_select_at_least_one">Please select at least one item</string>
+    <string name="backup_select_import_items">Please select items to import</string>
+    <string name="backup_export_failed">Export failed: %1$s</string>
+    <string name="backup_import_failed">Import failed: %1$s</string>
+    <string name="backup_empty_or_corrupt">File is empty or malformed</string>
+    <string name="backup_internal_error">Internal error: package manifest missing</string>
+    <string name="backup_restart_action">Restart</string>
+
+    <!-- ===== Update engine ===== -->
+    <string name="update_all_sources_unreachable">All update sources are unreachable, please check your network</string>
+    <string name="update_already_latest">You are on the latest version (v%1$s)</string>
+    <string name="update_parse_failed">Failed to parse update data</string>
+    <string name="update_found_title">New version available: %1$s</string>
+    <string name="update_download_now">Download now</string>
+    <string name="update_later">Later</string>
+    <string name="update_no_browser">No browser app found</string>
+
+    <!-- ===== Share preview ===== -->
+    <string name="share_layout_style">Layout style</string>
+    <string name="share_layout_classic">Classic</string>
+    <string name="share_layout_minimal">Minimal</string>
+    <string name="share_layout_poster">Poster</string>
+    <string name="share_overall_background">Overall background (image / scrim color)</string>
+    <string name="share_content_color">Content color</string>
+    <string name="share_opacity">Opacity</string>
+    <string name="share_show_date">Show event date on the card</string>
+    <string name="share_display_format">Display format</string>
+    <string name="share_format_days">Days</string>
+    <string name="share_format_detailed">Detailed</string>
+    <string name="share_format_full">Full</string>
+    <string name="share_share_image">Share image</string>
+    <string name="share_save_to_gallery">Save to gallery</string>
+    <string name="share_saved_to_gallery">Image saved to gallery</string>
+    <string name="share_load_failed">Could not load event data</string>
+    <!-- Date pattern for the rendered share card. Keep the pattern letters, translate only the order. -->
+    <string name="share_target_date_format">yyyy-MM-dd EEEE</string>
+    <string name="share_generated_by">Generated by ZakoCountdown</string>
+
+    <!-- ===== Widgets ===== -->
+    <string name="widget_configure_title">Choose an event to display</string>
+    <string name="widget_background_style">Background style</string>
+    <string name="widget_bg_translucent">Translucent</string>
+    <string name="widget_bg_opaque">Opaque</string>
+    <string name="widget_bg_image">Image</string>
+    <string name="widget_image_alpha">Image opacity</string>
+    <string name="widget_enable_scrim">Enable theme-colored scrim</string>
+    <string name="widget_scrim_strength">Scrim strength</string>
+    <string name="widget_alpha_adjust">Opacity</string>
+    <string name="widget_pick_image">Choose image</string>
+    <string name="widget_add">Add widget</string>
+    <string name="widget_image_selected">Image selected</string>
+    <string name="widget_pick_image_first">Please choose an image first</string>
+    <string name="widget_event_title_placeholder">Event title</string>
+
+    <!-- ===== Log reader ===== -->
+    <string name="log_refresh">Refresh logs</string>
+    <string name="log_copied">Logs copied</string>
+    <string name="log_level_all" translatable="false">ALL</string>
+    <string name="log_level_error" translatable="false">ERROR</string>
+    <string name="log_level_warn" translatable="false">WARN</string>
+    <string name="log_level_info" translatable="false">INFO</string>
+    <string name="log_level_debug" translatable="false">DEBUG</string>
+
+    <!-- ===== About / build details ===== -->
+    <string name="about_build_info">Build information</string>
+    <string name="about_main_dependencies">Main dependencies</string>
+    <string name="about_license_dialog_title">%1$s license</string>
+
+    <!-- ===== Services & notifications ===== -->
+    <string name="service_channel_reminder_title">ZakoCountdown event reminders</string>
+    <string name="service_channel_reminder_desc">Used to remind you about upcoming important events</string>
+    <string name="service_channel_persistent_title">ZakoCountdown persistent service</string>
+    <string name="service_channel_persistent_desc">Used to keep the persistent notification up to date in the background</string>
+    <string name="service_running_title">ZakoCountdown service is running</string>
+    <string name="service_running_text">Preparing countdown data…</string>
+    <string name="service_no_important_events">No important events to remind you about</string>
+    <string name="service_friendly_title">A friendly Zako reminder ❤️</string>
+    <string name="service_friendly_text">Your "%1$s" is coming up in %2$s</string>
+    <string name="service_event_expired">"%1$s" has expired</string>
+    <string name="service_event_remaining">"%1$s" is %2$s away</string>
+    <string name="service_reminder_default_event">your event</string>
+    <string name="service_reminder_default_time">some time</string>
+    <string name="service_popup_no_data">Error: no data received</string>
+    <string name="service_widget_configure_hint">Tap to configure</string>
+
+    <!-- Compact duration fragments used by widgets / notifications, e.g. "3 days 5 hours" -->
+    <string name="duration_days_hours">%1$d days %2$d hours</string>
+    <string name="duration_hours_minutes">%1$d hours %2$d minutes</string>
+    <string name="duration_minutes">%1$d minutes</string>
+    <string name="duration_days_hours_minutes">%1$d days %2$d hours %3$d minutes</string>
+    <string name="duration_hm_short">%1$02d hr %2$02d min</string>
+    <string name="duration_dhms_short">%1$d days %2$02d:%3$02d:%4$02d</string>
+    <string name="duration_full_short">%1$s</string>
+    <string name="duration_zero">0 days</string>
+
+    <!-- ===== Widget configure ===== -->
+    <string name="widget_confirm_update">Update widget: %1$s</string>
+    <string name="widget_confirm_add_or_update">Add / update: %1$s</string>
+
+    <!-- ===== Agenda detail / books ===== -->
+    <string name="agenda_edit_book">Edit agenda book</string>
+    <string name="agenda_edit_book_short">Edit book</string>
+    <string name="agenda_edit_details">Edit details</string>
+    <string name="agenda_delete_book">Delete agenda book</string>
+    <string name="agenda_set_cover">Set cover</string>
+    <string name="agenda_remove_cover">Remove cover</string>
+    <string name="agenda_adjust_alpha">Adjust opacity</string>
+    <string name="agenda_switch_view">Switch view</string>
+    <string name="agenda_default_book">Default book</string>
+    <string name="agenda_custom_events">Custom events</string>
+    <string name="agenda_move_hint">%1$s (will be moved from another book)</string>
+    <string name="agenda_stats_latest"> · Latest: %1$s (%2$s)</string>
+    <string name="agenda_stats_all_expired"> · All expired</string>
+    <string name="agenda_stats_empty"> · No events</string>
+
+    <!-- ===== About rows ===== -->
+    <string name="about_version_format">Version %1$s</string>
+    <string name="about_current_version_format">Current version %1$s</string>
+    <string name="about_row_developer">Developer</string>
+    <string name="about_row_studio">Publisher</string>
+    <string name="about_row_details">Details</string>
+    <string name="about_row_license">View licenses</string>
+    <string name="about_row_contact">Contact the author (email)</string>
+    <string name="about_row_website">Visit website</string>
+    <string name="about_row_github">GitHub repository</string>
+    <string name="about_row_telegram">Join the Telegram group</string>
+    <string name="about_row_bilibili">Bilibili channel</string>
+    <string name="about_row_check_update">Check for updates</string>
+    <string name="about_no_email_app">No email app found</string>
+    <string name="about_no_browser">No browser found</string>
+    <string name="about_no_app_for_link">No app available to open this link</string>
+    <string name="about_license_load_failed">Could not load the license file…</string>
+    <string name="about_license_load_failed_detail">Could not load the license file (ID: %1$d). Make sure the file exists under res/raw.</string>
+
+    <!-- ===== Build details rows ===== -->
+    <string name="build_version_name">Version name</string>
+    <string name="build_version_code">Version code</string>
+    <string name="build_type">Build type</string>
+    <string name="build_time">Build time</string>
+
+    <!-- ===== Backup & restore (EYF) ===== -->
+    <string name="backup_tab_export">Export backup</string>
+    <string name="backup_tab_import">Import &amp; restore</string>
+    <string name="backup_saved">Backup saved</string>
+    <string name="backup_share">Share</string>
+    <string name="backup_share_chooser">Share backup</string>
+    <string name="backup_imported_restart_hint">Import succeeded! Restarting the app is recommended</string>
+    <string name="backup_header_settings">App settings</string>
+    <string name="backup_header_books">Agenda books (%1$d)</string>
+    <string name="backup_header_events">Event cards (%1$d)</string>
+    <string name="backup_sub_color">Includes label color</string>
+    <string name="backup_sub_cover">Includes cover image</string>
+    <string name="backup_sub_alpha">Includes opacity</string>
+    <string name="backup_sub_event_color">Includes card color</string>
+    <string name="backup_sub_event_cover">Includes background image</string>
+    <string name="backup_sub_event_alpha">Includes display settings</string>
+    <string name="backup_event_subtitle">Target: %1$s</string>
+    <string name="backup_event_subtitle_important">Important · Target: %1$s</string>
+    <string name="backup_mtb_light">MTB light: %1$s</string>
+    <string name="backup_mtb_dark">MTB dark: %1$s</string>
+
+    <!-- Individual preference labels shown in the export tree -->
+    <string name="pref_theme_style">Theme style</string>
+    <string name="pref_accent_color">Global accent color</string>
+    <string name="pref_nav_mode">Navigation style</string>
+    <string name="pref_home_layout">Home layout mode</string>
+    <string name="pref_popup_enabled">Launch popup</string>
+    <string name="pref_popup_duration">Popup duration</string>
+    <string name="pref_popup_skippable">Allow manual dismissal</string>
+    <string name="pref_popup_skip_delay">Close button delay</string>
+    <string name="pref_popup_apps">Apps that trigger the popup</string>
+    <string name="pref_persistent_notification">Persistent notification</string>
+    <string name="pref_reminder_time">Reminder lead time</string>
+    <string name="pref_unlock_alpha">Unlock card opacity</string>
+    <string name="pref_dev_mode">Developer mode access</string>
+    <string name="pref_swipe_left">Swipe left action</string>
+    <string name="pref_swipe_right">Swipe right action</string>
+    <string name="pref_app_icon">App icon style</string>
+    <string name="pref_auto_update">Automatic update check</string>
+    <string name="pref_sync_update_urls">Online update-source sync</string>
+    <string name="pref_custom_update_urls">Custom update node pool</string>
+    <string name="pref_log_persistence">Persist logs to disk</string>
+    <string name="pref_about_easter_egg">"About" page easter egg</string>
+    <string name="pref_homepage_wallpaper">Home background wallpaper</string>
+    <string name="pref_drawer_header_image">Navigation drawer header image</string>
+    <string name="pref_drawer_header_image_enabled">Show drawer header image</string>
+    <string name="pref_cover_all">Default cover for "All events"</string>
+    <string name="pref_cover_important">Default cover for "Important"</string>
+    <string name="pref_alpha_all">"All events" opacity</string>
+    <string name="pref_alpha_important">"Important" opacity</string>
+    <string name="pref_scrim_color_mode">Background scrim color mode</string>
+    <string name="pref_scrim_alpha">Background scrim strength</string>
+    <string name="pref_scrim_custom_color">Custom scrim color</string>
+    <string name="pref_mtb_enabled">MTB dynamic theme switch</string>
+    <string name="pref_agenda_view_mode">Agenda book list view mode</string>
+
+    <!-- ===== Import conflict analysis ===== -->
+    <string name="conflict_cross_version_title">Cross-version restore warning</string>
+    <string name="conflict_cross_version_subtitle">Backup version (v%1$d) is newer than this app (v%2$d)</string>
+    <string name="conflict_cross_version_message">You can still import, but because your app is older some new settings or personalization options may be ignored or not work.</string>
+    <string name="conflict_cross_app_title">Foreign data detected</string>
+    <string name="conflict_cross_app_subtitle">Data source: %1$s</string>
+    <string name="conflict_cross_app_message">This does not look like a standard ZakoCountdown backup. Forcing the import may crash the app.</string>
+    <string name="conflict_setting_title">Setting: %1$s</string>
+    <string name="conflict_setting_value">Imported value: %1$s</string>
+    <string name="conflict_duplicate_book">An agenda book with the same name exists; importing will create a duplicate</string>
+    <string name="conflict_book_subtitle">Label color: %1$s</string>
+    <string name="conflict_default_color">Default</string>
+    <string name="conflict_duplicate_event">An event with the same name exists; importing will create a duplicate</string>
+    <string name="conflict_alpha_locked">Conflict: this card uses a custom opacity but global opacity is not unlocked</string>
+    <string name="conflict_event_important">Important event</string>
+    <string name="conflict_event_normal">Regular event</string>
+
+    <!-- ===== Backup engine errors ===== -->
+    <string name="backup_error_version_incompatible">Incompatible version: backup v%1$s is newer than the supported v%2$s</string>
+    <string name="backup_error_corrupt_v1">Corrupt v1 file: data.json is missing</string>
+    <string name="backup_error_unknown_format">Unrecognized package format: metadata manifest is missing</string>
+    <string name="backup_error_cache_lost">The cached file is gone</string>
+    <string name="backup_error_malicious_path">Malicious file path detected: %1$s</string>
+
+    <!-- ===== Theme / accent pickers ===== -->
+    <string name="theme_custom_mtb">Custom imported dynamic theme</string>
+    <string name="theme_md3_forced_compact">Compact mode forces Material Design 3</string>
+    <string name="theme_md3_expressive">Material Design 3 Expressive</string>
+    <string name="nav_mode_floating">Floating bottom bar</string>
+    <string name="nav_mode_bottom">Bottom navigation bar</string>
+    <string name="nav_mode_drawer">Navigation drawer</string>
+    <string name="theme_icon_changed_oobe">Icon changed! The system may take a few seconds to refresh, and some launchers may flicker briefly.</string>
+
+    <!-- ===== Permission summaries ===== -->
+    <string name="perm_summary_granted">Granted</string>
+    <string name="perm_summary_not_granted_tap">Not granted, tap to configure</string>
+    <string name="perm_summary_not_granted_tap_enable">Not granted, tap to enable</string>
+    <string name="perm_summary_unrestricted">Set to "Unrestricted"</string>
+    <string name="perm_summary_not_exempt">Not exempted, tap to configure</string>
+    <string name="perm_summary_background_popup">Make sure the "background pop-up" permission is enabled</string>
+    <string name="perm_summary_accessibility_manual">Not enabled — tap to enable it manually in system settings</string>
+    <string name="perm_error_notification_settings">Could not open notification settings</string>
+    <string name="perm_error_alarm_settings">Could not open the permission page</string>
+    <string name="perm_error_battery_settings">Could not open battery optimization settings</string>
+    <string name="perm_error_accessibility_settings">Could not open accessibility settings</string>
+    <string name="perm_error_generic_settings">Could not open the permission page</string>
+    <string name="perm_error_autostart_settings">Could not open the autostart settings page</string>
+    <string name="perm_error_miui_page">Could not open the MIUI permission page</string>
+
+    <!-- ===== Event editor ===== -->
+    <string name="event_date_format">yyyy年MM月dd日</string>
+
+    <!-- ===== Card settings ===== -->
+    <string name="card_color_label">Card color</string>
+    <string name="card_opacity_label">Card opacity</string>
+    <string name="card_scrim_alpha_label">Background scrim strength</string>
+    <string name="card_info_area_color">Lower info area color</string>
+    <string name="card_image_scrim_alpha">Upper image scrim strength</string>
+    <string name="share_chooser_image">Share image</string>
+
+    <!-- ===== Reminder lead-time short labels ===== -->
+    <string name="reminder_short_1_day">1 day</string>
+    <string name="reminder_short_3_days">3 days</string>
+    <string name="reminder_short_1_week">1 week</string>
+
+    <!-- ===== Licenses ===== -->
+    <string name="license_mpl_zh">Mozilla Public License 2.0 (Chinese)</string>
+    <string name="license_mpl_en">Mozilla Public License 2.0 (EN)</string>
+    <string name="license_studio_agreement">Studio agreement</string>
+
+    <!-- ===== Dialogs ===== -->
+    <string name="dialog_import_shared_event_title">Import shared event</string>
+    <string name="dialog_import_shared_event_message">You received a shared event:\n\n Title: %1$s\n Target date: %2$s\n\nImport it into ZakoCountdown now?</string>
+    <string name="dialog_import">Import</string>
+    <string name="dialog_import_success">Event "%1$s" imported successfully!</string>
+    <string name="dialog_untitled_shared_event">Untitled shared event</string>
+    <string name="dialog_new_agenda_book">New agenda book</string>
+
+    <!-- ===== Notifications & services ===== -->
+    <string name="notify_permission_channel">Permission requests</string>
+    <string name="notify_overlay_missing_title">Missing permission</string>
+    <string name="notify_overlay_missing_text">Grant the overlay permission to show countdown reminders</string>
+    <string name="service_popup_unavailable">Zako: cannot show the popup, please check the background pop-up permission</string>
+    <string name="service_no_event_info">No event information found</string>
+    <string name="popup_no_events">No events to remind you about</string>
+    <string name="popup_close_in">Closing in %1$ds</string>
+    <string name="popup_closing">Closing…</string>
+    <string name="popup_past_event">"%1$s" passed %2$d days ago</string>
+    <string name="popup_future_event">"%1$s" is %2$d days away</string>
+
+    <!-- ===== Secret codes / debug ===== -->
+    <string name="secret_entering_debug">Entering debug options…</string>
+    <string name="secret_log_level_info">Log level set to INFO</string>
+    <string name="secret_log_level_off">Log recording disabled</string>
+    <string name="secret_dev_mode_trigger">Developer mode trigger permission %1$s</string>
+
+    <!-- ===== Android system UI exposure ===== -->
+    <string name="accessibility_service_description">Shows reminders for your important countdowns when you open a selected app. ZakoCountdown needs this permission to detect foreground app changes so reminders appear in time. We never collect any personal information.</string>
+
+    <!-- ===== Store / uninstall metadata (Xiaomi) ===== -->
+    <string name="SBUI_SyBerOS_uninstall_title">Uninstall? Think again</string>
+    <string name="SBUI_SyBerOS_uninstall_content">After uninstalling you will no longer receive countdown reminders. Are you sure?\nThis app is still in development and some features are incomplete; we are sorry for any rough edges.\nIf you have suggestions or found a bug, please reach out on the official GitHub repository or Telegram group.\nErrorsia Yusulif Studio\n~~Exception Ignites Evolution~~\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n</string>
+
 </resources>

@@ -66,7 +66,7 @@ class AddEditEventFragment : Fragment() {
             binding.editTextTitle.setText(title ?: "")
         }
         viewModel.selectedDateTime.observe(viewLifecycleOwner) { calendar ->
-            val dateFormat = SimpleDateFormat("yyyy年MM月dd日", Locale.getDefault())
+            val dateFormat = SimpleDateFormat(getString(R.string.event_date_format), Locale.getDefault())
             val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
             binding.buttonDatePicker.text = dateFormat.format(calendar.time)
             binding.buttonTimePicker.text = timeFormat.format(calendar.time)
@@ -87,7 +87,7 @@ class AddEditEventFragment : Fragment() {
         binding.inputLayoutAgenda.visibility = View.VISIBLE
 
         agendaViewModel.allBooks.observe(viewLifecycleOwner) { books ->
-            val displayList = mutableListOf("默认 / 全部")
+            val displayList = mutableListOf(getString(R.string.event_book_default))
             val idList = mutableListOf<Long?>(null)
 
             books.forEach {
@@ -124,7 +124,7 @@ class AddEditEventFragment : Fragment() {
             if (viewModel.saveEvent(title, selectedBookId)) {
                 findNavController().navigateUp()
             } else {
-                Toast.makeText(context, "标题不能为空哦～", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.event_title_empty, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -132,7 +132,7 @@ class AddEditEventFragment : Fragment() {
     private fun showDatePicker() {
         val selectedDateInMillis = viewModel.selectedDateTime.value?.timeInMillis ?: System.currentTimeMillis()
         val datePicker = MaterialDatePicker.Builder.datePicker()
-            .setTitleText("选择目标日期")
+            .setTitleText(getString(R.string.event_pick_date))
             .setSelection(selectedDateInMillis)
             .build()
         datePicker.addOnPositiveButtonClickListener { selection ->
@@ -148,7 +148,7 @@ class AddEditEventFragment : Fragment() {
             .setTimeFormat(TimeFormat.CLOCK_24H)
             .setHour(calendar.get(Calendar.HOUR_OF_DAY))
             .setMinute(calendar.get(Calendar.MINUTE))
-            .setTitleText("选择目标时间")
+            .setTitleText(getString(R.string.event_pick_time))
             .build()
         timePicker.addOnPositiveButtonClickListener {
             viewModel.updateTime(timePicker.hour, timePicker.minute)

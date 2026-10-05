@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:layout_weight="1"
         android:layout_marginStart="16dp"
-        android:text="日程本 (筛选)"
+        android:text="@string/nav_filter_agenda"
         android:textSize="18sp"
         android:textStyle="bold" />
 

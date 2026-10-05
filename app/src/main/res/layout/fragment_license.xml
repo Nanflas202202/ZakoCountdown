@@ -26,15 +26,15 @@
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GNU开源许可证（中文）" />
+                android:text="@string/license_mpl_zh" />
 
             <!--  ↓↓↓  添加新的按钮  ↓↓↓ -->
             <Button
-                android:id="@+id/button_license_mpl_en"
+                android:id="@+id/button_license_en"
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="GNU License (EN)" />
+                android:text="@string/license_mpl_en" />
             <!--  ↑↑↑  添加新的按钮  ↑↑↑ -->
 
             <Button
@@ -42,7 +42,7 @@
                 style="?attr/materialButtonOutlinedStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="工作室协议" />
+                android:text="@string/license_studio_agreement" />
 
         </com.google.android.material.button.MaterialButtonToggleGroup>
 

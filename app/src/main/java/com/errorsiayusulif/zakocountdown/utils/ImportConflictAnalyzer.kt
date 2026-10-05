@@ -1,12 +1,15 @@
 // file: app/src/main/java/com/errorsiayusulif/zakocountdown/utils/ImportConflictAnalyzer.kt
 package com.errorsiayusulif.zakocountdown.utils
 
+import android.content.Context
 import com.errorsiayusulif.zakocountdown.BuildConfig
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.*
 
 object ImportConflictAnalyzer {
 
     suspend fun analyze(
+        context: Context,
         repository: EventRepository,
         preferenceManager: PreferenceManager,
         parsedPackage: BackupManager.ParsedEyfPackage
@@ -24,11 +27,11 @@ object ImportConflictAnalyzer {
                 SelectableNode(
                     type = NodeType.HEADER,
                     id = "hdr_downgrade_warning",
-                    title = "跨版本恢复警告",
-                    subtitle = "备份来源版本 (v${appVersionCode}) 高于当前应用版本 (v${BuildConfig.VERSION_CODE})",
+                    title = context.getString(R.string.conflict_cross_version_title),
+                    subtitle = context.getString(R.string.conflict_cross_version_subtitle, appVersionCode, BuildConfig.VERSION_CODE),
                     isChecked = true,
                     conflictLevel = ConflictLevel.WARNING,
-                    conflictMessage = "您可以继续导入，但由于您当前的版本较旧，某些新的设置项或个性化功能可能被忽略或失效。"
+                    conflictMessage = context.getString(R.string.conflict_cross_version_message)
                 )
             )
         } else if (appId != BuildConfig.APPLICATION_ID) {
@@ -36,18 +39,33 @@ object ImportConflictAnalyzer {
                 SelectableNode(
                     type = NodeType.HEADER,
                     id = "hdr_cross_app_warning",
-                    title = "跨应用数据识别",
-                    subtitle = "数据源: ${appId}",
+                    title = context.getString(R.string.conflict_cross_app_title),
+                    subtitle = context.getString(R.string.conflict_cross_app_subtitle, appId),
                     isChecked = true,
                     conflictLevel = ConflictLevel.WARNING,
-                    conflictMessage = "这似乎不是由 ZakoCountdown 生成的标准备份，强行导入可能导致崩溃。"
+                    conflictMessage = context.getString(R.string.conflict_cross_app_message)
                 )
             )
         }
 
         // --- 2. 分析设置项 ---
         if (!eyfData.settings.isNullOrEmpty()) {
-            nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", "应用配置", isChecked = true))
+            // 备份包里记录了导出时的功能清单 —— 直接展示给用户，比只报 internalCode 直观得多
+            parsedPackage.features?.let { doc ->
+                val names = doc.features.joinToString("、") { it.displayName }
+                nodes.add(
+                    SelectableNode(
+                        type = NodeType.HEADER,
+                        id = "hdr_features",
+                        title = context.getString(R.string.import_features_title, doc.featureCount),
+                        subtitle = context.getString(R.string.import_features_subtitle, doc.targetVersionName, names),
+                        isChecked = true,
+                        conflictLevel = ConflictLevel.NONE
+                    )
+                )
+            }
+
+            nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", context.getString(R.string.backup_header_settings), isChecked = true))
             for ((key, value) in eyfData.settings) {
                 // 如果是新版本的专有设置，也可以在这里做检测（假设低版本遇到高版本设置）
                 // 但通常低版本的 SharedPreferences 遇到未知的 Key 会直接忽略，不会造成崩溃，所以这里直接列出。
@@ -55,8 +73,8 @@ object ImportConflictAnalyzer {
                     SelectableNode(
                         type = NodeType.SETTING,
                         id = "set_$key",
-                        title = "配置项: $key",
-                        subtitle = "导入值: $value",
+                        title = context.getString(R.string.conflict_setting_title, key),
+                        subtitle = context.getString(R.string.conflict_setting_value, value),
                         conflictLevel = ConflictLevel.NONE,
                         rawSettingValue = value
                     )
@@ -66,7 +84,7 @@ object ImportConflictAnalyzer {
 
         // --- 3. 分析日程本 ---
         if (!eyfData.agendaBooks.isNullOrEmpty()) {
-            nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", "日程集", isChecked = true))
+            nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", context.getString(R.string.nav_agenda_books), isChecked = true))
             val localBooks = repository.getAllBooksSuspend()
             val localBookNames = localBooks.map { it.name }.toSet()
 
@@ -76,7 +94,7 @@ object ImportConflictAnalyzer {
 
                 if (localBookNames.contains(book.name)) {
                     level = ConflictLevel.WARNING
-                    msg = "存在同名日程集，导入将导致重复"
+                    msg = context.getString(R.string.conflict_duplicate_book)
                 }
 
                 nodes.add(
@@ -84,7 +102,10 @@ object ImportConflictAnalyzer {
                         type = NodeType.BOOK,
                         id = "book_${book.originalId}",
                         title = book.name,
-                        subtitle = "标识色: ${book.colorHex ?: "默认"}",
+                        subtitle = context.getString(
+                            R.string.conflict_book_subtitle,
+                            book.colorHex ?: context.getString(R.string.conflict_default_color)
+                        ),
                         conflictLevel = level,
                         conflictMessage = msg,
                         rawBook = book
@@ -95,7 +116,7 @@ object ImportConflictAnalyzer {
 
         // --- 4. 分析日程 ---
         if (!eyfData.events.isNullOrEmpty()) {
-            nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", "日程卡片", isChecked = true))
+            nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", context.getString(R.string.backup_header_events, eyfData.events.size), isChecked = true))
             val localEvents = repository.getAllEventsSuspend()
             val localEventTitles = localEvents.map { it.title }.toSet()
             val isGlobalAlphaUnlocked = preferenceManager.isGlobalAlphaUnlocked()
@@ -106,10 +127,10 @@ object ImportConflictAnalyzer {
 
                 if (localEventTitles.contains(event.title)) {
                     level = ConflictLevel.WARNING
-                    msg = "存在同名日程，导入将产生重复项"
+                    msg = context.getString(R.string.conflict_duplicate_event)
                 } else if (event.cardAlpha != null && event.cardAlpha < 1.0f && !event.isPinned && !isGlobalAlphaUnlocked) {
                     level = ConflictLevel.ERROR
-                    msg = "冲突：使用了卡片透明度，但当前系统未解锁全局透明度"
+                    msg = context.getString(R.string.conflict_alpha_locked)
                 }
 
                 nodes.add(
@@ -117,7 +138,7 @@ object ImportConflictAnalyzer {
                         type = NodeType.EVENT,
                         id = "event_${event.title}_${event.targetDate}",
                         title = event.title,
-                        subtitle = if (event.isImportant) "重点日程" else "普通日程",
+                        subtitle = if (event.isImportant) context.getString(R.string.conflict_event_important) else context.getString(R.string.conflict_event_normal),
                         conflictLevel = level,
                         conflictMessage = msg,
                         rawEvent = event

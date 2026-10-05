@@ -153,7 +153,7 @@ class LogReaderFragment : Fragment() {
 
         // Android 13+ 系统会自动提示已复制，低版本我们手动提示
         if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
-            Toast.makeText(requireContext(), "日志已复制", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.log_copied, Toast.LENGTH_SHORT).show()
         }
     }
 

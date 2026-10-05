@@ -35,7 +35,7 @@
                 android:id="@+id/tv_book_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="日程本名称"
+                android:text="@string/agenda_book_name"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="?attr/colorOnSurface"/>
@@ -46,7 +46,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="5个日程 · 最近: 考试 (3天)"
+                tools:text="5 · 3"
                 android:textSize="14sp"
                 android:textColor="?attr/colorOnSurfaceVariant"/>
         </LinearLayout>

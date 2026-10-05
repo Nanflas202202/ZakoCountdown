@@ -32,7 +32,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="标识颜色"
+                android:text="@string/agenda_marker_color"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <HorizontalScrollView
@@ -51,7 +51,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="封面与透明度"
+                android:text="@string/agenda_cover_and_alpha"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <LinearLayout
@@ -97,14 +97,14 @@
                             style="?attr/materialButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="选图" />
+                            android:text="@string/common_pick_image" />
                         <Button
                             android:id="@+id/btn_remove_cover"
                             style="?attr/materialButtonOutlinedStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="清除" />
+                            android:text="@string/common_clear" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -114,13 +114,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:text="包含的日程"
+                android:text="@string/agenda_included_events"
                 android:textAppearance="?attr/textAppearanceTitleMedium" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="勾选以加入（若已在其他本中，将移动至此）"
+                android:text="@string/agenda_included_events_hint"
                 android:textSize="12sp"
                 android:textColor="?attr/colorOnSurfaceVariant"/>
 

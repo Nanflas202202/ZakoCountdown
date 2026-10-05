@@ -68,11 +68,11 @@ class CardSettingsFragment : Fragment() {
                     val updatedEvent = event.copy(backgroundUri = uri.toString())
                     homeViewModel.update(updatedEvent)
                     this.currentEvent = updatedEvent
-                    Toast.makeText(context, "背景图已设置", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.card_background_set, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: SecurityException) {
                 e.printStackTrace()
-                Toast.makeText(context, "无法获取图片权限，请尝试其他图片", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.card_image_permission_failed, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -149,7 +149,7 @@ class CardSettingsFragment : Fragment() {
                     val updatedEvent = current.copy(backgroundUri = null)
                     homeViewModel.update(updatedEvent)
                     this.currentEvent = updatedEvent
-                    Toast.makeText(context, "背景图已移除", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.card_background_removed, Toast.LENGTH_SHORT).show()
                 }
             }
         } else {

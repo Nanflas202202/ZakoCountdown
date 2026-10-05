@@ -51,7 +51,7 @@
         android:background="@drawable/widget_background_base"
         android:backgroundTint="?attr/colorSurfaceVariant"
         android:textColor="?attr/colorOnSurfaceVariant"
-        android:text="5s 后关闭"
+        tools:text="5s"
         android:alpha="0.8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -63,7 +63,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="24dp"
-        android:text="关闭"
+        android:text="@string/common_close"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>

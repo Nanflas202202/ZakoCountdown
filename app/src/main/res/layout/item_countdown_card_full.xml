@@ -17,7 +17,7 @@
             android:id="@+id/text_view_prefix_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="距离"
+            android:text="@string/countdown_distance"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -60,7 +60,7 @@
             android:id="@+id/time_years_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="年"
+            android:text="@string/unit_year"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_years_value"
             app:layout_constraintStart_toEndOf="@id/time_years_value"/>
@@ -80,7 +80,7 @@
             android:id="@+id/time_months_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="月"
+            android:text="@string/unit_month"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_months_value"
             app:layout_constraintStart_toEndOf="@id/time_months_value"/>
@@ -100,7 +100,7 @@
             android:id="@+id/time_weeks_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="周"
+            android:text="@string/unit_week"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_weeks_value"
             app:layout_constraintStart_toEndOf="@id/time_weeks_value"/>
@@ -120,7 +120,7 @@
             android:id="@+id/time_days_in_week_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="天"
+            android:text="@string/unit_day"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_days_in_week_value"
             app:layout_constraintStart_toEndOf="@id/time_days_in_week_value"/>
@@ -140,7 +140,7 @@
             android:id="@+id/time_minutes_label_full"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="分"
+            android:text="@string/unit_minute"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_minutes_value_full"
             app:layout_constraintStart_toEndOf="@id/time_minutes_value_full"/>
@@ -160,7 +160,7 @@
             android:id="@+id/time_seconds_label_full"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="秒"
+            android:text="@string/unit_second"
             android:layout_marginStart="4dp"
             app:layout_constraintBaseline_toBaselineOf="@id/time_seconds_value_full"
             app:layout_constraintStart_toEndOf="@id/time_seconds_value_full"/>

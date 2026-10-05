@@ -16,7 +16,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="显示模式"
+            android:text="@string/card_display_mode"
             android:textAppearance="?attr/textAppearanceTitleMedium"/>
 
         <RadioGroup
@@ -28,24 +28,24 @@
                 android:id="@+id/radio_simple"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="简洁模式 (只显示天数)"/>
+                android:text="@string/card_mode_simple"/>
             <RadioButton
                 android:id="@+id/radio_detailed"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="详细模式 (天:时:分:秒)"/>
+                android:text="@string/card_mode_detailed"/>
             <RadioButton
                 android:id="@+id/radio_full"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="完整模式 (年:月:周:天...)"/>
+                android:text="@string/card_mode_full"/>
         </RadioGroup>
 
         <!-- 2. 自定义颜色 -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="自定义颜色"
+            android:text="@string/card_custom_color"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:layout_marginTop="24dp"/>
 
@@ -73,7 +73,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="自定义背景 (仅置顶卡片)"
+                android:text="@string/card_custom_background"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:layout_marginTop="24dp"/>
 
@@ -89,7 +89,7 @@
                     style="?attr/materialButtonStyle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="选择图片"/>
+                    android:text="@string/card_pick_image"/>
 
                 <!-- 使用动态无边框样式 -->
                 <com.google.android.material.button.MaterialButton
@@ -98,7 +98,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="移除图片"/>
+                    android:text="@string/card_remove_image"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -107,7 +107,7 @@
             android:id="@+id/text_alpha_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="卡片不透明度"
+            android:text="@string/card_opacity"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             android:layout_marginTop="24dp"
             android:visibility="gone"

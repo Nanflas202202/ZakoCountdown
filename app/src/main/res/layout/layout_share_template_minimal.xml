@@ -40,7 +40,7 @@
                 android:id="@+id/tv_title_prefix"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="距离"
+                android:text="@string/countdown_distance"
                 android:textColor="#E0E0E0"
                 android:textSize="50px" />
 
@@ -53,7 +53,7 @@
                 android:ellipsize="end"
                 android:maxLines="1"
                 android:maxWidth="700px"
-                android:text="日程标题"
+                tools:text="@string/widget_event_title_placeholder"
                 android:textColor="#FFFFFF"
                 android:textSize="70px"
                 android:textStyle="bold" />
@@ -62,7 +62,7 @@
                 android:id="@+id/tv_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="还有"
+                android:text="@string/countdown_remaining"
                 android:textColor="#E0E0E0"
                 android:textSize="50px" />
         </LinearLayout>
@@ -86,7 +86,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="sans-serif-thin"
                 android:includeFontPadding="false"
-                android:text="XXX"
+                tools:text="0"
                 android:textColor="#FFFFFF"
                 android:textSize="380px"
                 android:maxLines="1"
@@ -101,7 +101,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="30px"
                 android:layout_marginBottom="60px"
-                android:text="天"
+                android:text="@string/unit_day"
                 android:textColor="#FFFFFF"
                 android:textSize="80px" />
         </LinearLayout>
@@ -113,7 +113,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="60px"
             android:gravity="center"
-            android:text="2025年12月25日"
+            tools:text="2025-12-25"
             android:textColor="#B0B0B0"
             android:textSize="40px"
             android:visibility="gone"

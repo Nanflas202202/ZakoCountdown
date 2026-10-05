@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="选择要显示的日程"
+        android:text="@string/widget_configure_title"
         android:textAppearance="?attr/textAppearanceTitleMedium"
         android:padding="16dp"
         android:textStyle="bold"/>
@@ -39,7 +39,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="背景样式"
+                android:text="@string/widget_background_style"
                 android:textAppearance="?attr/textAppearanceTitleMedium"
                 android:textStyle="bold"
                 android:paddingHorizontal="16dp"
@@ -55,20 +55,20 @@
                     android:id="@+id/widget_bg_transparent"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="半透明"
+                    android:text="@string/widget_bg_translucent"
                     android:layout_weight="1"
                     android:checked="true" />
                 <RadioButton
                     android:id="@+id/widget_bg_solid"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="不透明"
+                    android:text="@string/widget_bg_opaque"
                     android:layout_weight="1"/>
                 <RadioButton
                     android:id="@+id/widget_bg_image"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="图片"
+                    android:text="@string/widget_bg_image"
                     android:layout_weight="1"/>
             </RadioGroup>
 
@@ -83,7 +83,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="图片透明度"
+                    android:text="@string/widget_image_alpha"
                     android:textSize="12sp"
                     android:layout_marginTop="4dp"/>
                 <com.google.android.material.slider.Slider
@@ -109,13 +109,13 @@
                     android:id="@+id/switch_show_scrim"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="启用主题色遮罩"
+                    android:text="@string/widget_enable_scrim"
                     android:checked="true"/>
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="遮罩浓度"
+                    android:text="@string/widget_scrim_strength"
                     android:textSize="12sp"/>
                 <com.google.android.material.slider.Slider
                     android:id="@+id/slider_scrim_alpha"
@@ -153,7 +153,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="透明度调节"
+                    android:text="@string/widget_alpha_adjust"
                     android:textSize="12sp"
                     android:layout_marginTop="4dp"/>
                 <com.google.android.material.slider.Slider
@@ -173,7 +173,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:text="选择图片"
+                android:text="@string/widget_pick_image"
                 android:visibility="gone"/>
 
             <!-- 使用动态样式 -->
@@ -183,7 +183,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                android:text="添加微件"
+                android:text="@string/widget_add"
                 android:enabled="false"/>
 
         </LinearLayout>

@@ -35,10 +35,10 @@ class BuildDetailsFragment : Fragment() {
 
         // 1. 动态生成构建信息
         val buildInfos = listOf(
-            "版本名称" to BuildConfig.VERSION_NAME,
-            "版本号" to BuildConfig.VERSION_CODE.toString(),
-            "构建类型" to BuildConfig.BUILD_TYPE,
-            "构建时间" to sdf.format(buildTime)
+            getString(R.string.build_version_name) to BuildConfig.VERSION_NAME,
+            getString(R.string.build_version_code) to BuildConfig.VERSION_CODE.toString(),
+            getString(R.string.build_type) to BuildConfig.BUILD_TYPE,
+            getString(R.string.build_time) to sdf.format(buildTime)
         )
 
         buildInfos.forEach { (title, value) ->
@@ -105,7 +105,7 @@ class BuildDetailsFragment : Fragment() {
                 val inputStream: InputStream = resources.openRawResource(resId)
                 tvContent.text = inputStream.bufferedReader().use { it.readText() }
             } catch (e: Exception) {
-                tvContent.text = "无法加载许可证文件..."
+                tvContent.text = getString(R.string.about_license_load_failed)
             }
         }
 
@@ -122,9 +122,9 @@ class BuildDetailsFragment : Fragment() {
         toggleGroup.check(R.id.btn_lang_zh)
 
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("$libraryName 许可协议")
+            .setTitle(getString(R.string.about_license_dialog_title, libraryName))
             .setView(dialogView)
-            .setPositiveButton("关闭", null)
+            .setPositiveButton(R.string.common_close, null)
             .show()
     }
 

@@ -1,18 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  左侧侧滑栏顶部。
+  结构分三层（从下到上）：
+    1. drawer_header_image —— 用户自定义图像，居中裁切铺满（未设置或关闭开关时隐藏）
+    2. drawer_header_scrim —— 遮罩层，保证深色/浅色图片上的文字都读得清
+    3. 前景内容 —— Logo + 应用名 + 快捷换图入口
+  未设置图像时整块回退为纯色品牌头部（由 MainActivity 上色）。
+-->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_header_root"
     android:layout_width="match_parent"
     android:layout_height="192dp"
     android:background="?attr/colorPrimary"
-    android:padding="16dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
+    <!-- 1. 自定义图像 -->
+    <ImageView
+        android:id="@+id/drawer_header_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:contentDescription="@string/personalization_drawer_header_pick"
+        android:scaleType="centerCrop"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="ImageContrastCheck" />
+
+    <!-- 2. 遮罩：底部略重，让下方文字始终清晰 -->
+    <View
+        android:id="@+id/drawer_header_scrim"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_drawer_header_scrim"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- 3. 前景内容 -->
     <ImageView
         android:id="@+id/drawer_logo"
         android:layout_width="72dp"
         android:layout_height="72dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="8dp"
         android:scaleType="centerInside"
         app:layout_constraintBottom_toTopOf="@id/drawer_app_name"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,11 +59,29 @@
         android:id="@+id/drawer_app_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="24dp"
         android:text="@string/app_name"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="?attr/colorOnPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <!-- 快捷入口：直接换顶部图像，不用每次都翻到设置里 -->
+    <ImageView
+        android:id="@+id/btn_pick_header_image"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginEnd="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:contentDescription="@string/personalization_drawer_header_pick"
+        android:focusable="true"
+        android:padding="8dp"
+        android:tint="?attr/colorOnPrimary"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_personalization" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

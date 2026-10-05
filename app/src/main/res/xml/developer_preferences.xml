@@ -1,80 +1,103 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
-    <PreferenceCategory app:title="主题与显示">
+    <PreferenceCategory app:title="@string/dev_category_theme">
         <!-- 新增开关 -->
         <SwitchPreferenceCompat
-            app:key="key_unlock_legacy_theme_compact"
-            app:title="紧凑模式下解锁旧版主题"
-            app:summary="允许在紧凑模式下使用 MD1/MD2 主题 (默认强制 MD3)"
+            app:key="legacy_theme_unlock_in_compact"
+            app:title="@string/dev_unlock_legacy_theme_compact"
+            app:summary="@string/dev_unlock_legacy_theme_compact_summary"
             app:defaultValue="false" />
 
         <SwitchPreferenceCompat
-            app:key="key_show_system_apps"
-            app:title="在应用列表中显示系统应用"
-            app:summary="开启后，“选择应用”列表将包含所有系统应用"
+            app:key="show_system_apps"
+            app:title="@string/dev_show_system_apps"
+            app:summary="@string/dev_show_system_apps_summary"
             app:defaultValue="false" />
     </PreferenceCategory>
-    <PreferenceCategory app:title="兼容性">
+    <PreferenceCategory app:title="@string/dev_category_compat">
         <SwitchPreferenceCompat
-            app:key="key_miui_fix_override"
-            app:title="停用MIUI兼容性修正"
-            app:summary="在MIUI设备上强制启用MD2主题选项（可能导致崩溃）"
+            app:key="miui_fix_disabled"
+            app:title="@string/dev_miui_fix_override"
+            app:summary="@string/dev_miui_fix_override_summary"
             app:defaultValue="false" />
     </PreferenceCategory>
     <SwitchPreferenceCompat
-        app:key="key_enable_md1_theme"
-        app:title="启用实验性MD1主题"
-        app:summary="开启后可在设置中选择MD1主题（可能不稳定）"
+        app:key="md1_theme_enabled"
+        app:title="@string/dev_enable_md1"
+        app:summary="@string/dev_enable_md1_summary"
         app:defaultValue="false" />
-    <PreferenceCategory app:title="弹窗提醒">
+    <PreferenceCategory app:title="@string/dev_category_popup">
         <Preference
             app:key="current_rom"
-            app:title="当前系统"
-            app:summary="Unknown"/>
+            app:title="@string/dev_current_rom"
+            app:summary="@string/dev_unknown"/>
         <ListPreference
-            app:key="key_popup_mode"
-            app:title="强制弹窗模式"
-            app:summary="当前为: %s"
+            app:key="popup_mode"
+            app:title="@string/dev_force_popup_mode"
+            app:summary="@string/dev_force_popup_mode_summary"
             app:entries="@array/popup_mode_entries"
             app:entryValues="@array/popup_mode_values"
             app:defaultValue="auto"/>
     </PreferenceCategory>
-    <PreferenceCategory app:title="个性化">
+    <PreferenceCategory app:title="@string/dev_category_personalization">
         <SwitchPreferenceCompat
-            app:key="key_unlock_global_alpha"
-            app:title="解锁所有卡片透明度"
-            app:summary="开启后，允许调节非置顶卡片的透明度"
+            app:key="card_alpha_unlocked"
+            app:title="@string/adv_unlock_global_alpha"
+            app:summary="@string/adv_unlock_global_alpha_summary"
             app:defaultValue="false" />
     </PreferenceCategory>
-    <PreferenceCategory app:title="功能测试">
+    <PreferenceCategory app:title="@string/dev_category_feature_test">
         <SwitchPreferenceCompat
-            app:key="key_enable_agenda_book"
-            app:title="启用[日程本]功能"
-            app:summary="在导航栏显示日程本入口 (Alpha)"
+            app:key="agenda_book_enabled"
+            app:title="@string/dev_enable_agenda_book"
+            app:summary="@string/dev_enable_agenda_book_summary"
             app:defaultValue="false" />
     </PreferenceCategory>
-    <PreferenceCategory app:title="调试与重置">
+    <PreferenceCategory app:title="@string/dev_category_debug">
         <Preference
             app:key="force_relaunch_oobe"
-            app:title="重新进入开箱引导 (OOBE)"
-            app:summary="强制跳转到初次启动的引导页面" />
+            app:title="@string/dev_force_relaunch_oobe"
+            app:summary="@string/dev_force_relaunch_oobe_summary" />
 
         <Preference
             app:key="clear_all_preferences"
-            app:title="清除所有本地设置 (危险)"
-            app:summary="恢复所有个性化与高级选项为默认值，并重启应用" />
+            app:title="@string/dev_clear_preferences"
+            app:summary="@string/dev_clear_preferences_summary" />
     </PreferenceCategory>
-    <PreferenceCategory app:title="更新源配置 (OTA引擎)">
+
+    <!--
+        构建标识：升级代号 + 构建指纹。
+        这里是**唯一**能看到升级代号的地方 —— 关于页、设置页、备份包里都不出现。
+    -->
+    <PreferenceCategory app:title="@string/dev_category_build_identity">
+        <Preference
+            app:key="upgrade_code_display"
+            app:title="@string/dev_upgrade_code"
+            app:summary="@string/dev_upgrade_code_summary" />
+
+        <Preference
+            app:key="build_id_display"
+            app:title="@string/dev_build_id"
+            app:summary="@string/dev_build_id_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory app:title="@string/dev_category_update_nodes">
         <SwitchPreferenceCompat
-            app:key="key_sync_update_urls"
-            app:title="在线同步备用更新源"
-            app:summary="每次检查更新前，尝试从主服务器拉取最新的节点列表"
+            app:key="update_source_sync_enabled"
+            app:title="@string/dev_sync_update_urls"
+            app:summary="@string/dev_sync_update_urls_summary"
             app:defaultValue="true" />
 
         <EditTextPreference
-            app:key="key_custom_update_urls"
-            app:title="自定义更新节点池"
-            app:summary="编辑直链URL，每行一个。优先级按行递减。"
-            app:dialogTitle="编辑更新源 (按回车换行)"
-            app:dialogMessage="请确保链接返回标准的 update.json 格式"/>
+            app:key="update_source_nodes"
+            app:title="@string/dev_custom_update_urls"
+            app:summary="@string/dev_custom_update_urls_summary"
+            app:dialogTitle="@string/dev_custom_update_urls_dialog_title"
+            app:dialogMessage="@string/dev_custom_update_urls_dialog_message"/>
+
+        <!-- 一键恢复内置节点池，避免用户误清空后无从下手 -->
+        <Preference
+            app:key="restore_default_update_urls"
+            app:title="@string/dev_restore_default_urls"
+            app:summary="@string/dev_restore_default_urls_summary" />
     </PreferenceCategory>
 </PreferenceScreen>

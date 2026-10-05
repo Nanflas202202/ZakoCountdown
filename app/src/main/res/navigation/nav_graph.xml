@@ -42,7 +42,12 @@
         android:label="{title}"
         tools:layout="@layout/fragment_add_edit_event">
         <argument android:name="eventId" app:argType="long" android:defaultValue="-1L" />
-        <argument android:name="title" app:argType="string" android:defaultValue="添加日程" />
+        <!--
+            注意：Navigation 的 android:defaultValue 只接受字面量，不能写 @string/...
+            （NavInflater 会抛 "unsupported value ... You must use a reference type"）。
+            这里只是占位默认值，真正的本地化标题由调用方用 getString() 传入。
+        -->
+        <argument android:name="title" app:argType="string" android:defaultValue="Add event" />
         <!-- 新增：默认归属的日程本ID -->
         <argument android:name="defaultBookId" app:argType="long" android:defaultValue="-1L" />
     </fragment>
@@ -51,7 +56,7 @@
     <fragment
         android:id="@+id/settingsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.SettingsFragment"
-        android:label="设置">
+        android:label="@string/nav_settings">
         <action
             android:id="@+id/action_settingsFragment_to_developerSettingsFragment"
             app:destination="@id/developerSettingsFragment" />
@@ -73,13 +78,16 @@
         <action
             android:id="@+id/action_settingsFragment_to_personalizationFragment"
             app:destination="@id/personalizationFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_languageSettingsFragment"
+            app:destination="@id/languageSettingsFragment" />
     </fragment>
 
     <!-- Sub-settings & Features -->
     <fragment
         android:id="@+id/aboutFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.AboutFragment"
-        android:label="关于"
+        android:label="@string/settings_about"
         tools:layout="@layout/fragment_about">
         <action
             android:id="@+id/action_aboutFragment_to_buildDetailsFragment"
@@ -92,35 +100,35 @@
     <fragment
         android:id="@+id/buildDetailsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.BuildDetailsFragment"
-        android:label="详细信息" />
+        android:label="@string/about_row_details" />
 
     <fragment
         android:id="@+id/licenseFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.LicenseFragment"
-        android:label="许可证"
+        android:label="@string/about_row_license"
         tools:layout="@layout/fragment_license" />
 
     <fragment
         android:id="@+id/cardSettingsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.CardSettingsFragment"
-        android:label="卡片个性化" >
+        android:label="@string/card_display_mode" >
         <argument android:name="eventId" app:argType="long" />
     </fragment>
 
     <fragment
         android:id="@+id/appSelectorFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.AppSelectorFragment"
-        android:label="选择应用" />
+        android:label="@string/adv_select_apps" />
 
     <fragment
         android:id="@+id/developerSettingsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeveloperSettingsFragment"
-        android:label="开发者选项" />
+        android:label="@string/nav_developer_options" />
 
     <fragment
         android:id="@+id/notificationSettingsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.NotificationSettingsFragment"
-        android:label="通知设置">
+        android:label="@string/nav_notification_settings">
         <deepLink
             app:uri="errorsiayusulif://zakocountdown/notifications"
             android:autoVerify="true"/>
@@ -129,12 +137,12 @@
     <fragment
         android:id="@+id/permissionsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.PermissionsFragment"
-        android:label="权限中心" />
+        android:label="@string/settings_permissions" />
 
     <fragment
         android:id="@+id/advancedSettingsFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.AdvancedSettingsFragment"
-        android:label="高级功能">
+        android:label="@string/settings_advanced">
         <action
             android:id="@+id/action_advancedSettingsFragment_to_appSelectorFragment"
             app:destination="@id/appSelectorFragment" />
@@ -143,12 +151,27 @@
     <fragment
         android:id="@+id/personalizationFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.PersonalizationFragment"
-        android:label="个性化" />
+        android:label="@string/settings_personalization">
+        <action
+            android:id="@+id/action_personalizationFragment_to_savedThemesFragment"
+            app:destination="@id/savedThemesFragment" />
+    </fragment>
+
+    <!-- 「已保存的主题」二级页面：列表展示每次导入的主题，可切换 / 重命名 / 删除 -->
+    <fragment
+        android:id="@+id/savedThemesFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.SavedThemesFragment"
+        android:label="@string/personalization_saved_themes" />
+
+    <fragment
+        android:id="@+id/languageSettingsFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.LanguageSettingsFragment"
+        android:label="@string/settings_language" />
 
     <fragment
         android:id="@+id/deepDeveloperFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.DeepDeveloperFragment"
-        android:label="调试选项">
+        android:label="@string/nav_debug_options">
         <action
             android:id="@+id/action_deepDeveloperFragment_to_logReaderFragment"
             app:destination="@id/logReaderFragment" />
@@ -160,7 +183,7 @@
     <fragment
         android:id="@+id/logReaderFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.LogReaderFragment"
-        android:label="日志详情">
+        android:label="@string/nav_log_detail">
         <argument
             android:name="filePath"
             app:argType="string"
@@ -171,7 +194,7 @@
     <fragment
         android:id="@+id/logFileListFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.LogFileListFragment"
-        android:label="历史日志文件">
+        android:label="@string/nav_log_files">
         <action
             android:id="@+id/action_logFileListFragment_to_logReaderFragment"
             app:destination="@id/logReaderFragment" />
@@ -181,7 +204,7 @@
     <fragment
         android:id="@+id/sharePreviewFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.share.SharePreviewFragment"
-        android:label="生成分享卡片">
+        android:label="@string/nav_share_preview">
         <argument
             android:name="eventId"
             app:argType="long" />
@@ -195,7 +218,7 @@
     <fragment
         android:id="@+id/agendaBookFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.agenda.AgendaBookFragment"
-        android:label="日程本">
+        android:label="@string/nav_agenda_books">
         <action
             android:id="@+id/action_agendaBookFragment_to_addEditAgendaBookFragment"
             app:destination="@id/addEditAgendaBookFragment" />
@@ -208,7 +231,7 @@
     <fragment
         android:id="@+id/agendaDetailFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.agenda.AgendaDetailFragment"
-        android:label="日程本详情">
+        android:label="@string/nav_agenda_detail">
         <argument
             android:name="bookId"
             app:argType="long" />
@@ -236,11 +259,11 @@
         <argument
             android:name="title"
             app:argType="string"
-            android:defaultValue="新建日程本" />
+            android:defaultValue="New agenda book" />
     </fragment>
     <!-- 数据备份与迁移页 -->
     <fragment
         android:id="@+id/backupRestoreFragment"
         android:name="com.errorsiayusulif.zakocountdown.ui.settings.BackupRestoreFragment"
-        android:label="数据备份与迁移" />
+        android:label="@string/settings_backup" />
 </navigation>

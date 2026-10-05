@@ -32,34 +32,34 @@
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ALL"
+                android:text="@string/log_level_all"
                 android:checked="true"/>
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_error"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="ERROR"
+                android:text="@string/log_level_error"
                 android:textColor="#B00020"/>
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_warn"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="WARN"
+                android:text="@string/log_level_warn"
                 android:textColor="#F57F17"/>
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_info"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="INFO"/>
+                android:text="@string/log_level_info"/>
             <com.google.android.material.chip.Chip
                 android:id="@+id/chip_debug"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="DEBUG"/>
+                android:text="@string/log_level_debug"/>
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 
@@ -76,6 +76,6 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_margin="8dp"
-        android:text="刷新日志"/>
+        android:text="@string/log_refresh"/>
 
 </LinearLayout>

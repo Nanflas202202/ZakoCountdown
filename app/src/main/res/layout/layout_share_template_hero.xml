@@ -50,7 +50,7 @@
                     android:id="@+id/tv_title_prefix"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="距离"
+                    android:text="@string/countdown_distance"
                     android:textColor="#9E9E9E"
                     android:textSize="40px" />
                 <TextView
@@ -61,7 +61,7 @@
                     android:layout_weight="1"
                     android:ellipsize="end"
                     android:maxLines="1"
-                    android:text="日程标题"
+                    tools:text="@string/widget_event_title_placeholder"
                     android:textColor="#212121"
                     android:textSize="80px"
                     android:textStyle="bold" />
@@ -69,7 +69,7 @@
                     android:id="@+id/tv_target_date"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2025/12/25"
+                    tools:text="2025-12-25"
                     android:textColor="#9E9E9E"
                     android:textSize="36px"
                     android:visibility="gone" />
@@ -87,7 +87,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="40px"
-                android:text="还有"
+                android:text="@string/countdown_remaining"
                 android:textColor="#757575"
                 android:textSize="44px" />
 
@@ -104,7 +104,7 @@
                     android:layout_weight="1"
                     android:fontFamily="serif"
                     android:includeFontPadding="false"
-                    android:text="XXX"
+                    tools:text="0"
                     android:textColor="#000000"
                     android:textSize="260px"
                     android:textStyle="bold"
@@ -120,7 +120,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="35px"
                     android:layout_marginStart="5px"
-                    android:text="天"
+                    android:text="@string/unit_day"
                     android:textColor="#212121"
                     android:textSize="60px" />
             </LinearLayout>

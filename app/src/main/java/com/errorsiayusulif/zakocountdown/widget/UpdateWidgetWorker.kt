@@ -111,7 +111,7 @@ private suspend fun updateSingleWidget(
         try { baseColor = Color.parseColor(savedColorHex) } catch (e: Exception) {}
     } else {
         try {
-            val attrs = intArrayOf(com.google.android.material.R.attr.colorPrimary)
+            val attrs = intArrayOf(android.R.attr.colorPrimary)
             val typedArray = context.obtainStyledAttributes(R.style.Theme_ZakoCountdown, attrs)
             baseColor = typedArray.getColor(0, baseColor)
             typedArray.recycle()
@@ -120,7 +120,7 @@ private suspend fun updateSingleWidget(
 
     var themePrimaryColor = Color.BLACK
     try {
-        val attrs = intArrayOf(com.google.android.material.R.attr.colorPrimary)
+        val attrs = intArrayOf(android.R.attr.colorPrimary)
         val typedArray = context.obtainStyledAttributes(R.style.Theme_ZakoCountdown, attrs)
         themePrimaryColor = typedArray.getColor(0, Color.BLACK)
         typedArray.recycle()
@@ -181,40 +181,40 @@ private suspend fun updateSingleWidget(
 
     if (event != null) {
         val diff = TimeCalculator.calculateDifference(event.targetDate)
-        val label = if (diff.isPast) "已过" else "还有"
+        val label = if (diff.isPast) context.getString(R.string.countdown_passed) else context.getString(R.string.countdown_remaining)
 
         when (layoutId) {
             R.layout.widget_layout -> { // Simple (2x2)
                 views.setTextViewText(R.id.widget_title, event.title) // 居中标题
                 views.setTextViewText(R.id.widget_status_label, label)
                 views.setTextViewText(R.id.widget_days, diff.totalDays.toString())
-                views.setTextViewText(R.id.widget_days_suffix, "天")
+                views.setTextViewText(R.id.widget_days_suffix, context.getString(R.string.unit_day))
             }
             R.layout.widget_layout_detailed -> { // Detailed (天时分)
-                views.setTextViewText(R.id.widget_title, "距离 ${event.title}")
+                views.setTextViewText(R.id.widget_title, context.getString(R.string.countdown_distance) + " " + event.title)
                 views.setTextViewText(R.id.widget_detailed_status, label)
                 views.setTextViewText(R.id.widget_detailed_days, diff.totalDays.toString())
-                val timeString = "${String.format("%02d", diff.hours)}时 ${String.format("%02d", diff.minutes)}分"
+                val timeString = String.format(context.getString(R.string.duration_hm_short), diff.hours, diff.minutes)
                 views.setTextViewText(R.id.widget_detailed_time, timeString)
             }
             R.layout.widget_layout_full -> { // Full (年 月 周 天)
-                views.setTextViewText(R.id.widget_title, "距离 ${event.title}")
+                views.setTextViewText(R.id.widget_title, context.getString(R.string.countdown_distance) + " " + event.title)
                 views.setTextViewText(R.id.widget_full_status, label)
 
                 // --- 核心修改：改为 年+月+周+天 ---
                 val sb = StringBuilder()
-                if (diff.years > 0) sb.append("${diff.years}年 ")
-                if (diff.months > 0) sb.append("${diff.months}月 ")
-                if (diff.weeks > 0) sb.append("${diff.weeks}周 ")
-                sb.append("${diff.daysInWeek}天")
+                if (diff.years > 0) sb.append(diff.years.toString() + context.getString(R.string.unit_year) + " ")
+                if (diff.months > 0) sb.append(diff.months.toString() + context.getString(R.string.unit_month) + " ")
+                if (diff.weeks > 0) sb.append(diff.weeks.toString() + context.getString(R.string.unit_week) + " ")
+                sb.append(diff.daysInWeek.toString() + context.getString(R.string.unit_day))
 
                 val fullText = sb.toString()
                 // 使用 widget_full_text (注意 XML 中 ID 要匹配)
-                views.setTextViewText(R.id.widget_full_text, if(fullText.isBlank()) "0天" else fullText)
+                views.setTextViewText(R.id.widget_full_text, if(fullText.isBlank()) context.getString(R.string.duration_zero) else fullText)
             }
         }
     } else {
-        views.setTextViewText(R.id.widget_title, "点击配置")
+        views.setTextViewText(R.id.widget_title, context.getString(R.string.service_widget_configure_hint))
         if (layoutId == R.layout.widget_layout) {
             views.setTextViewText(R.id.widget_days, "-")
             views.setTextViewText(R.id.widget_status_label, "")

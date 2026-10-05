@@ -15,9 +15,10 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.GravityCompat
+import androidx.coordinatorlayout.widget.CoordinatorLayout
+import androidx.core.view.doOnLayout
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
@@ -36,11 +37,15 @@ import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityMainBinding
 import com.errorsiayusulif.zakocountdown.receiver.SecretCodeReceiver
 import com.errorsiayusulif.zakocountdown.ui.agenda.AgendaViewModel
+import com.errorsiayusulif.zakocountdown.utils.LocalizedActivity
 import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
+import com.errorsiayusulif.zakocountdown.utils.NavModeHelper
+import com.errorsiayusulif.zakocountdown.utils.ZakoFloatingNavBehavior
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.color.MaterialColors
+import coil.load
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var navController: NavController
@@ -49,6 +54,29 @@ class MainActivity : AppCompatActivity() {
     private var destinationListener: NavController.OnDestinationChangedListener? = null
 
     private val agendaViewModel: AgendaViewModel by viewModels()
+
+    /**
+     * 侧滑栏顶部的快捷换图入口。
+     * 和设置页里的是同一件事，只是放在伸手就能点到的位置。
+     */
+    private val drawerHeaderPicker = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri: android.net.Uri? ->
+        uri ?: return@registerForActivityResult
+        try {
+            val inputStream = contentResolver.openInputStream(uri) ?: return@registerForActivityResult
+            val file = java.io.File(filesDir, DRAWER_HEADER_CACHE_FILE)
+            java.io.FileOutputStream(file).use { output ->
+                inputStream.use { input -> input.copyTo(output) }
+            }
+            preferenceManager.saveDrawerHeaderImageUri(android.net.Uri.fromFile(file).toString())
+            preferenceManager.setDrawerHeaderImageEnabled(true)
+            applyUniversalDynamicTheme()
+            android.widget.Toast.makeText(this, R.string.personalization_drawer_header_set, android.widget.Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(this, getString(R.string.common_failed, e.message ?: ""), android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         preferenceManager = PreferenceManager(this)
@@ -121,23 +149,53 @@ class MainActivity : AppCompatActivity() {
 
         // 1. 获取高度自适应的 Surface 和 Primary 颜色
         val surface = engine.getResolvedColor(this, "surface", com.google.android.material.R.attr.colorSurface, android.R.attr.windowBackground, "#F7FBF2")
-        val primary = engine.getResolvedColor(this, "primary", com.google.android.material.R.attr.colorPrimary, com.google.android.material.R.attr.colorPrimary, "#37693D")
+        val primary = engine.getResolvedColor(this, "primary", android.R.attr.colorPrimary, android.R.attr.textColorPrimary, "#37693D")
         val onPrimary = engine.getResolvedColor(this, "onPrimary", com.google.android.material.R.attr.colorOnPrimary, android.R.attr.textColorPrimaryInverse, "#FFFFFF")
 
         // 2. 全局染色 Window 状态栏 & 导航栏
         window.statusBarColor = surface
         window.navigationBarColor = surface
 
-        // 3. 染色左侧 Drawer Header (nav_header.xml)
-        if (binding.navView.headerCount > 0) {
-            val headerView = binding.navView.getHeaderView(0)
-            headerView.setBackgroundColor(primary)
-            headerView.findViewById<android.widget.TextView>(R.id.drawer_app_name)?.setTextColor(onPrimary)
-            headerView.findViewById<android.widget.ImageView>(R.id.drawer_logo)?.imageTintList = android.content.res.ColorStateList.valueOf(onPrimary)
-        }
+        // 3. 渲染左侧 Drawer Header（纯色品牌头部 或 用户自定义图像）
+        renderDrawerHeader(primary, onPrimary)
 
         // 4. 深度染色整个界面的 View 树 (覆盖 Toolbar, BottomNav, FAB 等)
         engine.applyThemeToViewTree(binding.root, this)
+    }
+
+    /**
+     * 侧滑栏顶部：用户设置过图像且开关打开时，用图像铺满 + 渐变遮罩；
+     * 否则回退为纯色品牌头部（primary 底 + onPrimary 前景）。
+     */
+    private fun renderDrawerHeader(primary: Int, onPrimary: Int) {
+        if (binding.navView.headerCount <= 0) return
+        val headerView = binding.navView.getHeaderView(0)
+
+        val imageView = headerView.findViewById<android.widget.ImageView>(R.id.drawer_header_image)
+        val scrimView = headerView.findViewById<View>(R.id.drawer_header_scrim)
+        val pickButton = headerView.findViewById<android.widget.ImageView>(R.id.btn_pick_header_image)
+
+        val imageUri = preferenceManager.getDrawerHeaderImageUri()
+        val useImage = preferenceManager.isDrawerHeaderImageEnabled() && !imageUri.isNullOrBlank()
+
+        if (useImage) {
+            imageView?.visibility = View.VISIBLE
+            scrimView?.visibility = View.VISIBLE
+            // 自定义图像自带背景，头部底色透不出来，避免边缘露色
+            headerView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            imageView?.load(imageUri) { crossfade(true) }
+        } else {
+            imageView?.visibility = View.GONE
+            scrimView?.visibility = View.GONE
+            imageView?.setImageDrawable(null)
+            headerView.setBackgroundColor(primary)
+        }
+
+        // 前景始终取 onPrimary：自定义图像上有渐变遮罩兜底对比度
+        headerView.findViewById<android.widget.TextView>(R.id.drawer_app_name)?.setTextColor(onPrimary)
+        headerView.findViewById<android.widget.ImageView>(R.id.drawer_logo)?.imageTintList =
+            android.content.res.ColorStateList.valueOf(onPrimary)
+        pickButton?.imageTintList = android.content.res.ColorStateList.valueOf(onPrimary)
     }
 
     private fun checkAccessibilityAndPopup() {
@@ -145,35 +203,45 @@ class MainActivity : AppCompatActivity() {
         val isPopupEnabled = prefs.isPopupReminderEnabled()
         val isServiceRunning = com.errorsiayusulif.zakocountdown.utils.AccessibilityStatusHelper.isAccessibilityServiceEnabled(this)
 
-        if (isPopupEnabled && !isServiceRunning) {
-            // 如果开关开着但服务没跑，自动禁用开关 (防止死循环检测)
-            // prefs.setPopupReminderEnabled(false) // 如果你想强制关掉
+        if (!isPopupEnabled || isServiceRunning) return
+        if (prefs.hasPromptedAccessibility()) return
 
-            // 检查是否是首次提示（用一个标志位记录）
-            if (!prefs.hasPromptedAccessibility()) {
-                prefs.setHasPromptedAccessibility(true)
-                androidx.appcompat.app.AlertDialog.Builder(this)
-                    .setTitle("需要无障碍权限")
-                    .setMessage("为了在您打开指定应用时弹出倒数日提醒，我们需要开启无障碍服务。")
-                    .setPositiveButton("去开启") { _, _ ->
-                        startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
-                    }
-                    .setNegativeButton("取消并禁用弹窗", { _, _ ->
-                        // prefs.setPopupReminderEnabled(false)
-                    })
-                    .show()
+        // 只在真正面向用户的恢复时提示一次；配置变更（旋转/深浅色切换/主题切换）
+        // 触发的重建不算一次新的提示，否则会在切换界面时反复弹窗。
+        if (isChangingConfigurations || isFinishing || isDestroyed) return
+
+        prefs.setHasPromptedAccessibility(true)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.perm_accessibility_dialog_title)
+            .setMessage(R.string.perm_accessibility_dialog_message)
+            .setPositiveButton(R.string.perm_accessibility_dialog_positive) { _, _ ->
+                startActivity(Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS))
             }
-        }
+            .setNegativeButton(R.string.perm_accessibility_dialog_negative, null)
+            .show()
     }
 
     private fun setupNavigationMode() {
         // 清除旧监听器防止冲突
         destinationListener?.let { navController.removeOnDestinationChangedListener(it) }
 
-        val navMode = preferenceManager.getNavMode()
-        val layoutMode = preferenceManager.getHomeLayoutMode()
+        // 解析出有效的导航形态（历史遗留值 floating 会被收敛成 bottom，见 NavModeHelper）
+        val navMode = NavModeHelper.resolveNavMode(this)
+        val isBottomNavMode = NavModeHelper.isBottomNav(navMode)
         val isAgendaEnabled = preferenceManager.isAgendaBookEnabled()
-        val isCompactMode = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
+        val isCompactMode = preferenceManager.getHomeLayoutMode() == PreferenceManager.HOME_LAYOUT_COMPACT
+
+        // 如果存的还是旧值，顺手把设置也改掉，免得设置页显示的和实际不一致
+        if (navMode != preferenceManager.getNavMode()) {
+            preferenceManager.saveNavMode(navMode)
+        }
+
+        // 底部导航栏是否开启「滚动自动隐藏」。
+        // ⚠️ 必须放在下面「确定导航形态与可见性」之后：applyBottomBarAppearance 里
+        //    会按底栏的可见状态给内容补底部内边距，提前调用时底栏还是 GONE，
+        //    内边距会算成 0，内容照样被遮住。
+        //（此处仅留注释，真正的调用见下方分支结束后）
 
         // 默认显示标题栏
         supportActionBar?.show()
@@ -181,19 +249,21 @@ class MainActivity : AppCompatActivity() {
         val topLevelDestinations = mutableSetOf<Int>()
 
         if (isCompactMode) {
-            // 紧凑模式：主页是唯一顶级
+            // 紧凑模式：主页是唯一顶级，不显示任何常驻导航
             topLevelDestinations.add(R.id.homeFragment)
             binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
             binding.navView.visibility = View.GONE
             binding.bottomNavView.visibility = View.GONE
             // 紧凑模式强制显示 Toolbar 菜单
             invalidateOptionsMenu()
-        } else if (navMode == PreferenceManager.NAV_MODE_BOTTOM) {
-            // 底部导航模式
+        } else if (isBottomNavMode) {
+            // 底部系导航（悬浮 / 贴底）
             topLevelDestinations.add(R.id.homeFragment)
             topLevelDestinations.add(R.id.settingsFragment)
             if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
 
+            // 底部系导航：左侧抽屉（导航用）锁死；
+            // 右侧「日程本筛选」是正常功能（工具栏菜单会 openDrawer 打开），保持可用。
             binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED, GravityCompat.START)
             binding.drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED, GravityCompat.END)
             binding.navView.visibility = View.GONE
@@ -201,7 +271,7 @@ class MainActivity : AppCompatActivity() {
             binding.bottomNavView.setupWithNavController(navController)
             binding.bottomNavView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
         } else {
-            // 侧滑模式
+            // 侧滑抽屉模式
             topLevelDestinations.add(R.id.homeFragment)
             topLevelDestinations.add(R.id.settingsFragment)
             if (isAgendaEnabled) topLevelDestinations.add(R.id.agendaBookFragment)
@@ -213,7 +283,13 @@ class MainActivity : AppCompatActivity() {
             binding.navView.menu.findItem(R.id.agendaBookFragment)?.isVisible = isAgendaEnabled
         }
 
-        appBarConfiguration = if (isCompactMode || navMode == PreferenceManager.NAV_MODE_BOTTOM) {
+        // 导航形态与可见性都确定之后，再应用底栏外观。
+        // 它会顺带按底栏可见状态给内容补底部内边距（底栏是覆盖层，需要占位）。
+        syncAutoHideNavBar()
+
+        // 悬浮/贴底模式没有抽屉，AppBarConfiguration 不能带 drawerLayout，
+        // 否则返回箭头/汉堡图标逻辑会错乱
+        appBarConfiguration = if (isCompactMode || isBottomNavMode) {
             AppBarConfiguration(topLevelDestinations)
         } else {
             AppBarConfiguration(topLevelDestinations, binding.drawerLayout)
@@ -237,7 +313,8 @@ class MainActivity : AppCompatActivity() {
                         menu.findItem(R.id.homeFragment)?.isChecked = true
                     }
                     R.id.settingsFragment, R.id.personalizationFragment, R.id.advancedSettingsFragment,
-                    R.id.aboutFragment, R.id.developerSettingsFragment, R.id.permissionsFragment, R.id.backupRestoreFragment -> {
+                    R.id.aboutFragment, R.id.developerSettingsFragment, R.id.permissionsFragment,
+                    R.id.backupRestoreFragment, R.id.savedThemesFragment -> {
                         menu.findItem(R.id.settingsFragment)?.isChecked = true
                     }
                     R.id.agendaBookFragment -> {
@@ -249,10 +326,104 @@ class MainActivity : AppCompatActivity() {
         navController.addOnDestinationChangedListener(destinationListener!!)
     }
 
+    /**
+     * 底部导航栏外观。
+     *
+     * 导航栏**始终贴住屏幕底边**（不留外边距、不做悬浮药丸）。
+     * 「自动隐藏」只是让它在滚动时上下位移，不改变它的位置形态：
+     *   - autoHide = true ：向下滚动时滑出屏幕，向上滚动时滑回来
+     *     （位移逻辑在 [com.errorsiayusulif.zakocountdown.utils.ZakoFloatingNavBehavior]）
+     *   - autoHide = false：固定不动
+     */
+    private fun applyBottomBarAppearance(autoHide: Boolean) {
+        val bar = binding.bottomNavView
+        val params = bar.layoutParams as ViewGroup.MarginLayoutParams
+        val density = resources.displayMetrics.density
+
+        // 先让行为复位（两个方向都要）。
+        // 关闭自动隐藏时若导航栏正停在屏幕外，必须立刻拉回来，
+        // 否则用户会以为「关闭开关没生效」。
+        val behavior = (bar.layoutParams as? CoordinatorLayout.LayoutParams)?.behavior as? ZakoFloatingNavBehavior
+        behavior?.reset(bar)
+        bar.translationY = 0f
+
+        // 贴底：不留任何外边距
+        params.setMargins(0, 0, 0, 0)
+        bar.layoutParams = params
+
+        // 普通底部导航栏外观（铺满宽度、直角、贴住底边）
+        bar.background = android.graphics.drawable.ColorDrawable(
+            MaterialColors.getColor(bar, com.google.android.material.R.attr.colorSurfaceContainer)
+        )
+        // 投影只做视觉层次，不再兼任「是否开启自动隐藏」的信号
+        bar.elevation = if (autoHide) 8 * density else 3 * density
+        bar.clipToOutline = false
+
+        // 标签随选中项横向平移：M3 导航栏的动效，自动隐藏形态下更明显
+        bar.isItemHorizontalTranslationEnabled = autoHide
+
+        // 重新走一遍布局，让 Behavior 用新的高度/边距重算「滑出屏幕」的距离
+        bar.requestLayout()
+
+        // 底栏在 CoordinatorLayout 里是**覆盖层**（layout_gravity=bottom），
+        // 不再像原来那样在 LinearLayout 里占位。所以必须给内容留出等高的底部内边距，
+        // 否则列表最后一项会被压在导航栏下面 —— 表现就是「挡内容」，
+        // 而且因为列表被压住，滚到底也看不到被遮住的导航栏。
+        syncContentBottomInset()
+    }
+
+    /**
+     * 让内容区域避开底部导航栏的占位。
+     *
+     * 底栏是覆盖层，内容需要自己留出 bottom padding = 底栏高度。
+     * 底栏隐藏时这段空白保留（与 Material 的做法一致）——
+     * 否则内容会在隐藏/显示的瞬间上下跳动，比留一条空白更难受。
+     *
+     * 高度要等测量完成才有效，所以这里 post 到下一帧；
+     * 若此时还没测量出来（高度为 0），再补一次布局回调。
+     */
+    private fun syncContentBottomInset() {
+        val bar = binding.bottomNavView
+        val content = binding.navHostFragment
+
+        fun apply() {
+            val inset = if (bar.visibility == View.VISIBLE) bar.height else 0
+            if (content.paddingBottom != inset) {
+                content.setPadding(
+                    content.paddingLeft,
+                    content.paddingTop,
+                    content.paddingRight,
+                    inset
+                )
+            }
+        }
+
+        bar.post { apply() }
+        bar.doOnLayout { apply() }
+    }
+
+    /**
+     * 读取自动隐藏开关并立即应用。
+     *
+     * 从设置页返回时 [onResume] 会走到这里，所以开关「关掉立刻生效」。
+     * 之前行为层用 elevation 当代理信号，导致关掉开关后滚动仍会隐藏导航栏；
+     * 现在行为直接读偏好值，并且这里显式复位，两个方向都对。
+     */
+    private fun syncAutoHideNavBar() {
+        applyBottomBarAppearance(NavModeHelper.isAutoHideNav(this))
+    }
+
     private fun setupRightDrawer() {
+        // 侧滑栏顶部的快捷换图入口
+        if (binding.navView.headerCount > 0) {
+            binding.navView.getHeaderView(0)
+                .findViewById<android.widget.ImageView>(R.id.btn_pick_header_image)
+                ?.setOnClickListener { drawerHeaderPicker.launch(arrayOf("image/*")) }
+        }
+
         val themeKey = preferenceManager.getTheme()
         val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
-        val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+        val colorPrimary = MaterialColors.getColor(binding.root, android.R.attr.colorPrimary)
         val colorOnPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnPrimary)
         val colorSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurface)
 
@@ -294,8 +465,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateRightDrawerList(books: List<AgendaBook>) {
         val listItems = mutableListOf<AgendaItem>()
-        listItems.add(AgendaItem(-1, "全部日程", "#9E9E9E"))
-        listItems.add(AgendaItem(-2, "重点日程", "#F44336"))
+        listItems.add(AgendaItem(-1, getString(R.string.nav_filter_all), "#9E9E9E"))
+        listItems.add(AgendaItem(-2, getString(R.string.nav_filter_important), "#F44336"))
         books.forEach { listItems.add(AgendaItem(it.id, it.name, it.colorHex)) }
         binding.recyclerViewAgenda.adapter = AgendaAdapter(listItems) { id ->
             agendaViewModel.setFilter(id)
@@ -305,51 +476,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun showAddBookDialog() {
         val input = EditText(this)
-        input.hint = "日程本名称"
+        input.hint = getString(R.string.agenda_book_name_hint)
         AlertDialog.Builder(this)
-            .setTitle("新建日程本")
+            .setTitle(R.string.dialog_new_agenda_book)
             .setView(input)
-            .setPositiveButton("创建") { _, _ ->
+            .setPositiveButton(R.string.common_create) { _, _ ->
                 val name = input.text.toString()
                 if (name.isNotBlank()) agendaViewModel.createBook(name, "#2196F3")
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton(R.string.common_cancel, null)
             .show()
     }
 
     private fun applySelectedTheme() {
-        val themeKey = preferenceManager.getTheme()
-        val colorKey = preferenceManager.getAccentColor()
-        val layoutMode = preferenceManager.getHomeLayoutMode()
-        val isCompact = layoutMode == PreferenceManager.HOME_LAYOUT_COMPACT
-        val isLegacyUnlocked = preferenceManager.isLegacyThemeUnlockedInCompact()
-
-        var finalThemeKey = themeKey
-        if (isCompact && !isLegacyUnlocked) {
-            finalThemeKey = PreferenceManager.THEME_M3
-        }
-
-        val themeResId = when (finalThemeKey) {
-            PreferenceManager.THEME_M1 -> when (colorKey) {
-                PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD1_Pink
-                PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD1_Blue
-                else -> R.style.Theme_ZakoCountdown_MD1
-            }
-            PreferenceManager.THEME_M2 -> when (colorKey) {
-                PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_MD2_Pink
-                PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_MD2_Blue
-                else -> R.style.Theme_ZakoCountdown_MD2
-            }
-            else -> when (colorKey) {
-                PreferenceManager.ACCENT_PINK -> R.style.Theme_ZakoCountdown_M3_Pink
-                PreferenceManager.ACCENT_BLUE -> R.style.Theme_ZakoCountdown_M3_Blue
-                else -> R.style.Theme_ZakoCountdown_M3
-            }
-        }
-        setTheme(themeResId)
-        if (finalThemeKey == PreferenceManager.THEME_M3 && colorKey == PreferenceManager.ACCENT_MONET) {
-            if (DynamicColors.isDynamicColorAvailable()) DynamicColors.applyToActivityIfAvailable(this)
-        }
+        // 统一走 ZakoThemeApplier，保证主界面与弹窗/微件等入口用的是同一套主题解析逻辑
+        com.errorsiayusulif.zakocountdown.utils.ZakoThemeApplier.applyToActivity(this)
     }
 
     private fun handleIntent(intent: Intent?) {
@@ -377,18 +518,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun handleImportFromUri(uri: android.net.Uri) {
-        val title = uri.getQueryParameter("title") ?: "未命名共享日程"
+        val title = uri.getQueryParameter("title") ?: getString(R.string.dialog_untitled_shared_event)
         val dateStr = uri.getQueryParameter("date") ?: return
         val targetDateMillis = dateStr.toLongOrNull() ?: return
         val colorHex = uri.getQueryParameter("color")
 
-        val sdf = java.text.SimpleDateFormat("yyyy年MM月dd日 HH:mm", java.util.Locale.getDefault())
+        // 用与语言无关的 ISO 风格格式，避免硬编码中文年月日
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.getDefault())
         val dateFormatted = sdf.format(java.util.Date(targetDateMillis))
 
         com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
-            .setTitle("导入分享的日程")
-            .setMessage("您收到了一个日程分享：\n\n 标题：$title\n 目标日：$dateFormatted\n\n是否立即将其导入到您的 ZakoCountdown？")
-            .setPositiveButton("导入") { _, _ ->
+            .setTitle(R.string.dialog_import_shared_event_title)
+            .setMessage(getString(R.string.dialog_import_shared_event_message, title, dateFormatted))
+            .setPositiveButton(R.string.dialog_import) { _, _ ->
                 val event = com.errorsiayusulif.zakocountdown.data.CountdownEvent(
                     title = title,
                     targetDate = java.util.Date(targetDateMillis),
@@ -399,16 +541,25 @@ class MainActivity : AppCompatActivity() {
                     val app = application as ZakoCountdownApplication
                     app.repository.insert(event)
                     withContext(Dispatchers.Main) {
-                        android.widget.Toast.makeText(this@MainActivity, "日程「$title」已成功导入！", android.widget.Toast.LENGTH_SHORT).show()
+                        android.widget.Toast.makeText(
+                            this@MainActivity,
+                            getString(R.string.dialog_import_success, title),
+                            android.widget.Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             }
-            .setNegativeButton("取消", null)
+            .setNegativeButton(R.string.common_cancel, null)
             .setCancelable(false)
             .show()
     }
 
     override fun onSupportNavigateUp(): Boolean = NavigationUI.navigateUp(navController, appBarConfiguration) || super.onSupportNavigateUp()
+
+    companion object {
+        /** 侧滑栏顶部图像的私有沙盒文件名（与设置页共用同一个缓存文件）。 */
+        const val DRAWER_HEADER_CACHE_FILE = "drawer_header_cache.png"
+    }
 
     /*override fun onBackPressed() {
         if (binding.drawerLayout.isDrawerOpen(GravityCompat.START)) binding.drawerLayout.closeDrawer(GravityCompat.START)

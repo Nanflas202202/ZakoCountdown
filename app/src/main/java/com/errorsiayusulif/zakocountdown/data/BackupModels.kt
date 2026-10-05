@@ -8,14 +8,20 @@ enum class AppVersion(val versionName: String, val internalCode: Int, val eyfFor
     V_0_8_9("V0.8.9-debug", 89, 1.0f),
     V_0_8_10("V0.8.10-nightly", 810, 1.0f),
     V_0_8_11("V0.8.11-nightly", 811, 1.0f),
-    V_0_9_0("V0.9.0", 900, 2.0f); // 我们即将发布的新版
+    V_0_9_0("V0.9.0", 900, 2.0f),
+
+    /** 当前开发版。悬浮导航 / MD3 Expressive / 侧滑栏自定义图像等从这一版开始存在。 */
+    V_0_9_1("V0.9.1-debug", 901, 2.0f);
 
     companion object {
+        /** 导出时的默认目标版本 = 当前最新版本。 */
+        val CURRENT: AppVersion = V_0_9_1
+
         fun fromVersionName(name: String): AppVersion {
-            return values().find { it.versionName == name } ?: V_0_9_0
+            return values().find { it.versionName == name } ?: CURRENT
         }
         fun fromInternalCode(code: Int): AppVersion {
-            return values().find { it.internalCode == code } ?: V_0_9_0
+            return values().find { it.internalCode == code } ?: CURRENT
         }
     }
 }
@@ -24,7 +30,7 @@ enum class AppVersion(val versionName: String, val internalCode: Int, val eyfFor
 data class EyfManifest(
     @SerializedName("eyf_version") val eyfVersion: String = "2.0", // 默认 2.0
     @SerializedName("app_id") val appId: String = "com.errorsiayusulif.zakocountdown",
-    @SerializedName("app_version_code") val appVersionCode: Int = AppVersion.V_0_9_0.internalCode, // 使用内部代号
+    @SerializedName("app_version_code") val appVersionCode: Int = AppVersion.CURRENT.internalCode, // 使用内部代号
     @SerializedName("export_time") val exportTime: Long = System.currentTimeMillis()
 )
 

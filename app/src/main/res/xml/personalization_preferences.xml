@@ -2,19 +2,19 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory app:title="主题与颜色">
+    <PreferenceCategory app:title="@string/personalization_theme_category">
         <ListPreference
-            app:key="theme"
-            app:title="应用主题"
-            app:summary="切换Material Design 1/2/3"
+            app:key="theme_mode"
+            app:title="@string/personalization_app_theme"
+            app:summary="@string/personalization_app_theme_summary"
             app:entries="@array/theme_entries"
             app:entryValues="@array/theme_values"
             app:defaultValue="M3" />
 
         <ListPreference
             app:key="accent_color"
-            app:title="强调色"
-            app:summary="选择ZakoCountdown的强调色"
+            app:title="@string/personalization_accent_color"
+            app:summary="@string/personalization_accent_color_summary"
             app:entries="@array/color_entries"
             app:entryValues="@array/color_values"
             app:defaultValue="MONET" />
@@ -22,37 +22,80 @@
         <!-- 正确！必须使用普通的 Preference -->
         <Preference
             app:key="import_mtb_theme"
-            app:title="导入动态主题"
-            app:summary="支持从 Material Theme Builder 导出的 JSON 文件"/>
+            app:title="@string/personalization_import_mtb"
+            app:summary="@string/personalization_import_mtb_summary"/>
+
+        <!--
+            已保存的导入主题。每次导入都会自动存一份，这里可以切回任意一套，
+            不用再去找原始文件。具体条目在代码里动态构建（见 PersonalizationFragment）。
+        -->
+        <Preference
+            app:key="saved_themes"
+            app:title="@string/personalization_saved_themes"
+            app:summary="@string/personalization_saved_themes_summary_empty"/>
     </PreferenceCategory>
 
-    <PreferenceCategory app:title="背景">
+    <PreferenceCategory app:title="@string/personalization_background_category">
         <Preference
             app:key="change_wallpaper"
-            app:title="更换主页背景图"
-            app:summary="选择一张图片作为主页的背景"/>
+            app:title="@string/personalization_change_wallpaper"
+            app:summary="@string/personalization_change_wallpaper_summary"/>
 
         <Preference
             app:key="remove_wallpaper"
-            app:title="移除主页背景图"
-            app:summary="恢复为默认背景"/>
+            app:title="@string/personalization_remove_wallpaper"
+            app:summary="@string/personalization_remove_wallpaper_summary"/>
         <!--  ↓↓↓  新增：遮罩设置  ↓↓↓  -->
         <ListPreference
-            app:key="key_scrim_color_mode"
-            app:title="背景遮罩颜色"
-            app:summary="设置覆盖在背景图上的颜色层"
+            app:key="scrim_color_mode"
+            app:title="@string/personalization_scrim_color"
+            app:summary="@string/personalization_scrim_color_summary"
             app:entries="@array/scrim_color_entries"
             app:entryValues="@array/scrim_color_values"
             app:defaultValue="theme" />
 
         <SeekBarPreference
-            app:key="key_scrim_alpha"
-            app:title="背景遮罩浓度"
-            app:summary="调节遮罩的透明度"
+            app:key="scrim_alpha"
+            app:title="@string/personalization_scrim_alpha"
+            app:summary="@string/personalization_scrim_alpha_summary"
             app:defaultValue="25"
             app:min="0"
             android:max="100"
             app:showSeekBarValue="true"/>
         <!--  ↑↑↑  新增：遮罩设置  ↑↑↑  -->
+    </PreferenceCategory>
+
+    <!-- v0.9.1 新增：侧滑栏顶部图像自定义
+         整组在「导航方式 != 侧滑抽屉」时会被隐藏（见 PersonalizationFragment） -->
+    <PreferenceCategory
+        app:key="category_drawer_header"
+        app:title="@string/personalization_drawer_header_category">
+        <SwitchPreferenceCompat
+            app:key="drawer_header_image_enabled"
+            app:title="@string/personalization_drawer_header_show"
+            app:summary="@string/personalization_drawer_header_show_summary"
+            app:defaultValue="true" />
+
+        <Preference
+            app:key="drawer_header_pick"
+            app:title="@string/personalization_drawer_header_pick"
+            app:summary="@string/personalization_drawer_header_pick_summary"
+            app:dependency="drawer_header_image_enabled" />
+
+        <Preference
+            app:key="drawer_header_clear"
+            app:title="@string/personalization_drawer_header_clear"
+            app:summary="@string/personalization_drawer_header_clear_summary" />
+    </PreferenceCategory>
+
+    <!-- v0.9.1 新增：布局与导航（这里也能改，方便大屏用户不用再进高级功能） -->
+    <PreferenceCategory app:title="@string/adv_category_personalization">
+        <ListPreference
+            app:key="app_layout_mode"
+            app:title="@string/adv_nav_mode"
+            app:summary="@string/adv_nav_mode_summary"
+            app:entries="@array/nav_mode_entries"
+            app:entryValues="@array/nav_mode_values"
+            app:defaultValue="floating" />
     </PreferenceCategory>
 </PreferenceScreen>

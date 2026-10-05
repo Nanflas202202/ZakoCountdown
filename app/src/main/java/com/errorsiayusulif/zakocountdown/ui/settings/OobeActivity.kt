@@ -3,15 +3,16 @@ package com.errorsiayusulif.zakocountdown.ui.settings
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 import androidx.viewpager2.widget.ViewPager2
 import com.errorsiayusulif.zakocountdown.MainActivity
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityOobeBinding
+import com.errorsiayusulif.zakocountdown.utils.LocalizedActivity
 
-class OobeActivity : AppCompatActivity() {
+class OobeActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivityOobeBinding
     private lateinit var preferenceManager: PreferenceManager
@@ -88,23 +89,23 @@ class OobeActivity : AppCompatActivity() {
 
         when (position) {
             0 -> { // 欢迎
-                binding.btnNext.text = "开始配置"
+                binding.btnNext.text = getString(R.string.oobe_next_start)
                 binding.btnNext.isEnabled = true
             }
             1 -> { // EULA
-                binding.btnNext.text = "我同意"
+                binding.btnNext.text = getString(R.string.oobe_next_agree)
                 binding.btnNext.isEnabled = isEulaChecked
             }
             2 -> { // 权限
-                binding.btnNext.text = "下一步"
+                binding.btnNext.text = getString(R.string.common_next)
                 binding.btnNext.isEnabled = true
             }
             3 -> { // 自定义
-                binding.btnNext.text = "下一步"
+                binding.btnNext.text = getString(R.string.common_next)
                 binding.btnNext.isEnabled = true
             }
             4 -> { // 教程
-                binding.btnNext.text = "进入应用"
+                binding.btnNext.text = getString(R.string.oobe_next_enter)
                 binding.btnNext.isEnabled = true
             }
         }

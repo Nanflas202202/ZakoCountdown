@@ -1,0 +1,776 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  简体中文 (zh-CN) 字符串目录。
+  新增语言时请复制本文件到 res/values-<语言代码>/strings.xml 并逐条翻译。
+  只翻译需要改动的条目即可，未翻译的条目会回退到 values/strings.xml（英文）。
+-->
+<resources>
+
+    <!-- ===== 常用 ===== -->
+    <string name="common_ok">确定</string>
+    <string name="common_cancel">取消</string>
+    <string name="common_confirm">确认</string>
+    <string name="common_yes">是</string>
+    <string name="common_no">否</string>
+    <string name="common_save">保存</string>
+    <string name="common_close">关闭</string>
+    <string name="common_delete">删除</string>
+    <string name="common_edit">编辑</string>
+    <string name="common_share">分享</string>
+    <string name="common_reset">重置</string>
+    <string name="common_refresh">刷新</string>
+    <string name="common_retry">重试</string>
+    <string name="common_undo">撤销</string>
+    <string name="common_done">完成</string>
+    <string name="common_skip">跳过</string>
+    <string name="common_next">下一步</string>
+    <string name="common_back">返回</string>
+    <string name="common_previous">上一步</string>
+    <string name="common_add">添加</string>
+    <string name="common_create">创建</string>
+    <string name="common_remove">移除</string>
+    <string name="common_apply">应用</string>
+    <string name="common_pick_image">选图</string>
+    <string name="common_clear">清除</string>
+    <string name="common_all">全部</string>
+    <string name="common_none">无</string>
+    <string name="common_default">默认</string>
+    <string name="common_enabled">已开启</string>
+    <string name="common_disabled">已关闭</string>
+    <string name="common_on">开</string>
+    <string name="common_off">关</string>
+    <string name="common_loading">正在加载…</string>
+    <string name="common_processing">正在处理…</string>
+    <string name="common_failed">操作失败: %1$s</string>
+    <string name="common_not_found">未找到</string>
+    <string name="common_copied">已复制到剪贴板</string>
+    <string name="common_coming_soon">即将推出</string>
+    <string name="common_enable">开启</string>
+    <string name="common_disable">关闭</string>
+    <string name="common_add_to_calendar">添加到日历</string>
+    <string name="common_important">重点</string>
+    <string name="common_pinned">已置顶</string>
+    <string name="common_default_all">默认 / 全部</string>
+    <string name="common_copy_link">复制分享链接</string>
+    <string name="common_time_years">年</string>
+    <string name="common_time_months">月</string>
+    <string name="common_time_weeks">周</string>
+    <string name="common_time_days">天</string>
+    <string name="common_time_hours">时</string>
+    <string name="common_time_minutes">分</string>
+    <string name="common_time_seconds">秒</string>
+    <string name="common_target_date">目标日期</string>
+    <string name="common_app_agenda">日程本</string>
+    <string name="common_more_options">更多选项</string>
+    <string name="common_select_all">全选</string>
+    <string name="common_deselect_all">取消全选</string>
+    <string name="common_file">文件</string>
+    <string name="common_size">大小</string>
+    <string name="common_date">日期</string>
+    <string name="common_target_version">目标版本</string>
+    <string name="common_unknown_error">未知错误</string>
+    <string name="common_operation_success">已完成</string>
+    <string name="common_permission_denied">权限被拒绝</string>
+    <string name="common_restart_required">需要重启</string>
+    <string name="common_restart_now">立即重启</string>
+    <string name="common_export">导出</string>
+    <string name="common_import">导入</string>
+    <string name="common_pick_color">自定义颜色</string>
+    <string name="common_pinned_only">仅置顶卡片</string>
+    <string name="license_tab_chinese">中文翻译版</string>
+    <string name="license_tab_english_official">English (Official)</string>
+
+    <!-- ===== 时间单位与倒数日措辞 ===== -->
+    <string name="unit_day">天</string>
+    <string name="unit_hour">时</string>
+    <string name="unit_minute">分</string>
+    <string name="unit_second">秒</string>
+    <string name="unit_week">周</string>
+    <string name="unit_month">月</string>
+    <string name="unit_year">年</string>
+    <string name="unit_value">%1$s%2$s</string>
+    <string name="countdown_remaining">还有</string>
+    <string name="countdown_since">已过</string>
+    <string name="countdown_distance">距离</string>
+    <string name="countdown_time_left">后</string>
+    <string name="countdown_passed">已过</string>
+    <string name="countdown_today">今天</string>
+    <string name="countdown_tomorrow">明天</string>
+    <string name="countdown_yesterday">昨天</string>
+
+    <!-- ===== 导航 ===== -->
+    <string name="nav_home">主页</string>
+    <string name="nav_agenda_books">日程本</string>
+    <string name="nav_settings">设置</string>
+    <string name="nav_filter_agenda">日程本 (筛选)</string>
+    <string name="nav_filter_all">全部日程</string>
+    <string name="nav_filter_important">重点日程</string>
+    <string name="nav_manage_agenda">管理日程本</string>
+    <string name="nav_menu_home">首页</string>
+    <string name="nav_menu_agenda">日程本</string>
+    <string name="nav_menu_settings">设置</string>
+    <string name="nav_log_detail">日志详情</string>
+    <string name="nav_log_files">历史日志文件</string>
+    <string name="nav_share_preview">生成分享卡片</string>
+    <string name="nav_agenda_detail">日程本详情</string>
+    <string name="nav_new_agenda_book">新建日程本</string>
+    <string name="nav_developer_options">开发者选项</string>
+    <string name="nav_debug_options">调试选项</string>
+    <string name="nav_notification_settings">通知设置</string>
+
+    <!-- ===== 主页 ===== -->
+    <string name="home_add_new_event">添加新日程</string>
+    <string name="home_title_add_event">添加日程</string>
+    <string name="home_title_edit_event">编辑日程</string>
+    <string name="home_tab_all">全部</string>
+    <string name="home_tab_important">重点</string>
+    <string name="home_empty_title">还没有倒数日</string>
+    <string name="home_empty_hint">点击右下角的 + 按钮创建第一个倒数日。</string>
+    <string name="home_event_deleted">日程已删除</string>
+    <string name="home_event_pinned">已置顶</string>
+    <string name="home_event_unpinned">已取消置顶</string>
+    <string name="home_event_marked_important">已设为重点</string>
+    <string name="home_event_unmarked_important">已取消重点</string>
+    <string name="home_pin">设为置顶</string>
+    <string name="home_unpin">取消置顶</string>
+    <string name="home_mark_important">设为重点</string>
+    <string name="home_unmark_important">取消重点</string>
+    <string name="home_dev_mode_unlocked">开发者选项已开启！</string>
+    <string name="home_share_link_copied">分享文本与链接已复制！</string>
+    <string name="home_share_link_text">我与你分享了一个倒数日「%1$s」，点击链接直接导入到 ZakoCountdown：\n%2$s</string>
+    <string name="home_no_calendar_app">未找到日历应用</string>
+    <string name="home_widget_request_sent">请求已发送</string>
+    <string name="home_added_to_calendar_desc">来自 ZakoCountdown 的提醒</string>
+    <string name="home_swipe_guide_title">💡 滑动操作可自定义</string>
+    <string name="home_swipe_guide_message">默认滑动操作为“删除”。您可以在高级设置中将其修改为：置顶、重点、个性化或分享等快捷功能！\n\n是否现在去配置？</string>
+    <string name="home_swipe_guide_configure">去配置</string>
+    <string name="home_swipe_guide_keep_delete">继续删除</string>
+
+    <!-- ===== 日程编辑 ===== -->
+    <string name="event_target_date">目标日期</string>
+    <string name="event_target_time">目标时间</string>
+    <string name="event_title_label">标题</string>
+    <string name="event_title_hint">日程标题</string>
+    <string name="event_title_empty">标题不能为空哦～</string>
+    <string name="event_pick_date">选择目标日期</string>
+    <string name="event_pick_time">选择目标时间</string>
+    <string name="event_book_default">默认 / 全部</string>
+    <string name="event_book_label">所属日程本</string>
+    <string name="event_color_label">颜色</string>
+    <string name="event_note_label">备注</string>
+
+    <!-- ===== 卡片个性化 ===== -->
+    <string name="card_display_mode">显示模式</string>
+    <string name="card_mode_simple">简洁模式 (只显示天数)</string>
+    <string name="card_mode_detailed">详细模式 (天:时:分:秒)</string>
+    <string name="card_mode_full">完整模式 (年:月:周:天…)</string>
+    <string name="card_custom_color">自定义颜色</string>
+    <string name="card_custom_background">自定义背景 (仅置顶卡片)</string>
+    <string name="card_pick_image">选择图片</string>
+    <string name="card_remove_image">移除图片</string>
+    <string name="card_opacity">卡片不透明度</string>
+    <string name="card_background_set">背景图已设置</string>
+    <string name="card_background_removed">背景图已移除</string>
+    <string name="card_image_permission_failed">无法获取图片权限，请尝试其他图片</string>
+
+    <!-- ===== 日程本 ===== -->
+    <string name="agenda_new_book">新建日程本</string>
+    <string name="agenda_book_name">日程本名称</string>
+    <string name="agenda_book_name_hint">日程本名称</string>
+    <string name="agenda_book_name_empty">请输入名称</string>
+    <string name="agenda_marker_color">标识颜色</string>
+    <string name="agenda_cover_and_alpha">封面与透明度</string>
+    <string name="agenda_included_events">包含的日程</string>
+    <string name="agenda_included_events_hint">勾选以加入（若已在其他本中，将移动至此）</string>
+    <string name="agenda_event_count">%1$d项</string>
+    <string name="agenda_book_summary">%1$d个日程 · 最近: %2$s (%3$s)</string>
+    <string name="agenda_cover_updated">封面已更新</string>
+    <string name="agenda_cover_failed">设置失败</string>
+    <string name="agenda_image_load_failed">图片加载失败</string>
+    <string name="agenda_cover_alpha_title">调整封面透明度</string>
+    <string name="agenda_confirm_delete_title">确认删除？</string>
+    <string name="agenda_confirm_delete_message">日程本删除后，其中的日程将移回“全部日程”，不会被删除。</string>
+
+    <!-- ===== 设置: 根页面 ===== -->
+    <string name="settings_personalization">个性化</string>
+    <string name="settings_personalization_summary">主题、颜色、背景图</string>
+    <string name="settings_notifications">通知与提醒</string>
+    <string name="settings_notifications_summary">常驻通知、定时提醒</string>
+    <string name="settings_permissions">权限中心</string>
+    <string name="settings_permissions_summary">检查并授予所有必要的后台与特殊权限</string>
+    <string name="settings_backup">数据备份与迁移</string>
+    <string name="settings_backup_summary">导出或导入 EYF 格式数据包</string>
+    <string name="settings_advanced">高级功能</string>
+    <string name="settings_advanced_summary">开屏弹窗、微件</string>
+    <string name="settings_about">关于</string>
+    <string name="settings_about_summary">版本信息、开发者</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_language_summary">选择应用显示语言</string>
+    <string name="settings_language_system">跟随系统</string>
+    <string name="language_restart_hint">关于语言切换</string>
+    <string name="language_restart_hint_summary">切换后会立即应用到所有界面。Android 13 及以上还可以在「系统设置 → 应用 → ZakoCountdown → 语言」中修改。</string>
+    <string name="language_changed">语言已切换</string>
+
+    <!-- ===== 设置: 个性化 ===== -->
+    <string name="personalization_theme_category">主题与颜色</string>
+    <string name="personalization_app_theme">应用主题</string>
+    <string name="personalization_app_theme_summary">切换 Material Design 1/2/3</string>
+    <string name="personalization_accent_color">强调色</string>
+    <string name="personalization_accent_color_summary">选择 ZakoCountdown 的强调色</string>
+    <string name="personalization_import_mtb">导入动态主题</string>
+    <string name="personalization_import_mtb_summary">支持 Material Theme Builder 的导出：Android 主题包（.zip）与 material-theme.json</string>
+    <string name="personalization_theme_imported_named">已导入并保存：%1$s</string>
+    <string name="oobe_theme_imported_named">已导入并保存：%1$s</string>
+    <string name="personalization_saved_themes">已保存的主题</string>
+    <string name="personalization_saved_themes_summary">已保存 %1$d 套 · 点击切换</string>
+    <string name="personalization_saved_themes_summary_empty">还没有保存过导入的主题</string>
+    <string name="personalization_saved_themes_title">已保存的主题</string>
+    <string name="personalization_saved_themes_empty">先导入一个 Material Theme Builder 主题包；每次导入都会自动保存在这里。</string>
+    <string name="personalization_saved_theme_active">使用中</string>
+    <string name="personalization_saved_theme_delete">删除</string>
+    <string name="personalization_saved_theme_applied">已切换到 %1$s</string>
+    <string name="personalization_saved_theme_deleted">已删除 %1$s</string>
+    <string name="personalization_saved_theme_already_active">%1$s 正在使用中</string>
+    <string name="personalization_saved_theme_rename">重命名</string>
+    <string name="personalization_saved_theme_delete_confirm">删除「%1$s」？只会移除这份保存的副本。</string>
+    <string name="personalization_saved_themes_empty_title">还没有保存的主题</string>
+    <string name="personalization_background_category">背景</string>
+    <string name="personalization_change_wallpaper">更换主页背景图</string>
+    <string name="personalization_change_wallpaper_summary">选择一张图片作为主页的背景</string>
+    <string name="personalization_remove_wallpaper">移除主页背景图</string>
+    <string name="personalization_remove_wallpaper_summary">恢复为默认背景</string>
+    <string name="personalization_scrim_color">背景遮罩颜色</string>
+    <string name="personalization_scrim_color_summary">设置覆盖在背景图上的颜色层</string>
+    <string name="personalization_scrim_alpha">背景遮罩浓度</string>
+    <string name="personalization_scrim_alpha_summary">调节遮罩的透明度</string>
+    <string name="personalization_drawer_header_category">侧滑栏顶部</string>
+    <string name="personalization_drawer_header_show">显示自定义顶部图像</string>
+    <string name="personalization_drawer_header_show_summary">关闭后回退为纯色品牌头部</string>
+    <string name="personalization_drawer_header_pick">选择顶部图像</string>
+    <string name="personalization_drawer_header_pick_summary">显示在侧滑栏的最上方</string>
+    <string name="personalization_drawer_header_clear">移除顶部图像</string>
+    <string name="personalization_drawer_header_clear_summary">恢复默认的品牌头部样式</string>
+    <string name="personalization_drawer_header_set">顶部图像已更新</string>
+    <string name="personalization_drawer_header_cleared">顶部图像已移除</string>
+    <string name="personalization_wallpaper_set">壁纸设置成功</string>
+    <string name="personalization_theme_imported">主题导入成功</string>
+    <string name="personalization_theme_import_failed">导入失败：不是有效的 Material Theme Builder 导出</string>
+
+    <!-- ===== 设置: 通知 ===== -->
+    <string name="notify_persistent_category">常驻通知</string>
+    <string name="notify_enable_persistent">开启常驻通知</string>
+    <string name="notify_enable_persistent_summary">在通知栏显示一个常驻的倒计时提醒</string>
+    <string name="notify_scheduled_category">定时提醒</string>
+    <string name="notify_reminder_time">日程提醒时间</string>
+    <string name="notify_reminder_time_summary">在日程到达前的指定时间发送通知</string>
+    <string name="notify_permissions_category">权限与后台设置</string>
+    <string name="notify_permission_notification">通知权限</string>
+    <string name="notify_permission_notification_summary">允许应用发送通知</string>
+    <string name="notify_permission_exact_alarm">精确闹钟权限</string>
+    <string name="notify_permission_exact_alarm_summary">允许应用精确地在指定时间提醒你</string>
+    <string name="notify_permission_autostart">自启动权限</string>
+    <string name="notify_permission_autostart_summary">确保手机重启后，提醒能自动恢复</string>
+    <string name="notify_permission_battery">后台运行设置</string>
+    <string name="notify_permission_battery_summary">防止后台任务被系统意外终止</string>
+    <string name="notify_permission_needed">需要通知权限才能开启常驻通知</string>
+
+    <!-- ===== 设置: 权限中心 ===== -->
+    <string name="perm_category_basic">基础权限</string>
+    <string name="perm_category_background">后台与提醒</string>
+    <string name="perm_category_advanced">高级功能权限</string>
+    <string name="perm_category_oem">系统特定权限 (国产ROM)</string>
+    <string name="perm_notification">通知权限</string>
+    <string name="perm_notification_summary">允许应用发送常驻通知和定时提醒</string>
+    <string name="perm_exact_alarm">精确闹钟权限</string>
+    <string name="perm_exact_alarm_summary">[推荐] 允许应用精确提醒和刷新</string>
+    <string name="perm_battery_optimization">电池优化豁免</string>
+    <string name="perm_battery_optimization_summary">[推荐] 防止后台任务被系统终止</string>
+    <string name="perm_accessibility">无障碍服务 (用于开屏弹窗)</string>
+    <string name="perm_accessibility_summary">[必要] 点击开启</string>
+    <string name="perm_overlay">悬浮窗权限</string>
+    <string name="perm_overlay_summary">[推荐] 在定制系统上确保弹窗正常</string>
+    <string name="perm_autostart">自启动权限</string>
+    <string name="perm_autostart_summary">确保手机重启后能恢复服务</string>
+    <string name="perm_miui_background">后台弹出界面 (小米/HyperOS)</string>
+    <string name="perm_miui_background_summary">开屏弹窗功能的核心权限</string>
+    <string name="perm_status_enabled">已开启</string>
+    <string name="perm_status_disabled">未开启，点击跳转至权限中心开启</string>
+    <string name="perm_no_manual_grant">您的系统版本无需手动授予此权限</string>
+    <string name="perm_miui_page_unavailable">无法跳转到MIUI权限页面</string>
+    <string name="perm_accessibility_dialog_title">需要无障碍权限</string>
+    <string name="perm_accessibility_dialog_message">为了在您打开指定应用时弹出倒数日提醒，我们需要开启无障碍服务。</string>
+    <string name="perm_accessibility_dialog_positive">去开启</string>
+    <string name="perm_accessibility_dialog_negative">取消并禁用弹窗</string>
+
+    <!-- ===== 设置: 高级功能 ===== -->
+    <string name="adv_category_popup">开屏弹窗</string>
+    <string name="adv_enable_popup">开启开屏弹窗</string>
+    <string name="adv_enable_popup_summary">在启动指定应用时，弹出重点日程提醒</string>
+    <string name="adv_select_apps">选择应用</string>
+    <string name="adv_select_apps_summary">选择要触发弹窗的应用</string>
+    <string name="adv_popup_duration">弹窗显示时长 (秒)</string>
+    <string name="adv_popup_duration_summary">倒计时结束后自动关闭</string>
+    <string name="adv_popup_skippable">允许手动关闭</string>
+    <string name="adv_popup_skippable_summary">显示关闭按钮</string>
+    <string name="adv_popup_skip_delay">关闭按钮延迟 (秒)</string>
+    <string name="adv_popup_skip_delay_summary">强制观看一段时间后才显示关闭按钮</string>
+    <string name="adv_category_permissions">相关权限</string>
+    <string name="adv_permission_accessibility">无障碍服务</string>
+    <string name="adv_permission_accessibility_summary">必要权限，点击开启</string>
+    <string name="adv_permission_overlay">悬浮窗权限</string>
+    <string name="adv_permission_overlay_summary">在定制系统上建议开启，确保弹窗正常</string>
+    <string name="adv_category_personalization">个性化设置</string>
+    <string name="adv_unlock_global_alpha">解锁所有卡片透明度</string>
+    <string name="adv_unlock_global_alpha_summary">开启后，允许调节非置顶卡片的透明度</string>
+    <string name="adv_nav_mode">导航栏样式</string>
+    <string name="adv_nav_mode_summary">切换侧滑抽屉或底部导航栏</string>
+    <string name="adv_nav_mode_compact_locked">紧凑模式不使用传统导航栏</string>
+    <string name="adv_auto_hide_nav">自动隐藏导航栏</string>
+    <string name="adv_auto_hide_nav_summary">向下滚动时收起导航栏，向上滚动时自动回来</string>
+    <string name="adv_home_layout">主页布局风格</string>
+    <string name="adv_home_layout_summary">切换标准视图或紧凑视图</string>
+    <string name="adv_app_icon">更换应用图标</string>
+    <string name="adv_app_icon_summary">更改在手机桌面上的图标样式</string>
+    <string name="adv_app_icon_changed">图标已更改！部分手机桌面可能会短暂闪烁或重启，请稍候…</string>
+    <string name="adv_category_swipe">主页交互</string>
+    <string name="adv_swipe_left">向左滑动卡片</string>
+    <string name="adv_swipe_right">向右滑动卡片</string>
+    <string name="adv_swipe_current">当前操作: %1$s</string>
+    <string name="adv_category_network">联网与更新</string>
+    <string name="adv_auto_update">自动检查更新</string>
+    <string name="adv_auto_update_summary">每次冷启动应用时自动连接服务器检查新版本</string>
+
+    <!-- ===== 设置: 开发者选项 ===== -->
+    <string name="dev_category_theme">主题与显示</string>
+    <string name="dev_unlock_legacy_theme_compact">紧凑模式下解锁旧版主题</string>
+    <string name="dev_unlock_legacy_theme_compact_summary">允许在紧凑模式下使用 MD1/MD2 主题 (默认强制 MD3)</string>
+    <string name="dev_show_system_apps">在应用列表中显示系统应用</string>
+    <string name="dev_show_system_apps_summary">开启后，“选择应用”列表将包含所有系统应用</string>
+    <string name="dev_category_compat">兼容性</string>
+    <string name="dev_miui_fix_override">停用MIUI兼容性修正</string>
+    <string name="dev_miui_fix_override_summary">在MIUI设备上强制启用MD2主题选项（可能导致崩溃）</string>
+    <string name="dev_enable_md1">启用实验性MD1主题</string>
+    <string name="dev_enable_md1_summary">开启后可在设置中选择MD1主题（可能不稳定）</string>
+    <string name="dev_category_popup">弹窗提醒</string>
+    <string name="dev_current_rom">当前系统</string>
+    <string name="dev_unknown">未知</string>
+    <string name="dev_clear_preferences_confirm">清除并重启</string>
+    <string name="dev_force_popup_mode">强制弹窗模式</string>
+    <string name="dev_force_popup_mode_summary">当前为: %1$s</string>
+    <string name="dev_category_personalization">个性化</string>
+    <string name="dev_category_feature_test">功能测试</string>
+    <string name="dev_enable_agenda_book">启用[日程本]功能</string>
+    <string name="dev_enable_agenda_book_summary">在导航栏显示日程本入口 (Alpha)</string>
+    <string name="dev_category_debug">调试与重置</string>
+    <string name="dev_force_relaunch_oobe">重新进入开箱引导 (OOBE)</string>
+    <string name="dev_force_relaunch_oobe_summary">强制跳转到初次启动的引导页面</string>
+    <string name="dev_clear_preferences">清除所有本地设置 (危险)</string>
+    <string name="dev_clear_preferences_summary">恢复所有个性化与高级选项为默认值，并重启应用</string>
+    <string name="dev_clear_preferences_dialog_title">⚠危险操作</string>
+    <string name="dev_clear_preferences_dialog_message">这将清除所有的主题、界面、弹窗等本地设置（您的日程和日程本数据不会丢失）。\n\n应用将会立即重启，确定吗？</string>
+    <string name="dev_category_update_nodes">更新源配置 (OTA引擎)</string>
+    <string name="dev_sync_update_urls">在线同步备用更新源</string>
+    <string name="dev_sync_update_urls_summary">每次检查更新前，尝试从主服务器拉取最新的节点列表</string>
+    <string name="dev_custom_update_urls">自定义更新节点池</string>
+    <string name="dev_custom_update_urls_summary">编辑直链URL，每行一个。优先级按行递减。</string>
+    <string name="dev_custom_update_urls_dialog_title">编辑更新源 (按回车换行)</string>
+    <string name="dev_custom_update_urls_dialog_message">请确保链接返回标准的 update.json 格式</string>
+    <string name="dev_category_build_identity">构建标识</string>
+    <string name="dev_upgrade_code">升级代号</string>
+    <string name="dev_upgrade_code_summary">OTA 引擎专用；除开发者选项外任何界面都不会显示</string>
+    <string name="dev_build_id">构建指纹</string>
+    <string name="dev_build_id_summary">标识这一次编译；反馈问题时请附上它</string>
+    <string name="dev_upgrade_code_copied">升级代号已复制</string>
+    <string name="dev_upgrade_code_value">%1$d · %2$s（点击复制）</string>
+    <string name="dev_upgrade_code_dialog_title">升级代号</string>
+    <string name="dev_upgrade_code_dialog_message">数值: %1$d\n标签: %2$s\n校验哈希: %3$s\n\n该值只存在于开发者选项中。OTA 引擎用它而不是 versionCode 来判断新旧，因此即使 versionCode 因商店重新上传而重排，升级代号依旧单调递增。</string>
+    <string name="dev_restore_default_urls">恢复内置更新源</string>
+    <string name="dev_restore_default_urls_summary">把上面的节点池替换为应用内置的默认节点</string>
+    <string name="dev_update_urls_count">%1$d 条</string>
+    <string name="dev_update_urls_empty">未配置</string>
+    <string name="dev_sync_update_urls_summary_count">可用 %1$d 条</string>
+    <string name="dev_category_logs">日志设置</string>
+    <string name="dev_log_level_info">日志级别：INFO</string>
+    <string name="dev_log_level_info_summary">输入*#*#20220238#*#*触发</string>
+    <string name="dev_log_level_off">日志级别：关闭</string>
+    <string name="dev_log_level_off_summary">输入*#*#20250528#*#*触发</string>
+    <string name="dev_log_persistence">日志持久化保存</string>
+    <string name="dev_log_persistence_summary">将运行日志写入文件，便于回溯 (可能占用存储空间)</string>
+    <string name="dev_category_dev_entry">开发者入口控制</string>
+    <string name="dev_enable_enter_dev_mode">允许进入普通开发者模式</string>
+    <string name="dev_enable_enter_dev_mode_summary">开启后，主页连续创建5个\'EnterDevMode\'日程可触发</string>
+    <string name="dev_enable_about_easter_egg">开启“关于”页面彩蛋</string>
+    <string name="dev_enable_about_easter_egg_summary">开启后，连续点击“关于”可进入普通开发者选项</string>
+    <string name="dev_category_log_system">日志系统</string>
+    <string name="dev_nav_live_logs">实时日志阅读器</string>
+    <string name="dev_nav_live_logs_summary">查看当前运行时的 Logcat</string>
+    <string name="dev_nav_archived_logs">查看历史日志文件</string>
+    <string name="dev_nav_archived_logs_summary">按日期查看已保存的日志</string>
+
+    <!-- ===== OOBE 开箱引导 ===== -->
+    <string name="oobe_welcome_title">欢迎使用 ZakoCountdown</string>
+    <string name="oobe_welcome_message">一款兼具极客精神与人文关怀的高级倒数日/日程管理应用。\n\n接下来，我们将花一分钟时间完成基础配置。</string>
+    <string name="oobe_eula_title">用户许可协议</string>
+    <string name="oobe_eula_studio_agreement">工作室协议</string>
+    <string name="oobe_eula_mpl_zh">MPL-2.0 (中文)</string>
+    <string name="oobe_eula_mpl_en">MPL-2.0 (EN)</string>
+    <string name="oobe_eula_accept">我已阅读并完全同意上述协议的所有条款</string>
+    <string name="oobe_permissions_title">关键权限 (已授予的将自动隐藏)</string>
+    <string name="oobe_perm_notification">通知权限</string>
+    <string name="oobe_perm_notification_summary">用于发送常驻通知和倒数日到期提醒</string>
+    <string name="oobe_perm_alarm">精确闹钟权限</string>
+    <string name="oobe_perm_alarm_summary">确保倒数日到期时能准时向您发送提醒</string>
+    <string name="oobe_perm_accessibility">无障碍服务</string>
+    <string name="oobe_perm_accessibility_summary">用于在您打开指定应用时检测并触发开屏弹窗</string>
+    <string name="oobe_perm_overlay">悬浮窗权限</string>
+    <string name="oobe_perm_overlay_summary">确保开屏弹窗能在其他应用上方正确显示</string>
+    <string name="oobe_customization_ui_category">界面与布局</string>
+    <string name="oobe_customization_wallpaper">设置主页壁纸</string>
+    <string name="oobe_customization_wallpaper_summary">选择一张您喜欢的图片作为主页背景</string>
+    <string name="oobe_customization_layout">主页布局模式</string>
+    <string name="oobe_customization_layout_summary">当前: %1$s</string>
+    <string name="oobe_customization_nav">导航栏样式</string>
+    <string name="oobe_customization_nav_summary">当前: %1$s</string>
+    <string name="oobe_customization_icon">更换应用图标</string>
+    <string name="oobe_customization_icon_summary">更改在手机桌面上的图标样式</string>
+    <string name="oobe_customization_swipe_category">主页滑动交互</string>
+    <string name="oobe_customization_swipe_left">向左滑动卡片</string>
+    <string name="oobe_customization_swipe_left_summary">设置左滑时执行的快捷操作</string>
+    <string name="oobe_customization_swipe_right">向右滑动卡片</string>
+    <string name="oobe_customization_swipe_right_summary">设置右滑时执行的快捷操作</string>
+    <string name="oobe_customization_theme_category">主题与色彩</string>
+    <string name="oobe_customization_accent">全局强调色</string>
+    <string name="oobe_customization_accent_summary">选择 ZakoCountdown 的强调色</string>
+    <string name="oobe_customization_import_mtb">导入 MTB 动态主题</string>
+    <string name="oobe_customization_import_mtb_summary">选择 material-theme.json 文件</string>
+    <string name="oobe_customization_scrim_color">背景遮罩颜色</string>
+    <string name="oobe_customization_scrim_alpha">背景遮罩浓度</string>
+    <string name="oobe_customization_features_category">功能与提醒</string>
+    <string name="oobe_customization_popup">开启开屏弹窗</string>
+    <string name="oobe_customization_popup_summary">启动指定应用时骑脸提醒 (需授予无障碍权限)</string>
+    <string name="oobe_customization_popup_duration">弹窗显示时长 (秒)</string>
+    <string name="oobe_customization_persistent">开启常驻通知</string>
+    <string name="oobe_customization_persistent_summary">在通知栏显示一个常驻的倒计时状态</string>
+    <string name="oobe_customization_auto_update">自动检查更新</string>
+    <string name="oobe_customization_auto_update_summary">允许应用在后台获取最新版本信息</string>
+    <string name="oobe_personalization_scrim_title">选择遮罩颜色</string>
+    <string name="oobe_tutorial_title">一切就绪！</string>
+    <string name="oobe_tutorial_guide_title">💡 快速上手指南：</string>
+    <string name="oobe_tutorial_body">👉 在主页长按日程卡片，可置顶、设置背景和分享图片。\n\n👉 从侧边栏进入日程本管理，可给日程分类与染色。\n\n👉 回到桌面长按，可添加半透明/全透明的精美微件。</string>
+    <string name="oobe_theme_imported">动态主题导入成功！</string>
+    <string name="oobe_theme_import_failed">导入失败：不是有效的 Material Theme Builder 导出</string>
+    <string name="oobe_wallpaper_set">主页壁纸已设置</string>
+    <string name="oobe_next_start">开始配置</string>
+    <string name="oobe_next_agree">我同意</string>
+    <string name="oobe_next_enter">进入应用</string>
+
+    <!-- ===== 备份与恢复 (EYF) ===== -->
+    <string name="backup_title">数据备份与迁移</string>
+    <string name="backup_target_version">目标兼容版本: </string>
+    <string name="backup_feature_summary">该版本可用功能 %1$d 项 · 其中 %2$d 项会导出 · 点击查看详情</string>
+    <string name="backup_feature_dialog_title">%1$s 的功能清单</string>
+    <string name="backup_feature_dialog_available">将包含在导出包中：</string>
+    <string name="backup_feature_dialog_skipped">该目标版本不支持，已略过：</string>
+    <string name="backup_feature_runtime_only">（运行时能力，不导出数据）</string>
+    <string name="import_meta_origin">来自 %1$s 的数据包</string>
+    <string name="import_meta_upgrade_code">升级代号 %1$s / %2$d</string>
+    <string name="import_meta_features">记录了 %1$d 项功能</string>
+    <string name="import_features_title">该数据包记录了 %1$d 项功能</string>
+    <string name="import_features_subtitle">目标 %1$s · %2$s</string>
+    <string name="backup_generate_file">生成导出文件</string>
+    <string name="backup_pick_eyf">选择 .eyf 文件</string>
+    <string name="backup_confirm_import">确认导入</string>
+    <string name="backup_select_at_least_one">请至少选择一项</string>
+    <string name="backup_select_import_items">请选择导入项</string>
+    <string name="backup_export_failed">导出失败: %1$s</string>
+    <string name="backup_import_failed">导入失败: %1$s</string>
+    <string name="backup_empty_or_corrupt">文件为空或格式错误</string>
+    <string name="backup_internal_error">内部错误：解析包丢失</string>
+    <string name="backup_restart_action">重启</string>
+
+    <!-- ===== 更新引擎 ===== -->
+    <string name="update_all_sources_unreachable">所有更新源均无法访问，请检查网络</string>
+    <string name="update_already_latest">当前已是最新版本 (v%1$s)</string>
+    <string name="update_parse_failed">更新数据解析失败</string>
+    <string name="update_found_title">发现新版本: %1$s</string>
+    <string name="update_download_now">立即下载</string>
+    <string name="update_later">稍后再说</string>
+    <string name="update_no_browser">找不到浏览器应用</string>
+
+    <!-- ===== 分享预览 ===== -->
+    <string name="share_layout_style">布局样式</string>
+    <string name="share_layout_classic">经典</string>
+    <string name="share_layout_minimal">极简</string>
+    <string name="share_layout_poster">海报</string>
+    <string name="share_overall_background">整体背景 (图片/遮罩色)</string>
+    <string name="share_content_color">内容区颜色</string>
+    <string name="share_opacity">透明度</string>
+    <string name="share_show_date">在卡片中显示日程日期</string>
+    <string name="share_display_format">显示格式</string>
+    <string name="share_format_days">天数</string>
+    <string name="share_format_detailed">详细</string>
+    <string name="share_format_full">完整</string>
+    <string name="share_share_image">分享图片</string>
+    <string name="share_save_to_gallery">保存到相册</string>
+    <string name="share_saved_to_gallery">图片已保存至相册</string>
+    <string name="share_load_failed">无法加载日程数据</string>
+    <string name="share_target_date_format">yyyy年MM月dd日 EEEE</string>
+    <string name="share_generated_by" translatable="false">Generated by ZakoCountdown</string>
+
+    <!-- ===== 微件 ===== -->
+    <string name="widget_configure_title">选择要显示的日程</string>
+    <string name="widget_background_style">背景样式</string>
+    <string name="widget_bg_translucent">半透明</string>
+    <string name="widget_bg_opaque">不透明</string>
+    <string name="widget_bg_image">图片</string>
+    <string name="widget_image_alpha">图片透明度</string>
+    <string name="widget_enable_scrim">启用主题色遮罩</string>
+    <string name="widget_scrim_strength">遮罩浓度</string>
+    <string name="widget_alpha_adjust">透明度调节</string>
+    <string name="widget_pick_image">选择图片</string>
+    <string name="widget_add">添加微件</string>
+    <string name="widget_image_selected">图片已选中</string>
+    <string name="widget_pick_image_first">请先选择一张图片</string>
+    <string name="widget_event_title_placeholder">日程标题</string>
+
+    <!-- ===== 日志阅读器 ===== -->
+    <string name="log_refresh">刷新日志</string>
+    <string name="log_copied">日志已复制</string>
+
+    <!-- ===== 关于 / 构建信息 ===== -->
+    <string name="about_build_info">构建信息</string>
+    <string name="about_main_dependencies">主要依赖库</string>
+    <string name="about_license_dialog_title">%1$s 许可协议</string>
+
+    <!-- ===== 服务与通知 ===== -->
+    <string name="service_channel_reminder_title">ZakoCountdown 日程提醒</string>
+    <string name="service_channel_reminder_desc">用于提醒您即将到来的重要日程</string>
+    <string name="service_channel_persistent_title">ZakoCountdown 常驻服务</string>
+    <string name="service_channel_persistent_desc">用于在后台更新常驻通知</string>
+    <string name="service_running_title">ZakoCountdown 服务正在运行</string>
+    <string name="service_running_text">正在准备倒计时数据…</string>
+    <string name="service_no_important_events">没有需要提醒的重点日程</string>
+    <string name="service_friendly_title">来自Zako的友情提醒～❤️</string>
+    <string name="service_friendly_text">您的「%1$s」还有 %2$s 就要到了呢~</string>
+    <string name="service_event_expired">「%1$s」已过期</string>
+    <string name="service_event_remaining">距离「%1$s」还有 %2$s</string>
+    <string name="service_reminder_default_event">您的日程</string>
+    <string name="service_reminder_default_time">时间</string>
+    <string name="service_popup_no_data">错误：无法接收数据</string>
+    <string name="service_widget_configure_hint">点击配置</string>
+
+    <!-- 微件/通知里的紧凑时长片段 -->
+    <string name="duration_days_hours">%1$d天 %2$d小时</string>
+    <string name="duration_hours_minutes">%1$d小时 %2$d分钟</string>
+    <string name="duration_minutes">%1$d分钟</string>
+    <string name="duration_days_hours_minutes">%1$d天 %2$d时 %3$d分</string>
+    <string name="duration_hm_short">%1$02d时 %2$02d分</string>
+    <string name="duration_dhms_short">%1$d天%2$02d时%3$02d分%4$02d秒</string>
+    <string name="duration_full_short">%1$s</string>
+    <string name="duration_zero">0天</string>
+
+    <!-- ===== 微件配置 ===== -->
+    <string name="widget_confirm_update">更新微件：%1$s</string>
+    <string name="widget_confirm_add_or_update">添加/更新：%1$s</string>
+
+    <!-- ===== 日程本详情 ===== -->
+    <string name="agenda_edit_book">编辑日程本</string>
+    <string name="agenda_edit_book_short">编辑本子</string>
+    <string name="agenda_edit_details">编辑详情</string>
+    <string name="agenda_delete_book">删除日程本</string>
+    <string name="agenda_set_cover">设置封面</string>
+    <string name="agenda_remove_cover">移除封面</string>
+    <string name="agenda_adjust_alpha">调整透明度</string>
+    <string name="agenda_switch_view">切换视图</string>
+    <string name="agenda_default_book">默认日程</string>
+    <string name="agenda_custom_events">自定义日程</string>
+    <string name="agenda_move_hint">%1$s (将从其他本移入)</string>
+    <string name="agenda_stats_latest"> · 最近: %1$s (%2$s)</string>
+    <string name="agenda_stats_all_expired"> · 全部已过期</string>
+    <string name="agenda_stats_empty"> · 暂无日程</string>
+
+    <!-- ===== 关于页条目 ===== -->
+    <string name="about_version_format">版本 %1$s</string>
+    <string name="about_current_version_format">当前版本 %1$s</string>
+    <string name="about_row_developer">开发者</string>
+    <string name="about_row_studio">开发商</string>
+    <string name="about_row_details">详细信息</string>
+    <string name="about_row_license">查看许可证</string>
+    <string name="about_row_contact">联系作者 (邮箱)</string>
+    <string name="about_row_website">访问官网</string>
+    <string name="about_row_github">访问Github仓库の主页</string>
+    <string name="about_row_telegram">加入Telegram群组</string>
+    <string name="about_row_bilibili">访问Bilibili频道</string>
+    <string name="about_row_check_update">检查更新</string>
+    <string name="about_no_email_app">未找到邮件应用</string>
+    <string name="about_no_browser">未找到浏览器</string>
+    <string name="about_no_app_for_link">未找到应用打开链接</string>
+    <string name="about_license_load_failed">无法加载许可证文件…</string>
+    <string name="about_license_load_failed_detail">无法加载许可证文件 (ID: %1$d)。请确保文件已放置在 res/raw 目录下。</string>
+
+    <!-- ===== 构建信息条目 ===== -->
+    <string name="build_version_name">版本名称</string>
+    <string name="build_version_code">版本号</string>
+    <string name="build_type">构建类型</string>
+    <string name="build_time">构建时间</string>
+
+    <!-- ===== 备份与恢复 (EYF) ===== -->
+    <string name="backup_tab_export">导出备份</string>
+    <string name="backup_tab_import">导入恢复</string>
+    <string name="backup_saved">备份已保存</string>
+    <string name="backup_share">分享</string>
+    <string name="backup_share_chooser">分享备份</string>
+    <string name="backup_imported_restart_hint">导入成功！建议重启应用</string>
+    <string name="backup_header_settings">应用配置</string>
+    <string name="backup_header_books">日程集 (%1$d)</string>
+    <string name="backup_header_events">日程卡片 (%1$d)</string>
+    <string name="backup_sub_color">包含标识色</string>
+    <string name="backup_sub_cover">包含封面图</string>
+    <string name="backup_sub_alpha">包含透明度</string>
+    <string name="backup_sub_event_color">包含卡片颜色</string>
+    <string name="backup_sub_event_cover">包含背景图</string>
+    <string name="backup_sub_event_alpha">包含显示设置</string>
+    <string name="backup_event_subtitle">目标: %1$s</string>
+    <string name="backup_event_subtitle_important">重点 · 目标: %1$s</string>
+    <string name="backup_mtb_light">MTB 明色: %1$s</string>
+    <string name="backup_mtb_dark">MTB 暗色: %1$s</string>
+
+    <!-- 导出树中的单项偏好名称 -->
+    <string name="pref_theme_style">主题风格</string>
+    <string name="pref_accent_color">全局强调色</string>
+    <string name="pref_nav_mode">导航栏样式</string>
+    <string name="pref_home_layout">主页布局模式</string>
+    <string name="pref_popup_enabled">开屏弹窗开关</string>
+    <string name="pref_popup_duration">弹窗显示时长</string>
+    <string name="pref_popup_skippable">允许手动关闭弹窗</string>
+    <string name="pref_popup_skip_delay">弹窗关闭延迟</string>
+    <string name="pref_popup_apps">触发弹窗应用名单</string>
+    <string name="pref_persistent_notification">常驻通知</string>
+    <string name="pref_reminder_time">提前提醒时间</string>
+    <string name="pref_unlock_alpha">解锁卡片透明度</string>
+    <string name="pref_dev_mode">开发者模式权限</string>
+    <string name="pref_swipe_left">向左滑动卡片操作</string>
+    <string name="pref_swipe_right">向右滑动卡片操作</string>
+    <string name="pref_app_icon">应用桌面图标样式</string>
+    <string name="pref_auto_update">自动检查更新</string>
+    <string name="pref_sync_update_urls">在线同步备用更新源</string>
+    <string name="pref_custom_update_urls">自定义更新节点池</string>
+    <string name="pref_log_persistence">日志持久化保存</string>
+    <string name="pref_about_easter_egg">“关于”页面彩蛋</string>
+    <string name="pref_homepage_wallpaper">主页背景壁纸</string>
+    <string name="pref_drawer_header_image">侧滑栏顶部图像</string>
+    <string name="pref_drawer_header_image_enabled">显示侧滑栏顶部图像</string>
+    <string name="pref_cover_all">全部日程默认封面</string>
+    <string name="pref_cover_important">重点日程默认封面</string>
+    <string name="pref_alpha_all">全部日程透明度</string>
+    <string name="pref_alpha_important">重点日程透明度</string>
+    <string name="pref_scrim_color_mode">背景遮罩颜色模式</string>
+    <string name="pref_scrim_alpha">背景遮罩浓度</string>
+    <string name="pref_scrim_custom_color">自定义背景遮罩色</string>
+    <string name="pref_mtb_enabled">MTB 动态主题开关</string>
+    <string name="pref_agenda_view_mode">日程本列表视图模式</string>
+
+    <!-- ===== 导入冲突分析 ===== -->
+    <string name="conflict_cross_version_title">跨版本恢复警告</string>
+    <string name="conflict_cross_version_subtitle">备份来源版本 (v%1$d) 高于当前应用版本 (v%2$d)</string>
+    <string name="conflict_cross_version_message">您可以继续导入，但由于您当前的版本较旧，某些新的设置项或个性化功能可能被忽略或失效。</string>
+    <string name="conflict_cross_app_title">跨应用数据识别</string>
+    <string name="conflict_cross_app_subtitle">数据源: %1$s</string>
+    <string name="conflict_cross_app_message">这似乎不是由 ZakoCountdown 生成的标准备份，强行导入可能导致崩溃。</string>
+    <string name="conflict_setting_title">配置项: %1$s</string>
+    <string name="conflict_setting_value">导入值: %1$s</string>
+    <string name="conflict_duplicate_book">存在同名日程集，导入将导致重复</string>
+    <string name="conflict_book_subtitle">标识色: %1$s</string>
+    <string name="conflict_default_color">默认</string>
+    <string name="conflict_duplicate_event">存在同名日程，导入将产生重复项</string>
+    <string name="conflict_alpha_locked">冲突：使用了卡片透明度，但当前系统未解锁全局透明度</string>
+    <string name="conflict_event_important">重点日程</string>
+    <string name="conflict_event_normal">普通日程</string>
+
+    <!-- ===== 备份引擎错误 ===== -->
+    <string name="backup_error_version_incompatible">版本不兼容: 备份版本 v%1$s > 核心支持 v%2$s</string>
+    <string name="backup_error_corrupt_v1">损坏的 v1 文件：缺失 data.json</string>
+    <string name="backup_error_unknown_format">无法识别的打包格式，缺少元数据清单文件</string>
+    <string name="backup_error_cache_lost">缓存文件已丢失</string>
+    <string name="backup_error_malicious_path">发现恶意文件路径: %1$s</string>
+
+    <!-- ===== 主题 / 强调色选择 ===== -->
+    <string name="theme_custom_mtb">自定义导入的动态主题</string>
+    <string name="theme_md3_forced_compact">紧凑模式强制使用 MD3</string>
+    <string name="theme_md3_expressive">Material Design 3 Expressive（表现力）</string>
+    <string name="nav_mode_floating">悬浮底部导航栏</string>
+    <string name="nav_mode_bottom">贴底导航栏</string>
+    <string name="nav_mode_drawer">侧滑抽屉</string>
+    <string name="theme_icon_changed_oobe">图标已更改！系统可能需要几秒钟刷新，部分手机桌面可能会短暂闪烁。</string>
+
+    <!-- ===== 权限摘要 ===== -->
+    <string name="perm_summary_granted">已授予</string>
+    <string name="perm_summary_not_granted_tap">未授予，点击设置</string>
+    <string name="perm_summary_not_granted_tap_enable">未授予，点击开启</string>
+    <string name="perm_summary_unrestricted">已设为“无限制”</string>
+    <string name="perm_summary_not_exempt">未豁免，点击设置</string>
+    <string name="perm_summary_background_popup">请确保“后台弹出界面”权限已开启</string>
+    <string name="perm_summary_accessibility_manual">未开启，点击去系统设置中手动开启</string>
+    <string name="perm_error_notification_settings">无法打开通知设置</string>
+    <string name="perm_error_alarm_settings">无法打开权限页面</string>
+    <string name="perm_error_battery_settings">无法打开电池优化页面</string>
+    <string name="perm_error_accessibility_settings">无法打开无障碍设置页面</string>
+    <string name="perm_error_generic_settings">无法打开权限页面</string>
+    <string name="perm_error_autostart_settings">无法跳转到自启设置页面</string>
+    <string name="perm_error_miui_page">无法跳转到MIUI权限页面</string>
+
+    <!-- ===== 日程编辑 ===== -->
+    <string name="event_date_format">yyyy年MM月dd日</string>
+
+    <!-- ===== 卡片个性化 ===== -->
+    <string name="card_color_label">卡片颜色</string>
+    <string name="card_opacity_label">卡片不透明度</string>
+    <string name="card_scrim_alpha_label">背景遮罩浓度</string>
+    <string name="card_info_area_color">下方信息区颜色</string>
+    <string name="card_image_scrim_alpha">上方图片遮罩浓度</string>
+    <string name="share_chooser_image">分享图片</string>
+
+    <!-- ===== 提醒时间短标签 ===== -->
+    <string name="reminder_short_1_day">1天</string>
+    <string name="reminder_short_3_days">3天</string>
+    <string name="reminder_short_1_week">1周</string>
+
+    <!-- ===== 许可协议 ===== -->
+    <string name="license_mpl_zh">Mozilla 公共许可协议 2.0（中文）</string>
+    <string name="license_mpl_en">Mozilla Public License 2.0 (EN)</string>
+    <string name="license_studio_agreement">工作室协议</string>
+
+    <!-- ===== 对话框 ===== -->
+    <string name="dialog_import_shared_event_title">导入分享的日程</string>
+    <string name="dialog_import_shared_event_message">您收到了一个日程分享：\n\n 标题：%1$s\n 目标日：%2$s\n\n是否立即将其导入到您的 ZakoCountdown？</string>
+    <string name="dialog_import">导入</string>
+    <string name="dialog_import_success">日程「%1$s」已成功导入！</string>
+    <string name="dialog_untitled_shared_event">未命名共享日程</string>
+    <string name="dialog_new_agenda_book">新建日程本</string>
+
+    <!-- ===== 通知与服务 ===== -->
+    <string name="notify_permission_channel">权限请求</string>
+    <string name="notify_overlay_missing_title">权限缺失</string>
+    <string name="notify_overlay_missing_text">请授予悬浮窗权限以显示倒数日提醒</string>
+    <string name="service_popup_unavailable">Zako: 无法弹出提示，请检查后台弹出权限</string>
+    <string name="service_no_event_info">没有找到日程信息</string>
+    <string name="popup_no_events">没有需要提醒的日程</string>
+    <string name="popup_close_in">%1$d 秒后关闭</string>
+    <string name="popup_closing">正在关闭…</string>
+    <string name="popup_past_event">「%1$s」已过去 %2$d 天</string>
+    <string name="popup_future_event">距离「%1$s」还有 %2$d 天</string>
+
+    <!-- ===== 暗码 / 调试 ===== -->
+    <string name="secret_entering_debug">正在进入调试选项…</string>
+    <string name="secret_log_level_info">日志级别已设为 INFO</string>
+    <string name="secret_log_level_off">日志记录已关闭</string>
+    <string name="secret_dev_mode_trigger">开发者模式触发权限已%1$s</string>
+
+    <!-- ===== 系统无障碍说明 ===== -->
+    <string name="accessibility_service_description">用于在您打开指定应用时，提醒您重要的倒数日日程。ZakoCountdown需要此权限来检测前台应用的变化，以便及时弹出提醒。我们承诺不会收集您的任何个人信息。</string>
+
+    <!-- ===== 应用商店 / 卸载提示 (小米) ===== -->
+    <string name="SBUI_SyBerOS_uninstall_title">卸⚡载⚡你⚡大⚡坝</string>
+    <string name="SBUI_SyBerOS_uninstall_content">您在卸载后将无法继续获得日程提示，您确定要卸载吗？\n该软件由于开发阶段，很多功能暂不完善，我们对您不好的体验深感抱歉。\n如果您有更好的意见或发现了bug，您可以前往官方GitHub仓库或Telegram群组反馈。\nErrorsia Yusulif Studio\n~~Exception Ignites Evolution~~\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n</string>
+
+</resources>

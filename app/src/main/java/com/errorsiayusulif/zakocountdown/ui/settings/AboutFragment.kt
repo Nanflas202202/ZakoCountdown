@@ -30,44 +30,44 @@ class AboutFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.aboutVersion.text = "版本 ${BuildConfig.VERSION_NAME}"
+        binding.aboutVersion.text = getString(R.string.about_version_format, BuildConfig.VERSION_NAME)
 
         // --- 绑定所有列表项 ---
-        setupRow(binding.rowDeveloper, "开发者", "Shigure Hatsukaze")
-        setupRow(binding.rowStudio, "开发商", "Errorsia Yusulif Studio")
+        setupRow(binding.rowDeveloper, getString(R.string.about_row_developer), "Shigure Hatsukaze")
+        setupRow(binding.rowStudio, getString(R.string.about_row_studio), "Errorsia Yusulif Studio")
 
-        setupRow(binding.rowDetails, "详细信息", isClickable = true) {
+        setupRow(binding.rowDetails, getString(R.string.about_row_details), isClickable = true) {
             findNavController().navigate(R.id.action_aboutFragment_to_buildDetailsFragment)
         }
         // in setupRow for license
-        setupRow(binding.rowLicense, "查看许可证", isClickable = true) {
+        setupRow(binding.rowLicense, getString(R.string.about_row_license), isClickable = true) {
             findNavController().navigate(R.id.action_aboutFragment_to_licenseFragment)
         }
 
         // 联系方式分组
-        setupRow(binding.rowContact, "联系作者 (邮箱)", isClickable = true) {
+        setupRow(binding.rowContact, getString(R.string.about_row_contact), isClickable = true) {
             val intent = Intent(Intent.ACTION_SENDTO, Uri.parse("elysian-realm@hotmail.com"))
-            startActivitySafely(intent, "未找到邮件应用")
+            startActivitySafely(intent, getString(R.string.about_no_email_app))
         }
-        setupRow(binding.rowWebsite, "访问官网", isClickable = true) {
+        setupRow(binding.rowWebsite, getString(R.string.about_row_website), isClickable = true) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://nanflas202202-github-io.pages.dev/yusulifstudio/ZakoCountdown.html"))
-            startActivitySafely(intent, "未找到浏览器")
+            startActivitySafely(intent, getString(R.string.about_no_browser))
         }
-        setupRow(binding.rowGithub, "访问Github仓库の主页", isClickable = true) {
+        setupRow(binding.rowGithub, getString(R.string.about_row_github), isClickable = true) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/nanflas202202/zakocountdown"))
-            startActivitySafely(intent, "未找到浏览器")
+            startActivitySafely(intent, getString(R.string.about_no_browser))
         }
         // --- 【UI优化】将所有联系方式分组 ---
-        setupRow(binding.rowContactTelegram, "加入Telegram群组", isClickable = true) {
+        setupRow(binding.rowContactTelegram, getString(R.string.about_row_telegram), isClickable = true) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/errorsiayusulif"))
-            startActivitySafely(intent, "未找到应用打开链接")
+            startActivitySafely(intent, getString(R.string.about_no_app_for_link))
         }
-        setupRow(binding.rowContactBilibili, "访问Bilibili频道", isClickable = true) {
+        setupRow(binding.rowContactBilibili, getString(R.string.about_row_bilibili), isClickable = true) {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://space.bilibili.com/1132328502"))
-            startActivitySafely(intent, "未找到应用打开链接")
+            startActivitySafely(intent, getString(R.string.about_no_app_for_link))
         }
         // 绑定手动检查更新
-        setupRow(binding.rowVersionName, "检查更新", "当前版本 ${BuildConfig.VERSION_NAME}", isClickable = true) {
+        setupRow(binding.rowVersionName, getString(R.string.about_row_check_update), getString(R.string.about_current_version_format, BuildConfig.VERSION_NAME), isClickable = true) {
             viewLifecycleOwner.lifecycleScope.launch {
                 com.errorsiayusulif.zakocountdown.utils.UpdateManager.checkUpdate(requireContext(), showToastIfLatest = true)
             }

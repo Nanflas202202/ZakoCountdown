@@ -5,17 +5,18 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
 import android.view.View
-import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityPopupReminderBinding
+import com.errorsiayusulif.zakocountdown.utils.LocalizedActivity
 import com.errorsiayusulif.zakocountdown.utils.TimeCalculator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class PopupReminderActivity : AppCompatActivity() {
+class PopupReminderActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivityPopupReminderBinding
     private var countDownTimer: CountDownTimer? = null
@@ -33,20 +34,20 @@ class PopupReminderActivity : AppCompatActivity() {
 
         // 加载内容
         if (eventIds == null || eventIds.isEmpty()) {
-            binding.popupDetailsText.text = "没有找到日程信息"
+            binding.popupDetailsText.text = getString(R.string.service_no_event_info)
         } else {
-            binding.popupDetailsText.text = "正在加载..."
+            binding.popupDetailsText.text = getString(R.string.common_loading)
             lifecycleScope.launch {
                 val repository = (application as ZakoCountdownApplication).repository
                 val detailsString = withContext(Dispatchers.IO) {
                     val events = repository.getEventsByIds(eventIds.toList())
                     events.take(5).joinToString("\n\n") { event -> // 最多显示5个
                         val diff = TimeCalculator.calculateDifference(event.targetDate)
-                        val status = if (diff.isPast) "已过" else "还有"
-                        "${event.title}\n$status ${diff.totalDays} 天"
+                        val status = if (diff.isPast) getString(R.string.countdown_passed) else getString(R.string.countdown_remaining)
+                        "${event.title}\n$status ${diff.totalDays}${getString(R.string.unit_day)}"
                     }
                 }
-                binding.popupDetailsText.text = if (detailsString.isBlank()) "没有需要提醒的日程" else detailsString
+                binding.popupDetailsText.text = if (detailsString.isBlank()) getString(R.string.popup_no_events) else detailsString
             }
         }
 
@@ -84,11 +85,11 @@ class PopupReminderActivity : AppCompatActivity() {
         countDownTimer = object : CountDownTimer(totalMillis, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 val secLeft = (millisUntilFinished / 1000) + 1
-                binding.tvCountdown.text = "${secLeft}s 后关闭"
+                binding.tvCountdown.text = getString(R.string.popup_close_in, secLeft)
             }
 
             override fun onFinish() {
-                binding.tvCountdown.text = "正在关闭..."
+                binding.tvCountdown.text = getString(R.string.popup_closing)
                 finish()
             }
         }.start()

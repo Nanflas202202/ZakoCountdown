@@ -23,7 +23,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="一切就绪！"
+            android:text="@string/oobe_tutorial_title"
             android:textAppearance="?attr/textAppearanceHeadlineMedium"
             android:textStyle="bold" />
 
@@ -45,7 +45,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:text="💡 快速上手指南："
+                    android:text="@string/oobe_tutorial_guide_title"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
                     android:textStyle="bold" />
 
@@ -53,7 +53,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:lineSpacingExtra="8dp"
-                    android:text="👉 在主页长按日程卡片，可置顶、设置背景和分享图片。\n\n👉 从侧边栏进入日程本管理，可给日程分类与染色。\n\n👉 回到桌面长按，可添加半透明/全透明的精美微件。"
+                    android:text="@string/oobe_tutorial_body"
                     android:textAppearance="?attr/textAppearanceBodyMedium" />
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>

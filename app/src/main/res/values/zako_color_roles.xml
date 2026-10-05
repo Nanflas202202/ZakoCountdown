@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  旧版（MD1 / MD2）主题缺失的 Material 3 扩展色彩角色，日间取值。
+  这些值只在 MD1/MD2 骨架下生效；MD3 使用 Material3 主题自带的调色板。
+  夜间对应值见 values-night/zako_color_roles.xml。
+-->
+<resources>
+    <color name="zako_color_surface">#FFFBFE</color>
+    <color name="zako_color_on_surface">#1C1B1F</color>
+    <color name="zako_color_surface_variant">#E7E0EC</color>
+    <color name="zako_color_on_surface_variant">#49454F</color>
+    <color name="zako_color_outline">#79747E</color>
+    <color name="zako_color_outline_variant">#CAC4D0</color>
+    <color name="zako_color_primary_container">#EADDFF</color>
+    <color name="zako_color_on_primary_container">#21005D</color>
+    <color name="zako_color_secondary">#625B71</color>
+    <color name="zako_color_on_secondary">#FFFFFF</color>
+    <color name="zako_color_secondary_container">#E8DEF8</color>
+    <color name="zako_color_on_secondary_container">#1D192B</color>
+    <color name="zako_color_error">#B3261E</color>
+    <color name="zako_color_on_error">#FFFFFF</color>
+
+    <!--
+      Material 3 Expressive 需要的「容器层级」角色。
+      Expressive 大量使用 surfaceContainer* 系列来表达层次（悬浮导航栏、分组卡片），
+      而不是像 M3 那样只靠 elevation 阴影。
+    -->
+    <color name="zako_color_surface_container_lowest">#FFFFFF</color>
+    <color name="zako_color_surface_container_low">#F7F2FA</color>
+    <color name="zako_color_surface_container">#F3EDF7</color>
+    <color name="zako_color_surface_container_high">#ECE6F0</color>
+    <color name="zako_color_surface_container_highest">#E6E0E9</color>
+    <color name="zako_color_surface_bright">#FFFBFE</color>
+    <color name="zako_color_surface_dim">#DED8E1</color>
+    <color name="zako_color_inverse_surface">#313033</color>
+    <color name="zako_color_inverse_on_surface">#F4EFF4</color>
+    <color name="zako_color_scrim">#000000</color>
+</resources>

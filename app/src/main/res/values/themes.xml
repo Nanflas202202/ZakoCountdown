@@ -63,8 +63,49 @@
     <!-- =====   3. 基础骨架 (绑定组件样式)      ====== -->
     <!-- ============================================= -->
 
+    <!--
+        Material 3 扩展色彩角色补充层。
+        MaterialComponents 主题并没有定义 colorSurfaceVariant / colorOutline /
+        colorPrimaryContainer 等 M3 角色，导致 MtbThemeEngine 在 MD1/MD2 下只能
+        回退到默认色，界面配色因此无法统一。
+        这里统一补齐，MD1/MD2 都继承它，日间/夜间分别取值。
+    -->
+    <style name="Theme_ZakoCountdown.ColorRoles" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorSurface">@color/zako_color_surface</item>
+        <item name="colorOnSurface">@color/zako_color_on_surface</item>
+        <item name="colorSurfaceVariant">@color/zako_color_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/zako_color_on_surface_variant</item>
+        <item name="colorOutline">@color/zako_color_outline</item>
+        <item name="colorOutlineVariant">@color/zako_color_outline_variant</item>
+        <item name="colorPrimaryContainer">@color/zako_color_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/zako_color_on_primary_container</item>
+        <item name="colorSecondary">@color/zako_color_secondary</item>
+        <item name="colorOnSecondary">@color/zako_color_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/zako_color_secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/zako_color_on_secondary_container</item>
+        <item name="colorError">@color/zako_color_error</item>
+        <item name="colorOnError">@color/zako_color_on_error</item>
+
+        <!-- Expressive 的层次色阶：悬浮导航栏 / 分组卡片靠它拉开层次，不依赖阴影 -->
+        <item name="colorSurfaceContainerLowest">@color/zako_color_surface_container_lowest</item>
+        <item name="colorSurfaceContainerLow">@color/zako_color_surface_container_low</item>
+        <item name="colorSurfaceContainer">@color/zako_color_surface_container</item>
+        <item name="colorSurfaceContainerHigh">@color/zako_color_surface_container_high</item>
+        <item name="colorSurfaceContainerHighest">@color/zako_color_surface_container_highest</item>
+        <item name="colorSurfaceBright">@color/zako_color_surface_bright</item>
+        <item name="colorSurfaceDim">@color/zako_color_surface_dim</item>
+
+        <!--
+            窗口底色显式设为 surface。
+            自动隐藏的底部导航栏是覆盖层，它滑出屏幕后会露出窗口底色；
+            不显式指定时由各父主题决定，可能出现内容(surface)与窗口底色不一致、
+            底部露出一条明显色差的情况。
+        -->
+        <item name="android:windowBackground">@color/zako_color_surface</item>
+    </style>
+
     <!-- MD1 Base -->
-    <style name="Theme_ZakoCountdown_Base_MD1" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme_ZakoCountdown_Base_MD1" parent="Theme_ZakoCountdown.ColorRoles">
         <item name="materialButtonStyle">@style/Widget.Zako.Button.MD1</item>
         <item name="switchStyle">@style/Widget.Zako.Switch.MD1</item>
         <!-- 其他组件使用 AppCompat 默认 -->
@@ -74,16 +115,43 @@
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
         <item name="navigationViewStyle">@style/Widget.MaterialComponents.NavigationView</item>
         <item name="android:windowTranslucentStatus">false</item>
+        <!-- 让 outlined 按钮继承适合旧版主题的描边与文字色 -->
+        <item name="materialButtonOutlinedStyle">@style/Widget.Zako.Button.Outlined</item>
     </style>
 
     <!-- MD2 Base -->
-    <style name="Theme_ZakoCountdown_Base_MD2" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme_ZakoCountdown_Base_MD2" parent="Theme_ZakoCountdown.ColorRoles">
         <item name="materialButtonStyle">@style/Widget.Zako.Button.MD2</item>
         <item name="switchStyle">@style/Widget.Zako.Switch.MD2</item>
 
         <item name="materialCardViewStyle">@style/Widget.ZakoCountdown.CardView.MD2</item>
         <item name="toolbarStyle">@style/Widget.ZakoCountdown.Toolbar.MD2.Surface</item>
         <item name="preferenceTheme">@style/PreferenceThemeOverlay</item>
+        <!-- 让 outlined 按钮继承适合旧版主题的描边与文字色 -->
+        <item name="materialButtonOutlinedStyle">@style/Widget.Zako.Button.Outlined</item>
+    </style>
+
+    <!-- 旧版主题的填充按钮（M2 规范），MD1/MD2 都用它，避免引擎去猜 -->
+    <style name="Widget.Zako.Button.Filled" parent="Widget.MaterialComponents.Button">
+        <item name="backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorOnPrimary</item>
+        <item name="iconTint">?attr/colorOnPrimary</item>
+        <item name="rippleColor">?attr/colorOnPrimary</item>
+    </style>
+
+    <!-- 旧版主题的描边按钮（M2 规范） -->
+    <style name="Widget.Zako.Button.Outlined" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="iconTint">?attr/colorPrimary</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
+    </style>
+
+    <!-- 旧版主题的文字按钮 -->
+    <style name="Widget.Zako.Button.Text" parent="Widget.MaterialComponents.Button.TextButton">
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="iconTint">?attr/colorPrimary</item>
+        <item name="rippleColor">?attr/colorPrimary</item>
     </style>
 
     <!-- MD3 Base -->
@@ -175,6 +243,103 @@
         <item name="colorOnSecondaryContainer">#3E0021</item>
     </style>
     <style name="Theme_ZakoCountdown_M3_Blue" parent="Theme_ZakoCountdown_Base_M3">
+        <item name="colorPrimary">#0061A4</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#D1E4FF</item>
+        <item name="colorOnPrimaryContainer">#001D36</item>
+        <item name="colorSecondary">#0061A4</item>
+        <item name="colorSecondaryContainer">#D1E4FF</item>
+        <item name="colorOnSecondaryContainer">#001D36</item>
+    </style>
+
+    <!-- ============================================= -->
+    <!-- =====   4b. Material Design 3 Expressive    === -->
+    <!-- ============================================= -->
+    <!--
+        依赖要求：Material Components **1.13.0+**。
+        已在 1.13.0 的 AAR 中逐项核实过，它自带完整的 Expressive 基础设施：
+
+          · 动效物理：Motion.Material3.Spring.Standard.{Fast,Default,Slow}.{Spatial,Effects}
+            共 6 组弹簧样式，并且**已经绑进 Theme.Material3 本体**
+            （motionSpringFast/Default/Slow 的 Spatial + Effects 六个属性都有默认值）。
+          · 形状尺度：ShapeAppearance.M3.Sys.Shape.Corner.* 从 4dp 一直到新增的
+              ExtraSmall 4dp / Small 8dp / Medium 12dp / Large 16dp /
+              LargeIncreased 20dp / ExtraLarge 28dp / ExtraLargeIncreased 32dp /
+              ExtraExtraLarge 48dp / Full 50%
+            这 8 个 shapeAppearanceCorner* 也**已经绑进 Theme.Material3 本体**。
+          · 新增组件：LoadingIndicator、MaterialButtonGroup、MaterialSplitButton、
+            FloatingToolbarLayout。
+
+        结论（很重要，避免重复劳动）：
+        **Expressive 的 shape scale 与弹簧动效，升级依赖那一刻就已经生效了。**
+        我们不需要、也不应该再去覆盖 shapeAppearanceCorner* —— 之前的版本就是这么做的，
+        它把 Material 精心调好的 8 级尺度压成了自己的 5 级（small 变 medium、
+        medium 变 large），属于负优化。现在这些覆盖已全部移除。
+
+        那么在 1.13.0 之上，M3E 相对 M3 的真实差异是什么？
+          1. 设置页用「通栏列表」：整块列表铺 colorSurfaceContainer 底色、
+             隐藏分隔线，与页面底色拉开色差（见 ZakoPreferenceFragment）。
+             M3 下设置页是通栏透明 + 可见分隔线。
+          2. M3E 把 colorSurfaceContainer 加深了一档（见下面的骨架），
+             让上面那块列表的色差更明显。
+          3. 底部导航栏使用 M3 胶囊形选中指示器的尺寸 token。
+
+        尚未使用但已可用的 Expressive 组件（后续可逐步接入）：
+          LoadingIndicator / MaterialButtonGroup / MaterialSplitButton / FloatingToolbarLayout
+    -->
+
+    <!--
+        底部导航栏样式：M3 的选中指示器是胶囊形，这里把尺寸调宽一点，
+        更接近 Expressive 的观感（M3 基线指示器较窄）。
+    -->
+    <style name="Widget.Zako.Expressive.NavigationBar" parent="Widget.Material3.BottomNavigationView">
+        <item name="itemActiveIndicatorStyle">@style/Widget.Zako.Expressive.NavigationBar.ActiveIndicator</item>
+    </style>
+    <style name="Widget.Zako.Expressive.NavigationBar.ActiveIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:width">64dp</item>
+        <item name="android:height">32dp</item>
+        <item name="shapeAppearance">@style/ShapeAppearance.Zako.NavigationBar.Pill</item>
+    </style>
+
+    <!-- 胶囊形（50% 圆角），用在中选指示器上 -->
+    <style name="ShapeAppearance.Zako.NavigationBar.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!--
+        Expressive 骨架。
+
+        刻意**不**覆盖 shapeAppearanceCorner* 与 motionSpring*：
+        这两组 Expressive 基础设施已由 Material 1.13 的 Theme.Material3 提供，
+        覆盖只会破坏规范值。
+
+        这里做两件确实有差别的事：
+          1. 导航栏换成胶囊形态的样式（组件级 token，会真正生效）；
+          2. 加深列表容器色（colorSurfaceContainer 指向 surfaceDim），
+             让 M3E 设置页的「通栏列表」与页面底色拉开色差 ——
+             这是和 M3 在观感上最容易分辨的一处。
+    -->
+    <style name="Theme_ZakoCountdown_Base_M3E" parent="Theme_ZakoCountdown_Base_M3">
+        <item name="bottomNavigationStyle">@style/Widget.Zako.Expressive.NavigationBar</item>
+
+        <!-- 列表容器色加深一档（浅色 #DED8E1 / 深色 #141218），
+             设置页整块列表因此比页面底色明显更深/更浅 -->
+        <item name="colorSurfaceContainer">@color/zako_color_surface_dim</item>
+    </style>
+
+    <!-- Expressive 成品主题（配色复用 MD3 的三套色，只是形状语言不同） -->
+    <style name="Theme_ZakoCountdown_M3E" parent="Theme_ZakoCountdown_Base_M3E" />
+    <style name="Theme_ZakoCountdown_M3E_Pink" parent="Theme_ZakoCountdown_Base_M3E">
+        <item name="colorPrimary">#B93E6D</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorPrimaryContainer">#FFD9E2</item>
+        <item name="colorOnPrimaryContainer">#3E0021</item>
+        <item name="colorSecondary">#B93E6D</item>
+        <item name="colorSecondaryContainer">#FFD9E2</item>
+        <item name="colorOnSecondaryContainer">#3E0021</item>
+    </style>
+    <style name="Theme_ZakoCountdown_M3E_Blue" parent="Theme_ZakoCountdown_Base_M3E">
         <item name="colorPrimary">#0061A4</item>
         <item name="colorOnPrimary">#FFFFFF</item>
         <item name="colorPrimaryContainer">#D1E4FF</item>

@@ -10,7 +10,7 @@ plugins {
 // --- 核心优化：定义版本号变量，作为单一数据源 ---
 val versionCoreKtx = "1.12.0"
 val versionAppCompat = "1.6.1"
-val versionMaterial = "1.11.0"
+val versionMaterial = "1.13.0"
 val versionConstraint = "2.1.4"
 val versionJunit = "4.13.2"
 val versionExtJunit = "1.1.5"
@@ -25,6 +25,25 @@ val versionWork = "2.9.0"
 val versionCoil = "2.6.0"
 val versionGson = "2.10.1"
 
+// ============================================================
+// 升级代号 (UpgradeCode)
+// ------------------------------------------------------------
+// 与 Android 的 versionCode 完全独立：
+//   * versionCode   → 给系统安装器看的，每次上架必须递增
+//   * upgradeCode   → 给 OTA 引擎看的，用于判断「服务端这一版是不是比本机新」
+//
+// 好处：versionCode 有时会因为渠道包/回滚/重新上传而重排，
+// 而 upgradeCode 只由我们自己维护，永远是单调递增的整型，
+// 且**只出现在开发者选项里**，不会暴露在关于页、设置页或备份包中。
+//
+// 维护约定：每次准备发布时手工 +1。
+//   0.9.0 → 900001
+//   0.9.1 → 901001   ← 当前
+//   0.9.2 → 902001
+// ============================================================
+val upgradeCode = 20261025
+val upgradeCodeLabel = "0.9.1-debug"
+
 android {
     namespace = "com.errorsiayusulif.zakocountdown"
     compileSdk = 34
@@ -34,10 +53,19 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.9.0-debug"
+        versionName = "0.9.1-debug"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")
+
+        // --- 升级代号：OTA 引擎用它比较版本，与 versionCode 解耦 ---
+        buildConfigField("int", "UPGRADE_CODE", "$upgradeCode")
+        buildConfigField("String", "UPGRADE_CODE_LABEL", "\"$upgradeCodeLabel\"")
+        // 构建指纹：同一次构建固定，用于在开发者选项里核对「手上这个包是哪一次编译的」。
+        // 这里算一个短哈希即可 —— 只是给人看的核对码，不需要密码学强度。
+        val buildIdSeed = "$upgradeCode|$upgradeCodeLabel|${System.currentTimeMillis()}"
+        val buildId = String.format("%06X", (buildIdSeed.hashCode() and 0xFFFFFF))
+        buildConfigField("String", "BUILD_ID", "\"$buildId\"")
 
         // --- 核心优化：将变量注入给 BuildConfig 供 UI 读取 ---
         buildConfigField("String", "LIB_CORE_KTX", "\"$versionCoreKtx\"")
@@ -53,6 +81,16 @@ android {
         buildConfigField("String", "LIB_WORK", "\"$versionWork\"")
         buildConfigField("String", "LIB_COIL", "\"$versionCoil\"")
         buildConfigField("String", "LIB_GSON", "\"$versionGson\"")
+    }
+
+    // 本地构建使用工程内的调试签名文件，避免依赖用户目录下的 ~/.android/debug.keystore
+    signingConfigs {
+        getByName("debug") {
+            storeFile = rootProject.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {

@@ -12,7 +12,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
@@ -25,9 +24,10 @@ import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ActivityWidgetConfigureBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
 import com.errorsiayusulif.zakocountdown.databinding.ItemWidgetConfigEventBinding
+import com.errorsiayusulif.zakocountdown.utils.LocalizedActivity
 import kotlinx.coroutines.launch
 
-class WidgetConfigureActivity : AppCompatActivity() {
+class WidgetConfigureActivity : LocalizedActivity() {
 
     private lateinit var binding: ActivityWidgetConfigureBinding
     private lateinit var preferenceManager: PreferenceManager
@@ -65,7 +65,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 contentResolver.takePersistableUriPermission(uri, takeFlags)
                 tempImageUri = uri.toString()
-                Toast.makeText(this, "图片已选中", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.widget_image_selected, Toast.LENGTH_SHORT).show()
             } catch (e: SecurityException) {
                 tempImageUri = uri.toString()
             }
@@ -199,7 +199,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
 
         binding.btnConfirmAddWidget.setOnClickListener {
             if (binding.widgetBgTypeGroup.checkedRadioButtonId == R.id.widget_bg_image && tempImageUri == null) {
-                Toast.makeText(this, "请先选择一张图片", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.widget_pick_image_first, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             commitConfiguration(isShortcut = false)
@@ -212,7 +212,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
         for (colorHex in colors) {
             val swatchBinding = ItemColorSwatchBinding.inflate(inflater, binding.colorPalette, false)
             val color = if (colorHex == null) {
-                val attrs = intArrayOf(com.google.android.material.R.attr.colorPrimary)
+                val attrs = intArrayOf(android.R.attr.colorPrimary)
                 val typedArray = obtainStyledAttributes(attrs)
                 val c = typedArray.getColor(0, Color.BLACK)
                 typedArray.recycle()
@@ -248,13 +248,13 @@ class WidgetConfigureActivity : AppCompatActivity() {
             selectedEvent = allEvents.find { it.id == currentEventId }
             if (selectedEvent != null) {
                 binding.btnConfirmAddWidget.isEnabled = true
-                binding.btnConfirmAddWidget.text = "更新微件：${selectedEvent?.title}"
+                binding.btnConfirmAddWidget.text = getString(R.string.widget_confirm_update, selectedEvent?.title ?: "")
             }
 
             val adapter = ConfigAdapter(allEvents, currentEventId) { event ->
                 selectedEvent = event
                 binding.btnConfirmAddWidget.isEnabled = true
-                binding.btnConfirmAddWidget.text = "添加/更新：${event.title}"
+                binding.btnConfirmAddWidget.text = getString(R.string.widget_confirm_add_or_update, event.title)
             }
             binding.recyclerViewWidgetConfig.adapter = adapter
 
@@ -322,7 +322,7 @@ class WidgetConfigureActivity : AppCompatActivity() {
             if (selectedPosition == position) {
                 holder.binding.cardRoot.strokeWidth = 6
                 // --- 修复：使用动态主题色，而非硬编码紫色 ---
-                val attrs = intArrayOf(com.google.android.material.R.attr.colorPrimary, com.google.android.material.R.attr.colorPrimaryContainer)
+                val attrs = intArrayOf(android.R.attr.colorPrimary, com.google.android.material.R.attr.colorPrimaryContainer)
                 val typedArray = holder.itemView.context.obtainStyledAttributes(attrs)
                 val colorPrimary = typedArray.getColor(0, Color.BLACK)
                 val colorContainer = typedArray.getColor(1, Color.LTGRAY)

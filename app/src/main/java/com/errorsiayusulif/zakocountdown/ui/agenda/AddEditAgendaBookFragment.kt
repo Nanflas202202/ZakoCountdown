@@ -97,7 +97,7 @@ class AddEditAgendaBookFragment : Fragment() {
                     binding.ivCoverPreview.load(selectedCoverUri)
                 }
             } catch (e: Exception) {
-                Toast.makeText(context, "图片加载失败", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.agenda_image_load_failed, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -159,7 +159,7 @@ class AddEditAgendaBookFragment : Fragment() {
         binding.fabSaveBook.setOnClickListener {
             val name = binding.etBookName.text.toString()
             if (name.isBlank()) {
-                Toast.makeText(context, "请输入名称", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.agenda_book_name_empty, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -243,7 +243,7 @@ class AddEditAgendaBookFragment : Fragment() {
             textView.isChecked = checkedEventIds.contains(event.id)
 
             if (event.bookId != null && event.bookId != args.bookId) {
-                textView.text = "${event.title} (将从其他本移入)"
+                textView.text = getString(R.string.agenda_move_hint, event.title)
                 textView.setTextColor(Color.GRAY)
             } else {
                 textView.setTextColor(Color.parseColor("#212121"))

@@ -1,118 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Default (English) string arrays.
+  Translations live in values-<locale>/arrays.xml — keep array names identical.
+  "_values" arrays hold machine-readable IDs and must NOT be translated.
+-->
 <resources>
-    <!-- 主题设置 -->
+    <!--
+        主题列表。
+        M3E 暂时下线：它的「通栏列表」底色在真机上没能稳定渲染，
+        与其让用户选到一个半成品，不如先收起来，等做稳了再放回来。
+        ⚠️ watch：M3E 的样式资源仍保留在 themes.xml（Theme_ZakoCountdown_M3E*），
+        重新上线时只需把 "Material Design 3 Expressive" 与 "M3E" 两项加回来，
+        并在 PreferenceKeys.migrateLegacyKeys 里去掉 M3E→M3 的迁移。
+    -->
     <string-array name="theme_entries">
-        <item>Material Design 3 (推荐)</item>
-        <item>Material Design 2 (经典)</item>
-        <item>Material Design 1 (怀旧)</item>
+        <item>Material Design 3 (Recommended)</item>
+        <item>Material Design 2 (Classic)</item>
+        <item>Material Design 1 (Nostalgic)</item>
     </string-array>
 
-    <string-array name="theme_values">
+    <string-array name="theme_values" translatable="false">
         <item>M3</item>
         <item>M2</item>
         <item>MD1</item>
+    </string-array>
 
-    </string-array>
-    <!-- 新增：不包含MD1的稳定版主题列表 -->
+    <!-- 稳定主题列表（不含 MD1） -->
     <string-array name="theme_entries_stable">
-        <item>Material Design 3 (推荐)</item>
-        <item>Material Design 2 (经典)</item>
+        <item>Material Design 3</item>
+        <item>Material Design 2 (Classic)</item>
     </string-array>
-    <string-array name="theme_values_stable">
+    <string-array name="theme_values_stable" translatable="false">
         <item>M3</item>
         <item>M2</item>
     </string-array>
-    <!-- 强调色设置 -->
+
+    <!-- Accent color -->
     <string-array name="color_entries">
-        <item>跟随壁纸 (Monet)</item>
-        <item>活力粉</item>
-        <item>天空蓝</item>
+        <item>Follow wallpaper (Monet)</item>
+        <item>Vibrant pink</item>
+        <item>Sky blue</item>
     </string-array>
 
-    <string-array name="color_values">
+    <string-array name="color_values" translatable="false">
         <item>MONET</item>
         <item>PINK</item>
         <item>BLUE</item>
     </string-array>
+
+    <!-- Popup mode -->
     <string-array name="popup_mode_entries">
-        <item>自动 (推荐)</item>
-        <item>Activity 模式</item>
-        <item>悬浮窗模式</item>
+        <item>Automatic (Recommended)</item>
+        <item>Activity mode</item>
+        <item>Overlay window mode</item>
     </string-array>
-    <string-array name="popup_mode_values">
+    <string-array name="popup_mode_values" translatable="false">
         <item>auto</item>
         <item>activity</item>
         <item>window</item>
     </string-array>
+
+    <!-- Reminder lead time -->
     <string-array name="reminder_time_entries">
-        <item>不提醒</item>
-        <item>提前 1 天</item>
-        <item>提前 3 天</item>
-        <item>提前 1 周</item>
+        <item>No reminder</item>
+        <item>1 day before</item>
+        <item>3 days before</item>
+        <item>1 week before</item>
     </string-array>
-    <string-array name="reminder_time_values">
+    <string-array name="reminder_time_values" translatable="false">
         <item>none</item>
         <item>1_day</item>
         <item>3_days</item>
         <item>1_week</item>
     </string-array>
 
-    <!--  ↓↓↓  新增：遮罩颜色选项  ↓↓↓  -->
+    <!-- Scrim color -->
     <string-array name="scrim_color_entries">
-        <item>主题色 (默认)</item>
-        <item>纯黑</item>
-        <item>纯白</item>
-        <item>自定义颜色</item> <!-- 新增 -->
+        <item>Theme color (Default)</item>
+        <item>Pure black</item>
+        <item>Pure white</item>
+        <item>Custom color</item>
     </string-array>
 
-    <string-array name="scrim_color_values">
+    <string-array name="scrim_color_values" translatable="false">
         <item>theme</item>
         <item>black</item>
         <item>white</item>
-        <item>custom</item> <!-- 新增 -->
-    </string-array>
-    <!--  ↑↑↑  新增：遮罩颜色选项  ↑↑↑  -->
-    <string-array name="nav_mode_entries">
-        <item>侧滑抽屉 (默认)</item>
-        <item>底部导航栏</item>
+        <item>custom</item>
     </string-array>
 
-    <string-array name="nav_mode_values">
-        <item>drawer</item>
+    <!-- Navigation mode.
+         "floating" (悬浮底部栏) 已不再是独立形态 —— 它变成了底部导航栏的
+         「自动隐藏」开关（见 PreferenceKeys.AUTO_HIDE_NAV_BAR）。
+         老用户存过 "floating" 的会在 PreferenceManager.getNavMode() 里自动迁移。 -->
+    <string-array name="nav_mode_entries">
+        <item>Bottom navigation bar</item>
+        <item>Navigation drawer</item>
+    </string-array>
+
+    <string-array name="nav_mode_values" translatable="false">
         <item>bottom</item>
+        <item>drawer</item>
     </string-array>
+
+    <!-- Home layout -->
     <string-array name="home_layout_entries">
-        <item>标准模式 (默认)</item>
-        <item>紧凑模式 (单页)</item>
+        <item>Standard (Default)</item>
+        <item>Compact (Single page)</item>
     </string-array>
-    <string-array name="home_layout_values">
+    <string-array name="home_layout_values" translatable="false">
         <item>standard</item>
         <item>compact</item>
     </string-array>
-    <!--  ↓↓↓  修改：应用图标选项  ↓↓↓  -->
+
+    <!-- App icon -->
     <string-array name="app_icon_entries">
-        <item>旧版图标</item>
-        <item>新版图标</item>
+        <item>Legacy icon</item>
+        <item>New icon</item>
     </string-array>
 
-    <string-array name="app_icon_values">
-        <!-- ⚠️ 这里从 MainActivity 改为了 MainActivityAliasDefault -->
+    <string-array name="app_icon_values" translatable="false">
         <item>com.errorsiayusulif.zakocountdown.MainActivityAliasDefault</item>
         <item>com.errorsiayusulif.zakocountdown.MainActivityAliasNew</item>
     </string-array>
-    <!--  ↑↑↑  修改：应用图标选项  ↑↑↑  -->
-    <!--  ↓↓↓  新增：滑动操作选项  ↓↓↓  -->
+
+    <!-- Swipe actions -->
     <string-array name="swipe_action_entries">
-        <item>删除日程</item>
-        <item>编辑日程详细信息</item>
-        <item>卡片个性化设置</item>
-        <item>设为 / 取消置顶</item>
-        <item>设为 / 取消重点</item>
-        <item>生成分享卡片</item>
-        <item>无操作 (禁用滑动)</item>
+        <item>Delete event</item>
+        <item>Edit event details</item>
+        <item>Card personalization</item>
+        <item>Pin / unpin</item>
+        <item>Mark / unmark important</item>
+        <item>Create share card</item>
+        <item>No action (disable swipe)</item>
     </string-array>
 
-    <string-array name="swipe_action_values">
+    <string-array name="swipe_action_values" translatable="false">
         <item>delete</item>
         <item>edit</item>
         <item>personalize</item>
@@ -121,5 +144,17 @@
         <item>share</item>
         <item>none</item>
     </string-array>
-    <!--  ↑↑↑  新增：滑动操作选项  ↑↑↑  -->
+
+    <!-- App language (Android 13+ per-app language / in-app picker).
+         Add a locale here after creating res/values-<locale>/strings.xml. -->
+    <string-array name="language_entries">
+        <item>Follow system</item>
+        <item>English</item>
+        <item>简体中文</item>
+    </string-array>
+    <string-array name="language_values" translatable="false">
+        <item>system</item>
+        <item>en</item>
+        <item>zh-CN</item>
+    </string-array>
 </resources>

@@ -6,12 +6,13 @@ import androidx.navigation.fragment.findNavController
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.utils.LogRecorder
 
-class DeepDeveloperFragment : PreferenceFragmentCompat() {
+class DeepDeveloperFragment : ZakoPreferenceFragment() {
 
     private lateinit var preferenceManager: PreferenceManager
 
@@ -21,13 +22,13 @@ class DeepDeveloperFragment : PreferenceFragmentCompat() {
         preferenceManager = (requireActivity().application as ZakoCountdownApplication).preferenceManager
 
         // 普通开发者模式开关
-        findPreference<SwitchPreferenceCompat>("key_enable_enter_dev_mode")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<SwitchPreferenceCompat>(PreferenceKeys.DEV_MODE_ENTRY_ENABLED)?.setOnPreferenceChangeListener { _, newValue ->
             preferenceManager.setEnableEnterDevMode(newValue as Boolean)
             true // 【修复】必须返回 true
         }
 
         // 关于页面彩蛋开关
-        findPreference<SwitchPreferenceCompat>("key_enable_about_easter_egg")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<SwitchPreferenceCompat>(PreferenceKeys.ABOUT_EASTER_EGG_ENABLED)?.setOnPreferenceChangeListener { _, newValue ->
             preferenceManager.setAboutEasterEggEnabled(newValue as Boolean)
             true // 【修复】必须返回 true
         }
@@ -40,7 +41,7 @@ class DeepDeveloperFragment : PreferenceFragmentCompat() {
         }
 
         // 日志持久化开关
-        findPreference<SwitchPreferenceCompat>("key_log_persistence")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<SwitchPreferenceCompat>(PreferenceKeys.LOG_PERSISTENCE_ENABLED)?.setOnPreferenceChangeListener { _, newValue ->
             val enabled = newValue as Boolean
             preferenceManager.setLogPersistenceEnabled(enabled)
             if (enabled) {

@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# 构建辅助目录（见 gradle.properties 里的 daemon / KSP 修复说明）
+/.gradle-home
+/.gradle-tmp
+/debug.keystore

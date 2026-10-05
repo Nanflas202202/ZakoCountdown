@@ -56,7 +56,7 @@ class AgendaDetailFragment : Fragment() {
         val adapter = CountdownAdapter(
             onItemClicked = { event ->
                 val action = AgendaDetailFragmentDirections.actionAgendaDetailFragmentToAddEditEventFragment(
-                    title = "编辑日程",
+                    title = getString(R.string.home_title_edit_event),
                     eventId = event.id
                 )
                 findNavController().navigate(action)
@@ -92,7 +92,7 @@ class AgendaDetailFragment : Fragment() {
         binding.fabAddToBook.setOnClickListener {
             val targetBookId = if (args.bookId > 0) args.bookId else -1L
             val action = AgendaDetailFragmentDirections.actionAgendaDetailFragmentToAddEditEventFragment(
-                title = "新建日程",
+                title = getString(R.string.home_add_new_event),
                 defaultBookId = targetBookId
             )
             findNavController().navigate(action)
@@ -101,14 +101,14 @@ class AgendaDetailFragment : Fragment() {
         if (args.bookId > 0) {
             binding.toolbar.inflateMenu(R.menu.event_card_context_menu)
             binding.toolbar.menu.clear()
-            val editItem = binding.toolbar.menu.add(0, 1, 0, "编辑本子")
+            val editItem = binding.toolbar.menu.add(0, 1, 0, getString(R.string.agenda_edit_book_short))
             editItem.setIcon(R.drawable.ic_settings)
             editItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
 
             binding.toolbar.setOnMenuItemClickListener {
                 if (it.itemId == 1) {
                     val action = AgendaDetailFragmentDirections.actionAgendaDetailFragmentToAddEditAgendaBookFragment(
-                        title = "编辑日程本",
+                        title = getString(R.string.agenda_edit_book),
                         bookId = args.bookId
                     )
                     findNavController().navigate(action)
@@ -164,13 +164,13 @@ class AgendaDetailFragment : Fragment() {
                 }
             }
         } else if (args.bookId == -1L) {
-            binding.collapsingToolbar.title = "全部日程"
-            binding.toolbar.title = "全部日程"
+            binding.collapsingToolbar.title = getString(R.string.nav_filter_all)
+            binding.toolbar.title = getString(R.string.nav_filter_all)
             // --- 修复：加载默认本子的图片 ---
             loadDefaultBookHeader(isImportant = false, defaultColor = Color.DKGRAY)
         } else if (args.bookId == -2L) {
-            binding.collapsingToolbar.title = "重点日程"
-            binding.toolbar.title = "重点日程"
+            binding.collapsingToolbar.title = getString(R.string.nav_filter_important)
+            binding.toolbar.title = getString(R.string.nav_filter_important)
             // --- 修复：加载默认本子的图片 ---
             loadDefaultBookHeader(isImportant = true, defaultColor = Color.parseColor("#F44336"))
         }
@@ -230,9 +230,9 @@ class AgendaDetailFragment : Fragment() {
         popup.menuInflater.inflate(R.menu.event_card_context_menu, popup.menu)
 
         val pinMenuItem = popup.menu.findItem(R.id.action_pin)
-        pinMenuItem.title = if (event.isPinned) "取消置顶" else "设为置顶"
+        pinMenuItem.title = if (event.isPinned) getString(R.string.home_unpin) else getString(R.string.home_pin)
         val importantMenuItem = popup.menu.findItem(R.id.action_mark_important)
-        importantMenuItem.title = if (event.isImportant) "取消重点" else "设为重点"
+        importantMenuItem.title = if (event.isImportant) getString(R.string.home_unmark_important) else getString(R.string.home_mark_important)
 
         popup.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -240,8 +240,8 @@ class AgendaDetailFragment : Fragment() {
                 R.id.action_mark_important -> { homeViewModel.update(event.copy(isImportant = !event.isImportant)); true }
                 R.id.action_delete -> {
                     homeViewModel.delete(event)
-                    Snackbar.make(binding.root, "日程已删除", Snackbar.LENGTH_LONG)
-                        .setAction("撤销") { homeViewModel.insert(event) }.show()
+                    Snackbar.make(binding.root, R.string.home_event_deleted, Snackbar.LENGTH_LONG)
+                        .setAction(R.string.common_undo) { homeViewModel.insert(event) }.show()
                     true
                 }
                 R.id.action_card_settings -> {

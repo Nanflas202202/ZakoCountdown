@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import com.errorsiayusulif.zakocountdown.MainActivity
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 
 class SecretCodeReceiver : BroadcastReceiver() {
@@ -21,18 +22,18 @@ class SecretCodeReceiver : BroadcastReceiver() {
 
             when (secretCode) {
                 "20160627" -> {
-                    Toast.makeText(context, "正在进入调试选项...", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.secret_entering_debug, Toast.LENGTH_SHORT).show()
                     launchMainActivitySafely(context, NAVIGATE_TO_DEV_OPTIONS)
                 }
-                "20220238" -> Toast.makeText(context, "日志级别已设为 INFO", Toast.LENGTH_SHORT).show()
-                "20250528" -> Toast.makeText(context, "日志记录已关闭", Toast.LENGTH_SHORT).show()
+                "20220238" -> Toast.makeText(context, R.string.secret_log_level_info, Toast.LENGTH_SHORT).show()
+                "20250528" -> Toast.makeText(context, R.string.secret_log_level_off, Toast.LENGTH_SHORT).show()
                 "63572202" -> launchMainActivitySafely(context, NAVIGATE_TO_LOG_READER)
                 "6357921606" -> {
                     val prefs = PreferenceManager(context)
                     val newState = !prefs.isEnableEnterDevMode()
                     prefs.setEnableEnterDevMode(newState)
-                    val status = if (newState) "开启" else "关闭"
-                    Toast.makeText(context, "开发者模式触发权限已$status", Toast.LENGTH_LONG).show()
+                    val status = if (newState) context.getString(R.string.common_enabled) else context.getString(R.string.common_disabled)
+                    Toast.makeText(context, context.getString(R.string.secret_dev_mode_trigger, status), Toast.LENGTH_LONG).show()
                 }
             }
         }

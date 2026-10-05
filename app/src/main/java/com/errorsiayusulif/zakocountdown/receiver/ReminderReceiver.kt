@@ -24,8 +24,8 @@ class ReminderReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         val eventId = intent.getLongExtra(EXTRA_EVENT_ID, -1)
-        val eventTitle = intent.getStringExtra(EXTRA_EVENT_TITLE) ?: "您的日程"
-        val timeDescription = intent.getStringExtra(EXTRA_TIME_DESCRIPTION) ?: "时间"
+        val eventTitle = intent.getStringExtra(EXTRA_EVENT_TITLE) ?: context.getString(R.string.service_reminder_default_event)
+        val timeDescription = intent.getStringExtra(EXTRA_TIME_DESCRIPTION) ?: context.getString(R.string.service_reminder_default_time)
 
         if (eventId == -1L) return
 
@@ -34,10 +34,10 @@ class ReminderReceiver : BroadcastReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "ZakoCountdown 日程提醒",
+                context.getString(R.string.service_channel_reminder_title),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "用于提醒您即将到来的重要日程"
+                description = context.getString(R.string.service_channel_reminder_desc)
             }
             notificationManager.createNotificationChannel(channel)
         }
@@ -57,8 +57,8 @@ class ReminderReceiver : BroadcastReceiver() {
 
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("来自Zako的友情提醒～❤️")
-            .setContentText("您的「${eventTitle}」还有 ${timeDescription} 就要到了呢~")
+            .setContentTitle(context.getString(R.string.service_friendly_title))
+            .setContentText(context.getString(R.string.service_friendly_text, eventTitle, timeDescription))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)

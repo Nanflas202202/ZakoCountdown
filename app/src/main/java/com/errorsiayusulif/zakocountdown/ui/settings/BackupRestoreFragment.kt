@@ -21,6 +21,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
+import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
 import com.errorsiayusulif.zakocountdown.data.*
@@ -61,8 +62,8 @@ class BackupRestoreFragment : Fragment() {
 
     private var currentParsedPackage: BackupManager.ParsedEyfPackage? = null
 
-    // 当前选中的目标版本，默认为最新
-    private var targetExportVersion: AppVersion = AppVersion.V_0_9_0
+    // 当前选中的目标版本，默认为最新（v0.9.1-debug）
+    private var targetExportVersion: AppVersion = AppVersion.CURRENT
 
     private val createEyfLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         uri?.let { performExportToUri(it) }
@@ -113,7 +114,7 @@ class BackupRestoreFragment : Fragment() {
         fabExport.setOnClickListener {
             val nodes = exportAdapter.getRootNodes()
             if (nodes.none { it.isChecked && it.type != NodeType.HEADER }) {
-                Toast.makeText(requireContext(), "请至少选择一项", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.backup_select_at_least_one, Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             val dateStr = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
@@ -138,7 +139,7 @@ class BackupRestoreFragment : Fragment() {
         }
 
         TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = if (position == 0) "导出备份" else "导入恢复"
+            tab.text = if (position == 0) getString(R.string.backup_tab_export) else getString(R.string.backup_tab_import)
         }.attach()
 
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -160,15 +161,17 @@ class BackupRestoreFragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinnerTargetVersion.adapter = adapter
 
-        // 默认选中当前版本 (通常是数组最后一个)
-        val defaultIndex = AppVersion.values().indexOf(AppVersion.V_0_9_0)
+        // 默认选中当前最新版本（v0.9.1-debug）
+        val defaultIndex = AppVersion.values().indexOf(AppVersion.CURRENT)
         spinnerTargetVersion.setSelection(defaultIndex)
+        updateFeatureSummary(AppVersion.CURRENT)
 
         spinnerTargetVersion.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val newTarget = AppVersion.values()[position]
                 if (newTarget != targetExportVersion) {
                     targetExportVersion = newTarget
+                    updateFeatureSummary(newTarget)
                     // 版本改变时，重新生成列表以过滤不支持的设置
                     setupExportView()
                 }
@@ -177,34 +180,77 @@ class BackupRestoreFragment : Fragment() {
         }
     }
 
+    /**
+     * 展示「该目标版本下可用功能」的概览，点一下能看到完整清单。
+     * 清单本身也会写进备份包的 DocumentFeatures.json，这里只是提前给用户看一眼。
+     */
+    private fun updateFeatureSummary(version: AppVersion) {
+        val label = view?.findViewById<android.widget.TextView>(R.id.tv_feature_summary) ?: return
+        val available = FeatureRegistry.availableFor(version.internalCode)
+        val exportable = available.count { it.exportable }
+        label.text = getString(R.string.backup_feature_summary, available.size, exportable)
+        label.setOnClickListener { showFeatureListDialog(version) }
+    }
+
+    private fun showFeatureListDialog(version: AppVersion) {
+        val available = FeatureRegistry.availableFor(version.internalCode)
+        val skipped = FeatureRegistry.addedAfter(version.internalCode)
+        val zh = java.util.Locale.getDefault().language.equals("zh", ignoreCase = true)
+
+        val body = buildString {
+            appendLine(getString(R.string.backup_feature_dialog_available, version.versionName))
+            appendLine()
+            available.forEach { f ->
+                val name = if (zh) f.displayNameZh else f.displayNameEn
+                append("• ").append(name)
+                if (!f.exportable) append("  ").append(getString(R.string.backup_feature_runtime_only))
+                appendLine()
+            }
+            if (skipped.isNotEmpty()) {
+                appendLine()
+                appendLine(getString(R.string.backup_feature_dialog_skipped))
+                skipped.forEach { f ->
+                    val name = if (zh) f.displayNameZh else f.displayNameEn
+                    appendLine("• $name")
+                }
+            }
+        }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())
+            .setTitle(getString(R.string.backup_feature_dialog_title, version.versionName))
+            .setMessage(body.trim())
+            .setPositiveButton(R.string.common_ok, null)
+            .show()
+    }
+
     private fun getExcludedSettingsKeys(version: AppVersion): Set<String> {
         val excluded = mutableSetOf<String>()
 
         // ==========================================
         // 永远排除的键（设备绑定的向导状态）
         // ==========================================
-        excluded.add("key_oobe_completed")
-        excluded.add("key_eula_accepted")
-        excluded.add("key_has_prompted_accessibility")
-        excluded.add("key_has_prompted_swipe")
+        excluded.add(PreferenceKeys.OOBE_COMPLETED)
+        excluded.add(PreferenceKeys.EULA_ACCEPTED)
+        excluded.add(PreferenceKeys.ACCESSIBILITY_GUIDE_PROMPTED)
+        excluded.add(PreferenceKeys.SWIPE_GUIDE_PROMPTED)
 
         // ==========================================
         // 如果目标版本 <= V0.8.11 (Nightly)
         // 排除 V0.9.0 新增的所有核心引擎设置
         // ==========================================
         if (version.internalCode <= AppVersion.V_0_8_11.internalCode) {
-            excluded.add("key_swipe_left_action")
-            excluded.add("key_swipe_right_action")
-            excluded.add("key_app_icon")
-            excluded.add("key_auto_update")
-            excluded.add("key_sync_update_urls")
-            excluded.add("key_custom_update_urls")
-            excluded.add("key_log_persistence")
-            excluded.add("key_enable_about_easter_egg")
-            excluded.add("key_scrim_color_mode")
-            excluded.add("key_scrim_alpha")
-            excluded.add("key_scrim_custom_color")
-            excluded.add("is_mtb_theme_enabled")
+            excluded.add(PreferenceKeys.SWIPE_LEFT_ACTION)
+            excluded.add(PreferenceKeys.SWIPE_RIGHT_ACTION)
+            excluded.add(PreferenceKeys.APP_ICON_ALIAS)
+            excluded.add(PreferenceKeys.AUTO_UPDATE_ENABLED)
+            excluded.add(PreferenceKeys.UPDATE_SOURCE_SYNC_ENABLED)
+            excluded.add(PreferenceKeys.UPDATE_SOURCE_NODES)
+            excluded.add(PreferenceKeys.LOG_PERSISTENCE_ENABLED)
+            excluded.add(PreferenceKeys.ABOUT_EASTER_EGG_ENABLED)
+            excluded.add(PreferenceKeys.SCRIM_COLOR_MODE)
+            excluded.add(PreferenceKeys.SCRIM_ALPHA)
+            excluded.add(PreferenceKeys.SCRIM_CUSTOM_COLOR)
+            excluded.add(PreferenceKeys.MTB_THEME_ENABLED)
         }
 
         // ==========================================
@@ -213,10 +259,10 @@ class BackupRestoreFragment : Fragment() {
         // 因此禁止将默认封面配置导出给 0.8.10 及更早版本
         // ==========================================
         if (version.internalCode <= AppVersion.V_0_8_10.internalCode) {
-            excluded.add("cover_book_all")
-            excluded.add("cover_book_important")
-            excluded.add("alpha_book_all")
-            excluded.add("alpha_book_important")
+            excluded.add(PreferenceKeys.DEFAULT_BOOK_COVER_ALL)
+            excluded.add(PreferenceKeys.DEFAULT_BOOK_COVER_IMPORTANT)
+            excluded.add(PreferenceKeys.DEFAULT_BOOK_ALPHA_ALL)
+            excluded.add(PreferenceKeys.DEFAULT_BOOK_ALPHA_IMPORTANT)
         }
 
         // ==========================================
@@ -224,10 +270,19 @@ class BackupRestoreFragment : Fragment() {
         // 0.8.9 时没有紧凑模式、没有导航栏切换，也没有日程集开关
         // ==========================================
         if (version.internalCode <= AppVersion.V_0_8_9.internalCode) {
-            excluded.add("key_home_layout_mode")
-            excluded.add("key_nav_mode")
-            excluded.add("key_enable_agenda_book")
-            excluded.add("key_unlock_legacy_theme_compact")
+            excluded.add(PreferenceKeys.HOME_LAYOUT_MODE)
+            excluded.add(PreferenceKeys.APP_LAYOUT_MODE)
+            excluded.add(PreferenceKeys.AGENDA_BOOK_ENABLED)
+            excluded.add(PreferenceKeys.LEGACY_THEME_IN_COMPACT)
+        }
+
+        // ==========================================
+        // 如果目标版本 <= V0.9.0 (code 900)
+        // 排除 V0.9.1 引入的悬浮导航、MD3 Expressive 与侧滑栏自定义图像
+        // ==========================================
+        if (version.internalCode < PreferenceManager.TARGET_VERSION_FLOATING_NAV) {
+            excluded.add(PreferenceKeys.DRAWER_HEADER_IMAGE_URI)
+            excluded.add(PreferenceKeys.DRAWER_HEADER_IMAGE_ENABLED)
         }
 
         return excluded
@@ -240,47 +295,50 @@ class BackupRestoreFragment : Fragment() {
             val app = requireActivity().application as ZakoCountdownApplication
             val books = app.repository.getAllBooksSuspend()
             val events = app.repository.getAllEventsSuspend()
-            val prefs = requireContext().getSharedPreferences("zako_prefs", Context.MODE_PRIVATE).all
+            val prefs = requireContext().getSharedPreferences(PreferenceKeys.PREFS_FILE, Context.MODE_PRIVATE).all
 
             val nodes = mutableListOf<SelectableNode>()
             val excludedKeys = getExcludedSettingsKeys(targetExportVersion)
 
             if (prefs.isNotEmpty()) {
-                nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", "应用配置", isExpanded = true, isChecked = true))
+                nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", getString(R.string.backup_header_settings), isExpanded = true, isChecked = true))
                 val prefMapping = mapOf(
-                    "key_theme" to "主题风格",
-                    "key_accent_color" to "全局强调色",
-                    "key_nav_mode" to "导航栏样式",
-                    "key_home_layout_mode" to "主页布局模式",
-                    "enable_popup_reminder" to "开屏弹窗开关",
-                    "key_popup_duration" to "弹窗显示时长",
-                    "key_popup_skippable" to "允许手动关闭弹窗",
-                    "key_popup_skip_delay" to "弹窗关闭延迟",
-                    "important_apps_list" to "触发弹窗应用名单",
-                    "enable_permanent_notification" to "常驻通知",
-                    "key_reminder_time" to "提前提醒时间",
-                    "key_unlock_global_alpha" to "解锁卡片透明度",
-                    "key_enable_enter_dev_mode" to "开发者模式权限",
+                    PreferenceKeys.THEME_MODE to getString(R.string.pref_theme_style),
+                    PreferenceKeys.ACCENT_COLOR to getString(R.string.pref_accent_color),
+                    PreferenceKeys.APP_LAYOUT_MODE to getString(R.string.pref_nav_mode),
+                    PreferenceKeys.HOME_LAYOUT_MODE to getString(R.string.pref_home_layout),
+                    PreferenceKeys.POPUP_REMINDER_ENABLED to getString(R.string.pref_popup_enabled),
+                    PreferenceKeys.POPUP_DURATION_SECONDS to getString(R.string.pref_popup_duration),
+                    PreferenceKeys.POPUP_SKIPPABLE to getString(R.string.pref_popup_skippable),
+                    PreferenceKeys.POPUP_SKIP_DELAY_SECONDS to getString(R.string.pref_popup_skip_delay),
+                    PreferenceKeys.POPUP_TARGET_APPS to getString(R.string.pref_popup_apps),
+                    PreferenceKeys.PERSISTENT_NOTIFICATION_ENABLED to getString(R.string.pref_persistent_notification),
+                    PreferenceKeys.REMINDER_LEAD_TIME to getString(R.string.pref_reminder_time),
+                    PreferenceKeys.CARD_ALPHA_UNLOCKED to getString(R.string.pref_unlock_alpha),
+                    PreferenceKeys.DEV_MODE_ENTRY_ENABLED to getString(R.string.pref_dev_mode),
 
                     // --- v0.9.0 新增项目 ---
-                    "key_swipe_left_action" to "向左滑动卡片操作",
-                    "key_swipe_right_action" to "向右滑动卡片操作",
-                    "key_app_icon" to "应用桌面图标样式",
-                    "key_auto_update" to "自动检查更新",
-                    "key_sync_update_urls" to "在线同步备用更新源",
-                    "key_custom_update_urls" to "自定义更新节点池",
-                    "key_log_persistence" to "日志持久化保存",
-                    "key_enable_about_easter_egg" to "“关于”页面彩蛋",
-                    "key_homepage_wallpaper" to "主页背景壁纸",
-                    "cover_book_all" to "全部日程默认封面",
-                    "cover_book_important" to "重点日程默认封面",
-                    "alpha_book_all" to "全部日程透明度",
-                    "alpha_book_important" to "重点日程透明度",
-                    "key_scrim_color_mode" to "背景遮罩颜色模式",
-                    "key_scrim_alpha" to "背景遮罩浓度",
-                    "key_scrim_custom_color" to "自定义背景遮罩色",
-                    "is_mtb_theme_enabled" to "MTB 动态主题开关",
-                    "key_agenda_view_mode" to "日程本列表视图模式"
+                    PreferenceKeys.SWIPE_LEFT_ACTION to getString(R.string.pref_swipe_left),
+                    PreferenceKeys.SWIPE_RIGHT_ACTION to getString(R.string.pref_swipe_right),
+                    PreferenceKeys.APP_ICON_ALIAS to getString(R.string.pref_app_icon),
+                    PreferenceKeys.AUTO_UPDATE_ENABLED to getString(R.string.pref_auto_update),
+                    PreferenceKeys.UPDATE_SOURCE_SYNC_ENABLED to getString(R.string.pref_sync_update_urls),
+                    PreferenceKeys.UPDATE_SOURCE_NODES to getString(R.string.pref_custom_update_urls),
+                    PreferenceKeys.LOG_PERSISTENCE_ENABLED to getString(R.string.pref_log_persistence),
+                    PreferenceKeys.ABOUT_EASTER_EGG_ENABLED to getString(R.string.pref_about_easter_egg),
+                    PreferenceKeys.HOME_WALLPAPER_URI to getString(R.string.pref_homepage_wallpaper),
+                    PreferenceKeys.DEFAULT_BOOK_COVER_ALL to getString(R.string.pref_cover_all),
+                    PreferenceKeys.DEFAULT_BOOK_COVER_IMPORTANT to getString(R.string.pref_cover_important),
+                    PreferenceKeys.DEFAULT_BOOK_ALPHA_ALL to getString(R.string.pref_alpha_all),
+                    PreferenceKeys.DEFAULT_BOOK_ALPHA_IMPORTANT to getString(R.string.pref_alpha_important),
+                    PreferenceKeys.SCRIM_COLOR_MODE to getString(R.string.pref_scrim_color_mode),
+                    PreferenceKeys.SCRIM_ALPHA to getString(R.string.pref_scrim_alpha),
+                    PreferenceKeys.SCRIM_CUSTOM_COLOR to getString(R.string.pref_scrim_custom_color),
+                    PreferenceKeys.MTB_THEME_ENABLED to getString(R.string.pref_mtb_enabled),
+                    PreferenceKeys.AGENDA_VIEW_IS_GRID to getString(R.string.pref_agenda_view_mode),
+                    // --- v0.9.1 新增项目 ---
+                    PreferenceKeys.DRAWER_HEADER_IMAGE_URI to getString(R.string.pref_drawer_header_image),
+                    PreferenceKeys.DRAWER_HEADER_IMAGE_ENABLED to getString(R.string.pref_drawer_header_image_enabled)
                 )
 
                 prefs.forEach { (key, value) ->
@@ -299,44 +357,37 @@ class BackupRestoreFragment : Fragment() {
 
                         // 如果是 MTB 生成的动态颜色代码，做友好的文字映射
                         val title = prefMapping[key] ?: when {
-                            key.startsWith("mtb_light_") -> "MTB 明色: ${key.removePrefix("mtb_light_")}"
-                            key.startsWith("mtb_dark_") -> "MTB 暗色: ${key.removePrefix("mtb_dark_")}"
+                            key.startsWith("mtb_light_") -> getString(R.string.backup_mtb_light, key.removePrefix("mtb_light_"))
+                            key.startsWith("mtb_dark_") -> getString(R.string.backup_mtb_dark, key.removePrefix("mtb_dark_"))
                             else -> key
                         }
-                        nodes.add(SelectableNode(NodeType.SETTING, "set_$key", title, value.toString(), true, rawSettingValue = value))
-                    }
-                }
-
-                prefs.forEach { (key, value) ->
-                    if (!key.startsWith("widget_") && !excludedKeys.contains(key)) {
-                        val title = prefMapping[key] ?: key
                         nodes.add(SelectableNode(NodeType.SETTING, "set_$key", title, value.toString(), true, rawSettingValue = value))
                     }
                 }
             }
 
             if (books.isNotEmpty()) {
-                nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", "日程集 (${books.size})", isExpanded = true, isChecked = true))
+                nodes.add(SelectableNode(NodeType.HEADER, "hdr_books", getString(R.string.backup_header_books, books.size), isExpanded = true, isChecked = true))
                 books.forEach { b ->
                     val raw = ExportAgendaBook(b.id, b.name, b.colorHex, if(b.coverImageUri != null) "cover" else null, b.cardAlpha, b.sortOrder)
                     val bookNode = SelectableNode(NodeType.BOOK, "book_${b.id}", b.name, null, true, rawBook = raw)
-                    bookNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${b.id}_color", "包含标识色", null, true, subOptionType = SubOptionType.COLOR))
-                    bookNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${b.id}_cover", "包含封面图", null, true, subOptionType = SubOptionType.COVER))
-                    bookNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${b.id}_alpha", "包含透明度", null, true, subOptionType = SubOptionType.ALPHA))
+                    bookNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${b.id}_color", getString(R.string.backup_sub_color), null, true, subOptionType = SubOptionType.COLOR))
+                    bookNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${b.id}_cover", getString(R.string.backup_sub_cover), null, true, subOptionType = SubOptionType.COVER))
+                    bookNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${b.id}_alpha", getString(R.string.backup_sub_alpha), null, true, subOptionType = SubOptionType.ALPHA))
                     nodes.add(bookNode)
                 }
             }
 
             if (events.isNotEmpty()) {
-                nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", "日程卡片 (${events.size})", isExpanded = true, isChecked = true))
+                nodes.add(SelectableNode(NodeType.HEADER, "hdr_events", getString(R.string.backup_header_events, events.size), isExpanded = true, isChecked = true))
                 val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 events.forEach { e ->
                     val raw = ExportEvent(e.title, e.targetDate.time, e.isImportant, e.bookId, e.colorHex, e.backgroundUri, e.isPinned, e.displayMode, e.cardAlpha)
-                    val sub = if (e.isImportant) "重点 · 目标: ${sdf.format(e.targetDate)}" else "目标: ${sdf.format(e.targetDate)}"
+                    val sub = if (e.isImportant) getString(R.string.backup_event_subtitle_important, sdf.format(e.targetDate)) else getString(R.string.backup_event_subtitle, sdf.format(e.targetDate))
                     val eventNode = SelectableNode(NodeType.EVENT, "event_${e.id}", e.title, sub, true, rawEvent = raw)
-                    eventNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${e.id}_color", "包含卡片颜色", null, true, subOptionType = SubOptionType.COLOR))
-                    eventNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${e.id}_cover", "包含背景图", null, true, subOptionType = SubOptionType.COVER))
-                    eventNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${e.id}_alpha", "包含显示设置", null, true, subOptionType = SubOptionType.ALPHA))
+                    eventNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${e.id}_color", getString(R.string.backup_sub_event_color), null, true, subOptionType = SubOptionType.COLOR))
+                    eventNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${e.id}_cover", getString(R.string.backup_sub_event_cover), null, true, subOptionType = SubOptionType.COVER))
+                    eventNode.children.add(SelectableNode(NodeType.SUB_OPTION, "${e.id}_alpha", getString(R.string.backup_sub_event_alpha), null, true, subOptionType = SubOptionType.ALPHA))
                     nodes.add(eventNode)
                 }
             }
@@ -370,14 +421,14 @@ class BackupRestoreFragment : Fragment() {
                     withContext(Dispatchers.Main) {
                         binding.root.findViewById<View>(R.id.fl_loading_overlay).visibility = View.GONE
                         fabExport.isEnabled = true
-                        Snackbar.make(binding.root, "备份已保存", Snackbar.LENGTH_LONG)
-                            .setAction("分享") {
+                        Snackbar.make(binding.root, R.string.backup_saved, Snackbar.LENGTH_LONG)
+                            .setAction(R.string.common_share) {
                                 val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                     type = "application/zip"
                                     putExtra(Intent.EXTRA_STREAM, targetUri)
                                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                 }
-                                startActivity(Intent.createChooser(shareIntent, "分享备份"))
+                                startActivity(Intent.createChooser(shareIntent, getString(R.string.backup_share_chooser)))
                             }.show()
                     }
                 }
@@ -386,7 +437,7 @@ class BackupRestoreFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     binding.root.findViewById<View>(R.id.fl_loading_overlay).visibility = View.GONE
                     fabExport.isEnabled = true
-                    Toast.makeText(requireContext(), "导出失败: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), getString(R.string.backup_export_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -403,18 +454,19 @@ class BackupRestoreFragment : Fragment() {
                 val parsedPackage = BackupManager.parseEyf(context, uri)
                 currentParsedPackage = parsedPackage
 
-                val analyzedNodes = ImportConflictAnalyzer.analyze(app.repository, preferenceManager, parsedPackage)
+                val analyzedNodes = ImportConflictAnalyzer.analyze(context, app.repository, preferenceManager, parsedPackage)
 
                 withContext(Dispatchers.Main) {
                     binding.root.findViewById<View>(R.id.fl_loading_overlay).visibility = View.GONE
                     if (analyzedNodes.isEmpty()) {
-                        Toast.makeText(context, "文件为空或格式错误", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.backup_empty_or_corrupt, Toast.LENGTH_SHORT).show()
                         llImportEmpty.visibility = View.VISIBLE
                         return@withContext
                     }
                     importAdapter.updateNodes(analyzedNodes)
                     rvImport.visibility = View.VISIBLE
                     fabImport.show()
+                    showImportMeta(parsedPackage)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -427,16 +479,42 @@ class BackupRestoreFragment : Fragment() {
         }
     }
 
+    /**
+     * 展示导入包的元信息：目标版本、导出时的升级代号、功能条目数。
+     * 旧包（v1.0 或没有 DocumentFeatures.json 的）只显示能拿到的部分。
+     */
+    private fun showImportMeta(parsed: BackupManager.ParsedEyfPackage) {
+        val meta = importView.findViewById<android.widget.TextView>(R.id.tv_import_meta) ?: return
+        val version = AppVersion.fromInternalCode(parsed.appVersionCode)
+
+        val parts = mutableListOf<String>()
+        parts += getString(R.string.import_meta_origin, version.versionName)
+
+        // 升级代号只在开发者模式打开时显示 —— 它本来就属于开发者信息
+        if (preferenceManager.isEnableEnterDevMode() && parsed.upgradeCode != null) {
+            parts += getString(
+                R.string.import_meta_upgrade_code,
+                parsed.upgradeCodeLabel ?: "",
+                parsed.upgradeCode
+            )
+        }
+
+        parsed.features?.let { parts += getString(R.string.import_meta_features, it.featureCount) }
+
+        meta.text = parts.joinToString("  ·  ")
+        meta.visibility = View.VISIBLE
+    }
+
     private fun executeImport() {
         val selectedNodes = importAdapter.getRootNodes()
         if (selectedNodes.none { it.isChecked && it.type != NodeType.HEADER }) {
-            Toast.makeText(requireContext(), "请选择导入项", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.backup_select_import_items, Toast.LENGTH_SHORT).show()
             return
         }
 
         val parsedPackage = currentParsedPackage
         if (parsedPackage == null) {
-            Toast.makeText(requireContext(), "内部错误：解析包丢失", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), R.string.backup_internal_error, Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -455,8 +533,8 @@ class BackupRestoreFragment : Fragment() {
 
                 withContext(Dispatchers.Main) {
                     binding.root.findViewById<View>(R.id.fl_loading_overlay).visibility = View.GONE
-                    Snackbar.make(binding.root, "导入成功！建议重启应用", Snackbar.LENGTH_INDEFINITE)
-                        .setAction("重启") { requireActivity().recreate() }.show()
+                    Snackbar.make(binding.root, R.string.backup_imported_restart_hint, Snackbar.LENGTH_INDEFINITE)
+                        .setAction(R.string.backup_restart_action) { requireActivity().recreate() }.show()
 
                     rvImport.visibility = View.GONE
                     fabImport.hide()
@@ -468,7 +546,7 @@ class BackupRestoreFragment : Fragment() {
                 withContext(Dispatchers.Main) {
                     binding.root.findViewById<View>(R.id.fl_loading_overlay).visibility = View.GONE
                     fabImport.isEnabled = true
-                    Toast.makeText(requireContext(), "导入失败: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(requireContext(), getString(R.string.backup_import_failed, e.message ?: ""), Toast.LENGTH_LONG).show()
                 }
             }
         }

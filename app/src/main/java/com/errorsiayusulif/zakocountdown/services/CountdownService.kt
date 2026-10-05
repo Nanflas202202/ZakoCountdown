@@ -19,6 +19,7 @@ import androidx.core.net.toUri
 import com.errorsiayusulif.zakocountdown.MainActivity
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.ZakoCountdownApplication
+import com.errorsiayusulif.zakocountdown.utils.LocaleHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -40,6 +41,11 @@ class CountdownService : Service() {
         const val ACTION_UPDATE = "com.errorsiayusulif.zakocountdown.services.UPDATE_NOTIFICATION"
     }
 
+    /** 让 Service 里的 getString / 通知文案跟随用户选择的语言 */
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(LocaleHelper.wrap(newBase))
+    }
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -53,8 +59,8 @@ class CountdownService : Service() {
         val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE)
         val initialNotification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("ZakoCountdown 服务正在运行")
-            .setContentText("正在准备倒计时数据...")
+            .setContentTitle(getString(R.string.service_running_title))
+            .setContentText(getString(R.string.service_running_text))
             .setContentIntent(pendingIntent)
             .build()
 
@@ -95,7 +101,7 @@ class CountdownService : Service() {
             val repo = (application as ZakoCountdownApplication).repository
             val importantEvents = repo.getImportantEvents()
             val contentText = if (importantEvents.isEmpty()) {
-                "没有需要提醒的重点日程"
+                getString(R.string.service_no_important_events)
             } else {
                 importantEvents.take(2).joinToString("\n") { event ->
                     val now = Date()
@@ -104,11 +110,11 @@ class CountdownService : Service() {
                     val hours = TimeUnit.MILLISECONDS.toHours(diff) % 24
                     val minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60
                     val timeString = when {
-                        days > 0 -> "${days}天 ${hours}小时"
-                        hours > 0 -> "${hours}小时 ${minutes}分钟"
-                        else -> "${minutes}分钟"
+                        days > 0 -> getString(R.string.duration_days_hours, days.toInt(), hours.toInt())
+                        hours > 0 -> getString(R.string.duration_hours_minutes, hours.toInt(), minutes.toInt())
+                        else -> getString(R.string.duration_minutes, minutes.toInt())
                     }
-                    if (diff < 0) "「${event.title}」已过期" else "距离「${event.title}」还有 $timeString"
+                    if (diff < 0) getString(R.string.service_event_expired, event.title) else getString(R.string.service_event_remaining, event.title, timeString)
                 }
             }
 
@@ -126,7 +132,7 @@ class CountdownService : Service() {
             )
 
             val updatedNotification = NotificationCompat.Builder(this@CountdownService, CHANNEL_ID)
-                .setContentTitle("杂～鱼～❤️")
+                .setContentTitle(getString(R.string.service_friendly_title))
                 .setStyle(NotificationCompat.BigTextStyle().bigText(contentText))
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentIntent(pendingIntent)
@@ -158,10 +164,10 @@ class CountdownService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
-                "ZakoCountdown 常驻服务",
+                getString(R.string.service_channel_persistent_title),
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "用于在后台更新常驻通知"
+                description = getString(R.string.service_channel_persistent_desc)
             }
             (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
                 .createNotificationChannel(serviceChannel)

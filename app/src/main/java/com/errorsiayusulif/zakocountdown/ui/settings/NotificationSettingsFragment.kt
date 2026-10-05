@@ -18,12 +18,13 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreferenceCompat
+import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.services.CountdownService
 import com.errorsiayusulif.zakocountdown.utils.PermissionUtils
 
-class NotificationSettingsFragment : PreferenceFragmentCompat() {
+class NotificationSettingsFragment : ZakoPreferenceFragment() {
     override fun onViewCreated(view: android.view.View, savedInstanceState: android.os.Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine.applyToPreferenceFragment(this)
@@ -32,11 +33,11 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            val pref = findPreference<SwitchPreferenceCompat>("enable_permanent_notification")
+            val pref = findPreference<SwitchPreferenceCompat>(PreferenceKeys.PERSISTENT_NOTIFICATION_ENABLED)
             if (isGranted) {
                 startCountdownService()
             } else {
-                Toast.makeText(requireContext(), "需要通知权限才能开启常驻通知", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.notify_permission_needed, Toast.LENGTH_SHORT).show()
                 pref?.isChecked = false
             }
         }
@@ -57,12 +58,12 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupListeners() {
-        findPreference<SwitchPreferenceCompat>("enable_permanent_notification")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<SwitchPreferenceCompat>(PreferenceKeys.PERSISTENT_NOTIFICATION_ENABLED)?.setOnPreferenceChangeListener { _, newValue ->
             if (newValue as Boolean) { checkNotificationPermissionAndStartService() }
             else { stopCountdownService() }
             true
         }
-        findPreference<ListPreference>("key_reminder_time")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<ListPreference>(PreferenceKeys.REMINDER_LEAD_TIME)?.setOnPreferenceChangeListener { _, newValue ->
             appPreferenceManager.saveReminderTime(newValue as String)
             // TODO: 在这里添加一个重新调度所有闹钟的逻辑
             true
@@ -72,19 +73,19 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
                 val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
                     putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
                 }
-                startActivitySafely(intent, "无法打开通知设置")
+                startActivitySafely(intent, getString(R.string.perm_error_notification_settings))
             }
             true
         }
         findPreference<Preference>("permission_exact_alarm")?.setOnPreferenceClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                startActivitySafely(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM), "无法打开权限页面")
+                startActivitySafely(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM), getString(R.string.perm_error_alarm_settings))
             }
             true
         }
         findPreference<Preference>("permission_autostart")?.setOnPreferenceClickListener {
             PermissionUtils.getAutostartIntent(requireContext())?.let {
-                startActivitySafely(it, "无法跳转到自启设置页面")
+                startActivitySafely(it, getString(R.string.perm_error_autostart_settings))
             }; true
         }
         findPreference<Preference>("permission_battery_optimization")?.setOnPreferenceClickListener {
@@ -92,7 +93,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
                 val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
                     data = Uri.parse("package:${requireActivity().packageName}")
                 }
-                startActivitySafely(intent, "无法打开电池优化页面")
+                startActivitySafely(intent, getString(R.string.perm_error_battery_settings))
             }
             true
         }
@@ -114,7 +115,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
         val pref = findPreference<Preference>("permission_notification") ?: return
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val isGranted = ContextCompat.checkSelfPermission(requireContext(), android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            pref.summary = if (isGranted) "已授予" else "未授予，点击设置"
+            pref.summary = if (isGranted) getString(R.string.perm_summary_granted) else getString(R.string.perm_summary_not_granted_tap)
             pref.isEnabled = !isGranted
         } else {
             pref.isVisible = false
@@ -142,7 +143,7 @@ class NotificationSettingsFragment : PreferenceFragmentCompat() {
             pref.isVisible = true
             val pm = requireContext().getSystemService(Context.POWER_SERVICE) as PowerManager
             val isIgnoring = pm.isIgnoringBatteryOptimizations(requireContext().packageName)
-            pref.summary = if (isIgnoring) "已设为“无限制”" else "当前未豁免。点击设置。"
+            pref.summary = if (isIgnoring) getString(R.string.perm_summary_unrestricted) else getString(R.string.perm_summary_not_exempt)
             pref.isEnabled = !isIgnoring
         } else {
             pref.isVisible = false

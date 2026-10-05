@@ -16,7 +16,7 @@
             android:id="@+id/text_view_prefix_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="距离"
+            android:text="@string/countdown_distance"
             android:textAppearance="?attr/textAppearanceTitleMedium"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -63,7 +63,7 @@
             android:id="@+id/text_view_days_suffix"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="天"
+            android:text="@string/unit_day"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             app:layout_constraintBaseline_toBaselineOf="@id/text_view_label"
             app:layout_constraintStart_toEndOf="@id/text_view_days"

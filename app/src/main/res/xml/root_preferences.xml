@@ -3,39 +3,45 @@
 
     <Preference
         app:key="nav_to_personalization"
-        app:title="个性化"
-        app:summary="主题、颜色、背景图"
+        app:title="@string/settings_personalization"
+        app:summary="@string/settings_personalization_summary"
         app:icon="@drawable/ic_personalization"/>
 
     <Preference
+        app:key="nav_to_language"
+        app:title="@string/settings_language"
+        app:summary="@string/settings_language_summary"
+        app:icon="@drawable/ic_info"/>
+
+    <Preference
         app:key="nav_to_notifications"
-        app:title="通知与提醒"
-        app:summary="常驻通知、定时提醒"
+        app:title="@string/settings_notifications"
+        app:summary="@string/settings_notifications_summary"
         app:icon="@drawable/ic_notifications"/>
 
 
     <Preference
         app:key="nav_to_permissions"
-        app:title="权限中心"
-        app:summary="检查并授予所有必要的后台与特殊权限"
+        app:title="@string/settings_permissions"
+        app:summary="@string/settings_permissions_summary"
         app:icon="@drawable/ic_security"/>
 
     <Preference
         app:key="nav_to_backup_restore"
-        app:title="数据备份与迁移"
-        app:summary="导出或导入 EYF 格式数据包"
+        app:title="@string/settings_backup"
+        app:summary="@string/settings_backup_summary"
         app:icon="@drawable/ic_backup"/>
 
     <Preference
         app:key="nav_to_advanced"
-        app:title="高级功能"
-        app:summary="开屏弹窗、微件"
+        app:title="@string/settings_advanced"
+        app:summary="@string/settings_advanced_summary"
         app:icon="@drawable/ic_advanced"/>
 
     <Preference
         app:key="nav_to_about"
-        app:title="关于"
-        app:summary="版本信息、开发者"
+        app:title="@string/settings_about"
+        app:summary="@string/settings_about_summary"
         app:icon="@drawable/ic_info"/>
 
 </PreferenceScreen>

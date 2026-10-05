@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  每新增一种语言，只需：
+  1. 新建 res/values-<语言代码>/strings.xml（例如 values-ja/、values-zh-rTW/）
+  2. 在本文件里追加一行 <locale android:name="..."/>
+  Android 13+ 的「系统设置 → 应用 → 语言」会自动识别这里声明的语言。
+-->
+<locale-config xmlns:android="http://schemas.android.com/apk/res/android">
+    <locale android:name="en" />
+    <locale android:name="zh-CN" />
+</locale-config>

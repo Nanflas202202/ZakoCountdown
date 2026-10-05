@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.util.Log
+import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.CountdownEvent
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.receiver.ReminderReceiver
@@ -51,9 +52,9 @@ object AlarmScheduler {
         }
 
         val timeDescription = when (reminderTime) {
-            PreferenceManager.REMINDER_TIME_1_DAY -> "1天"
-            PreferenceManager.REMINDER_TIME_3_DAYS -> "3天"
-            PreferenceManager.REMINDER_TIME_1_WEEK -> "1周"
+            PreferenceManager.REMINDER_TIME_1_DAY -> context.getString(R.string.reminder_short_1_day)
+            PreferenceManager.REMINDER_TIME_3_DAYS -> context.getString(R.string.reminder_short_3_days)
+            PreferenceManager.REMINDER_TIME_1_WEEK -> context.getString(R.string.reminder_short_1_week)
             else -> ""
         }
 

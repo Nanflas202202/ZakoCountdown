@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- file: res/xml/language_preferences.xml
+     语言设置。新增语言时请在 res/values/arrays.xml 的
+     language_entries / language_values 中追加一项。 -->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory app:title="@string/settings_language">
+
+        <ListPreference
+            app:key="app_language"
+            app:title="@string/settings_language"
+            app:summary="@string/settings_language_summary"
+            app:entries="@array/language_entries"
+            app:entryValues="@array/language_values"
+            app:useSimpleSummaryProvider="true"
+            app:defaultValue="system" />
+
+        <Preference
+            app:key="language_restart_hint"
+            app:title="@string/language_restart_hint"
+            app:summary="@string/language_restart_hint_summary"
+            app:selectable="false" />
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

@@ -20,14 +20,13 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceFragmentCompat
+import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.FragmentOobeEulaBinding
 import com.errorsiayusulif.zakocountdown.utils.AccessibilityStatusHelper
 import com.errorsiayusulif.zakocountdown.utils.MtbThemeHelper
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
 import java.io.InputStream
 
 // ==========================================
@@ -55,8 +54,8 @@ class OobeEulaFragment : Fragment() {
             if (isChecked) {
                 when (checkedId) {
                     R.id.btn_eula_eys -> loadLicenseText(R.raw.eula)
-                    R.id.btn_eula_zh -> loadLicenseText(R.raw.license_zh)
-                    R.id.btn_eula_en -> loadLicenseText(R.raw.license_en)
+                    R.id.btn_eula_zh -> loadLicenseText(R.raw.license_mpl_zh)
+                    R.id.btn_eula_en -> loadLicenseText(R.raw.license_mpl_en)
                 }
             }
         }
@@ -78,7 +77,7 @@ class OobeEulaFragment : Fragment() {
             val text = inputStream.bufferedReader().use { it.readText() }
             binding.eulaTextView.text = text
         } catch (e: Exception) {
-            binding.eulaTextView.text = "协议加载失败，请重试。"
+            binding.eulaTextView.text = getString(R.string.about_license_load_failed)
         }
     }
 
@@ -91,7 +90,9 @@ class OobeEulaFragment : Fragment() {
 // ==========================================
 // 3. 权限引导页面 (采用 Preference 列表)
 // ==========================================
-class OobePermissionsFragment : PreferenceFragmentCompat() {
+class OobePermissionsFragment : ZakoPreferenceFragment() {
+    /** 引导流程保持朴素样式，不套 M3E 卡片。 */
+    override fun useExpressiveCards(): Boolean = false
 
     private val requestNotificationLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) updatePermissionVisibility()
@@ -105,7 +106,7 @@ class OobePermissionsFragment : PreferenceFragmentCompat() {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 requestNotificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             } else {
-                Toast.makeText(context, "您的系统版本无需手动授予此权限", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, R.string.perm_no_manual_grant, Toast.LENGTH_SHORT).show()
             }
             true
         }
@@ -173,7 +174,9 @@ class OobePermissionsFragment : PreferenceFragmentCompat() {
 // ==========================================
 // 4. 自定义偏好设置页面 (采用 Preference 列表)
 // ==========================================
-class OobeCustomizationFragment : PreferenceFragmentCompat() {
+class OobeCustomizationFragment : ZakoPreferenceFragment() {
+    /** 引导流程保持朴素样式，不套 M3E 卡片。 */
+    override fun useExpressiveCards(): Boolean = false
 
     private lateinit var appPrefManager: PreferenceManager
 
@@ -183,7 +186,7 @@ class OobeCustomizationFragment : PreferenceFragmentCompat() {
                 val takeFlags: Int = Intent.FLAG_GRANT_READ_URI_PERMISSION
                 requireActivity().contentResolver.takePersistableUriPermission(it, takeFlags)
                 appPrefManager.saveHomepageWallpaperUri(it.toString())
-                Toast.makeText(requireContext(), "主页壁纸已设置", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), R.string.oobe_wallpaper_set, Toast.LENGTH_SHORT).show()
             } catch (e: Exception) {}
         }
     }
@@ -191,9 +194,16 @@ class OobeCustomizationFragment : PreferenceFragmentCompat() {
     private val importMtbLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
             lifecycleScope.launch {
-                val success = MtbThemeHelper.importThemeJson(requireContext(), it, appPrefManager)
-                if (success) Toast.makeText(requireContext(), "动态主题导入成功！", Toast.LENGTH_SHORT).show()
-                else Toast.makeText(requireContext(), "导入失败: JSON格式错误", Toast.LENGTH_SHORT).show()
+                val saved = MtbThemeHelper.importTheme(requireContext(), it, appPrefManager)
+                if (saved != null) {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.oobe_theme_imported_named, saved.name),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(requireContext(), R.string.oobe_theme_import_failed, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
@@ -209,14 +219,14 @@ class OobeCustomizationFragment : PreferenceFragmentCompat() {
             true
         }
         // --- 更换应用图标 ---
-        findPreference<ListPreference>("key_app_icon")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<ListPreference>(PreferenceKeys.APP_ICON_ALIAS)?.setOnPreferenceChangeListener { _, newValue ->
             val aliasName = newValue as String
             com.errorsiayusulif.zakocountdown.utils.IconSwitchHelper.switchIcon(requireContext(), aliasName)
 
             // 提示用户
             Toast.makeText(
                 requireContext(),
-                "图标已更改！系统可能需要几秒钟刷新，部分手机桌面可能会短暂闪烁。",
+                getString(R.string.theme_icon_changed_oobe),
                 Toast.LENGTH_LONG
             ).show()
             true
@@ -226,7 +236,7 @@ class OobeCustomizationFragment : PreferenceFragmentCompat() {
         val mtbPref = findPreference<Preference>("oobe_import_mtb")
 
         // 动态构建颜色列表 (含 MTB 选项)
-        val entriesList = mutableListOf("跟随壁纸 (Monet)", "活力粉", "天空蓝", "自定义导入的动态主题")
+        val entriesList = resources.getStringArray(R.array.color_entries).toMutableList().apply { add(getString(R.string.theme_custom_mtb)) }
         val valuesList = mutableListOf(PreferenceManager.ACCENT_MONET, PreferenceManager.ACCENT_PINK, PreferenceManager.ACCENT_BLUE, "CUSTOM_MTB")
         accentPref?.entries = entriesList.toTypedArray()
         accentPref?.entryValues = valuesList.toTypedArray()
@@ -238,7 +248,7 @@ class OobeCustomizationFragment : PreferenceFragmentCompat() {
         }
 
         mtbPref?.setOnPreferenceClickListener {
-            importMtbLauncher.launch(arrayOf("application/json", "*/*"))
+            importMtbLauncher.launch(arrayOf("application/json", "application/zip", "*/*"))
             true
         }
 
@@ -251,16 +261,16 @@ class OobeCustomizationFragment : PreferenceFragmentCompat() {
         super.onResume()
 
         // 动态检查无障碍权限，控制弹窗功能的显示
-        val featuresCategory = findPreference<PreferenceCategory>("cat_features")
+        val featuresCategory = findPreference<PreferenceCategory>(PreferenceKeys.OOBE_FEATURES_CATEGORY)
         val hasAccessibility = AccessibilityStatusHelper.isAccessibilityServiceEnabled(requireContext())
 
         if (!hasAccessibility) {
             // 如果没给权限，直接隐藏开屏弹窗功能
-            findPreference<Preference>("enable_popup_reminder")?.isVisible = false
-            findPreference<Preference>("key_popup_duration")?.isVisible = false
+            findPreference<Preference>(PreferenceKeys.POPUP_REMINDER_ENABLED)?.isVisible = false
+            findPreference<Preference>(PreferenceKeys.POPUP_DURATION_SECONDS)?.isVisible = false
         } else {
-            findPreference<Preference>("enable_popup_reminder")?.isVisible = true
-            findPreference<Preference>("key_popup_duration")?.isVisible = true
+            findPreference<Preference>(PreferenceKeys.POPUP_REMINDER_ENABLED)?.isVisible = true
+            findPreference<Preference>(PreferenceKeys.POPUP_DURATION_SECONDS)?.isVisible = true
         }
     }
 }

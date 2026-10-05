@@ -16,20 +16,23 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SeekBarPreference
+import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
 import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import com.errorsiayusulif.zakocountdown.utils.MtbThemeHelper
+import com.errorsiayusulif.zakocountdown.utils.NavModeHelper
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 
-class PersonalizationFragment : PreferenceFragmentCompat() {
+class PersonalizationFragment : ZakoPreferenceFragment() {
 
     private lateinit var appPreferenceManager: PreferenceManager
     private lateinit var paletteContainer: View
@@ -50,10 +53,35 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
                     val file = File(context.filesDir, "home_wallpaper_cache.png")
                     FileOutputStream(file).use { output -> inputStream.use { input -> input.copyTo(output) } }
                     appPreferenceManager.saveHomepageWallpaperUri(Uri.fromFile(file).toString())
-                    Toast.makeText(context, "壁纸设置成功", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, R.string.personalization_wallpaper_set, Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "设置失败: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), getString(R.string.common_failed, e.message ?: ""), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /**
+     * 侧滑栏顶部图像。
+     * 与主页壁纸同样先拷贝到私有沙盒再记 URI —— 系统授予的 content:// 权限是临时的，
+     * 直接存原 URI 会导致重启后侧滑栏图像丢失。
+     */
+    private val pickDrawerHeaderLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { sourceUri ->
+            try {
+                val context = requireContext()
+                val inputStream = context.contentResolver.openInputStream(sourceUri)
+                if (inputStream != null) {
+                    val file = File(context.filesDir, "drawer_header_cache.png")
+                    FileOutputStream(file).use { output -> inputStream.use { input -> input.copyTo(output) } }
+                    appPreferenceManager.saveDrawerHeaderImageUri(Uri.fromFile(file).toString())
+                    // 用户刚选完图，顺手把开关打开，否则看不到任何变化会以为没生效
+                    appPreferenceManager.setDrawerHeaderImageEnabled(true)
+                    Toast.makeText(context, R.string.personalization_drawer_header_set, Toast.LENGTH_SHORT).show()
+                    activity?.recreate()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), getString(R.string.common_failed, e.message ?: ""), Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -61,13 +89,17 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
     private val importMtbJsonLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
             lifecycleScope.launch {
-                val success = MtbThemeHelper.importThemeJson(requireContext(), it, appPreferenceManager)
-                if (success) {
-                    Toast.makeText(requireContext(), "主题导入成功", Toast.LENGTH_SHORT).show()
+                val saved = MtbThemeHelper.importTheme(requireContext(), it, appPreferenceManager)
+                if (saved != null) {
+                    Toast.makeText(
+                        requireContext(),
+                        getString(R.string.personalization_theme_imported_named, saved.name),
+                        Toast.LENGTH_SHORT
+                    ).show()
                     // 重新加载 Activity 以应用新主题
                     activity?.recreate()
                 } else {
-                    Toast.makeText(requireContext(), "导入失败: JSON格式错误", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), R.string.personalization_theme_import_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -80,8 +112,8 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
 
         // --- 核心防御 ---
         // 手动检查并修复所有可能的 ListPreference，防止 XML 配置丢失导致崩溃
-        safeCheckListPreference("theme", R.array.theme_entries, R.array.theme_values)
-        safeCheckListPreference("key_scrim_color_mode", R.array.scrim_color_entries, R.array.scrim_color_values)
+        safeCheckListPreference(PreferenceKeys.THEME_MODE, R.array.theme_entries, R.array.theme_values)
+        safeCheckListPreference(PreferenceKeys.SCRIM_COLOR_MODE, R.array.scrim_color_entries, R.array.scrim_color_values)
 
         setupPreferenceListeners()
     }
@@ -110,6 +142,45 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         updateThemePreferenceState()
         // 动态更新强调色选项 (包含 Monet 逻辑)
         updateAccentColorOptions()
+        // 非侧滑导航模式下，侧滑栏根本出不来，相关设置一并禁用
+        updateDrawerPreferenceState()
+        // 导入/删除主题后，摘要里的套数要跟着变
+        updateSavedThemesSummary()
+    }
+
+    /** 刷新「已保存的主题」摘要，显示当前存了几套。 */
+    private fun updateSavedThemesSummary() {
+        val pref = findPreference<Preference>("saved_themes") ?: return
+        val count = MtbThemeHelper.savedThemes(requireContext()).size
+        pref.summary = if (count == 0) {
+            getString(R.string.personalization_saved_themes_summary_empty)
+        } else {
+            getString(R.string.personalization_saved_themes_summary, count)
+        }
+    }
+
+    /**
+     * 侧滑栏相关的个性化设置（抽屉顶图）只在「侧滑抽屉」导航形态下有意义。
+     *
+     * 底部导航栏 / 紧凑模式下用了底部栏，抽屉既看不到也打不开，
+     * 所以这里直接**隐藏**整组设置（而不是置灰）—— 置灰会让人以为功能坏了，
+     * 隐藏才是「不提供无关选项」的正确做法。切回侧滑抽屉后自动恢复。
+     */
+    private fun updateDrawerPreferenceState() {
+        val drawerAvailable = NavModeHelper.isDrawer(requireContext())
+
+        // 整组一起隐藏，包括分类标题
+        findPreference<androidx.preference.PreferenceCategory>(PreferenceKeys.CATEGORY_DRAWER_HEADER)?.let {
+            it.isVisible = drawerAvailable
+        }
+
+        listOf(
+            PreferenceKeys.DRAWER_HEADER_IMAGE_ENABLED,
+            PreferenceKeys.DRAWER_HEADER_PICK,
+            PreferenceKeys.DRAWER_HEADER_CLEAR
+        ).forEach { key ->
+            findPreference<Preference>(key)?.isVisible = drawerAvailable
+        }
     }
 
     /**
@@ -131,7 +202,7 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
     }
 
     private fun setupPreferenceListeners() {
-        findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
+        findPreference<ListPreference>(PreferenceKeys.THEME_MODE)?.setOnPreferenceChangeListener { _, newValue ->
             val theme = newValue as String
             appPreferenceManager.saveTheme(theme)
             // 主题改变，可能影响 Monet 的可用性，重新计算
@@ -154,7 +225,13 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         }
 
         findPreference<Preference>("import_mtb_theme")?.setOnPreferenceClickListener {
-            importMtbJsonLauncher.launch(arrayOf("application/json", "*/*"))
+            importMtbJsonLauncher.launch(arrayOf("application/json", "application/zip", "*/*"))
+            true
+        }
+
+        findPreference<Preference>("saved_themes")?.setOnPreferenceClickListener {
+            // 二级页面展示全部已保存主题（列表形式，含色块 / 名称 / 导入时间）
+            findNavController().navigate(R.id.action_personalizationFragment_to_savedThemesFragment)
             true
         }
 
@@ -169,20 +246,43 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
             true
         }
 
-        findPreference<ListPreference>("key_scrim_color_mode")?.setOnPreferenceChangeListener { _, newValue ->
+        // ==========================================
+        // v0.9.1 新增：侧滑栏顶部图像自定义
+        // ==========================================
+        findPreference<androidx.preference.SwitchPreferenceCompat>(PreferenceKeys.DRAWER_HEADER_IMAGE_ENABLED)
+            ?.setOnPreferenceChangeListener { _, newValue ->
+                appPreferenceManager.setDrawerHeaderImageEnabled(newValue as Boolean)
+                // 抽屉头部由 MainActivity 渲染，重建才能立刻看到效果
+                activity?.recreate()
+                true
+            }
+
+        findPreference<Preference>("drawer_header_pick")?.setOnPreferenceClickListener {
+            pickDrawerHeaderLauncher.launch(arrayOf("image/*"))
+            true
+        }
+
+        findPreference<Preference>("drawer_header_clear")?.setOnPreferenceClickListener {
+            appPreferenceManager.saveDrawerHeaderImageUri(null)
+            Toast.makeText(requireContext(), R.string.personalization_drawer_header_cleared, Toast.LENGTH_SHORT).show()
+            activity?.recreate()
+            true
+        }
+
+        findPreference<ListPreference>(PreferenceKeys.SCRIM_COLOR_MODE)?.setOnPreferenceChangeListener { _, newValue ->
             updatePaletteVisibility(newValue as String)
             true
         }
     }
 
     private fun updateThemePreferenceState() {
-        val themePref = findPreference<ListPreference>("theme") ?: return
+        val themePref = findPreference<ListPreference>(PreferenceKeys.THEME_MODE) ?: return
         val isCompact = appPreferenceManager.getHomeLayoutMode() == PreferenceManager.HOME_LAYOUT_COMPACT
         val isLegacyUnlocked = appPreferenceManager.isLegacyThemeUnlockedInCompact()
 
         if (isCompact && !isLegacyUnlocked) {
             themePref.isEnabled = false
-            themePref.summary = "紧凑模式强制使用 MD3"
+            themePref.summary = getString(R.string.theme_md3_forced_compact)
         } else {
             themePref.isEnabled = true
             themePref.summary = themePref.entry
@@ -202,19 +302,24 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         val entriesList = mutableListOf<String>()
         val valuesList = mutableListOf<String>()
 
+        // 强调色名称统一从已本地化的数组资源读取，避免任何硬编码文案
+        val localizedAccentNames = resources.getStringArray(R.array.color_entries)
+        fun accentName(index: Int, fallbackRes: Int): String =
+            localizedAccentNames.getOrNull(index) ?: getString(fallbackRes)
+
         if (isMonetSupported) {
-            entriesList.add("跟随壁纸 (Monet)")
+            entriesList.add(accentName(0, R.string.personalization_accent_color))
             valuesList.add(PreferenceManager.ACCENT_MONET)
         }
 
-        entriesList.add("活力粉")
+        entriesList.add(accentName(1, R.string.personalization_accent_color))
         valuesList.add(PreferenceManager.ACCENT_PINK)
 
-        entriesList.add("天空蓝")
+        entriesList.add(accentName(2, R.string.personalization_accent_color))
         valuesList.add(PreferenceManager.ACCENT_BLUE)
 
         if (isMtbEnabled) {
-            entriesList.add("自定义导入的动态主题")
+            entriesList.add(getString(R.string.theme_custom_mtb))
             valuesList.add(PreferenceManager.ACCENT_CUSTOM_MTB)
         }
 
@@ -223,7 +328,7 @@ class PersonalizationFragment : PreferenceFragmentCompat() {
         // 核心防御：绝对不能传入空数组
         if (entriesList.isEmpty() || valuesList.isEmpty()) {
             Log.e("ZakoDebug", "FATAL: Accent color arrays are empty! Forcing fallback.")
-            entriesList.add("天空蓝")
+            entriesList.add(accentName(2, R.string.personalization_accent_color))
             valuesList.add(PreferenceManager.ACCENT_BLUE)
         }
 

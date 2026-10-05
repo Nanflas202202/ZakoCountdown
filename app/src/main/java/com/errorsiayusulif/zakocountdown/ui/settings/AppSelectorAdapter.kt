@@ -37,7 +37,7 @@ class AppSelectorAdapter(
 
             // --- 修复 Bug 1: 动态设置 Switch 颜色 ---
             // 获取当前主题的主色 (Primary)
-            val colorPrimary = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorPrimary)
+            val colorPrimary = MaterialColors.getColor(binding.root, android.R.attr.colorPrimary)
             val colorSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorSurfaceVariant)
             val colorOnSurface = MaterialColors.getColor(binding.root, com.google.android.material.R.attr.colorOnSurface)
 
