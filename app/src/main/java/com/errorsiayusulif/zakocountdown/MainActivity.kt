@@ -78,6 +78,66 @@ class MainActivity : LocalizedActivity() {
         }
     }
 
+    /**
+     * 侧滑栏**头像**选择器。
+     *
+     * 与 [drawerHeaderPicker] 是两个独立入口：
+     *   · 本方法 → 圆形头像（原来放 Logo 的那一格）
+     *   · drawerHeaderPicker → 头部背景图
+     * 用户明确反馈过这两张是两回事，所以偏好键与入口都分开。
+     */
+    private val drawerAvatarPicker = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri: android.net.Uri? ->
+        uri ?: return@registerForActivityResult
+        try {
+            val inputStream = contentResolver.openInputStream(uri) ?: return@registerForActivityResult
+            val file = java.io.File(filesDir, DRAWER_AVATAR_CACHE_FILE)
+            java.io.FileOutputStream(file).use { output ->
+                inputStream.use { input -> input.copyTo(output) }
+            }
+            preferenceManager.saveDrawerAvatarUri(android.net.Uri.fromFile(file).toString())
+            applyUniversalDynamicTheme()
+            android.widget.Toast.makeText(
+                this, R.string.personalization_drawer_avatar_set, android.widget.Toast.LENGTH_SHORT
+            ).show()
+        } catch (e: Exception) {
+            android.widget.Toast.makeText(
+                this, getString(R.string.common_failed, e.message ?: ""), android.widget.Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    /** 编辑头像下方的自定义名称。留空即恢复默认应用名。 */
+    private fun showDrawerNameDialog() {
+        val input = android.widget.EditText(this).apply {
+            hint = getString(R.string.personalization_drawer_name_hint)
+            setText(preferenceManager.getDrawerCustomName() ?: "")
+            setSelection(text.length)
+        }
+        val container = android.widget.FrameLayout(this).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.personalization_drawer_name)
+            .setView(container)
+            .setPositiveButton(R.string.common_save) { _, _ ->
+                // 空白 → 存 null，读取时自然回退到默认应用名
+                val name = input.text?.toString()?.trim().orEmpty()
+                preferenceManager.saveDrawerCustomName(name.ifBlank { null })
+                applyUniversalDynamicTheme()
+            }
+            .setNeutralButton(R.string.personalization_drawer_name_reset) { _, _ ->
+                preferenceManager.saveDrawerCustomName(null)
+                applyUniversalDynamicTheme()
+            }
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         preferenceManager = PreferenceManager(this)
 
@@ -174,6 +234,7 @@ class MainActivity : LocalizedActivity() {
         val imageView = headerView.findViewById<android.widget.ImageView>(R.id.drawer_header_image)
         val scrimView = headerView.findViewById<View>(R.id.drawer_header_scrim)
         val pickButton = headerView.findViewById<android.widget.ImageView>(R.id.btn_pick_header_image)
+        val logoView = headerView.findViewById<android.widget.ImageView>(R.id.drawer_logo)
 
         val imageUri = preferenceManager.getDrawerHeaderImageUri()
         val useImage = preferenceManager.isDrawerHeaderImageEnabled() && !imageUri.isNullOrBlank()
@@ -183,6 +244,9 @@ class MainActivity : LocalizedActivity() {
             scrimView?.visibility = View.VISIBLE
             // 自定义图像自带背景，头部底色透不出来，避免边缘露色
             headerView.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+            // ⚠️ 背景图**不做圆形裁剪** —— 它铺满整块头部，
+            // 圆形裁剪只会让它变成中间一个圆、四周露底色。
+            // （圆形裁剪是**头像**那一格的事，见下面 logoView 的处理。）
             imageView?.load(imageUri) { crossfade(true) }
         } else {
             imageView?.visibility = View.GONE
@@ -191,17 +255,100 @@ class MainActivity : LocalizedActivity() {
             headerView.setBackgroundColor(primary)
         }
 
-        // 前景始终取 onPrimary：自定义图像上有渐变遮罩兜底对比度
-        headerView.findViewById<android.widget.TextView>(R.id.drawer_app_name)?.setTextColor(onPrimary)
-        headerView.findViewById<android.widget.ImageView>(R.id.drawer_logo)?.imageTintList =
-            android.content.res.ColorStateList.valueOf(onPrimary)
+        // ---- 头像：与背景图**互相独立** ----
+        //
+        // 这里曾经写成「设了背景图就隐藏 Logo」，理由是两层图形会打架。
+        // 但那是把「品牌 Logo」当成了背景图的附属品 —— 现在这一格是
+        // **用户头像**，头像和背景本来就是并存的（聊天软件都这样），
+        // 设了背景图反而把头像藏起来，用户就找不到自己设的头像了。
+        val avatarUri = preferenceManager.getDrawerAvatarUri()
+        logoView?.visibility = View.VISIBLE
+        if (!avatarUri.isNullOrBlank()) {
+            logoView?.load(avatarUri) {
+                crossfade(true)
+                transformations(coil.transform.CircleCropTransformation())
+            }
+            // 用户头像自带颜色，去掉默认 Logo 的浅色圆底，让圆形裁剪完整生效
+            logoView?.background = null
+        } else {
+            // 没有自定义头像 → 用内置 Logo，并保留浅色圆底保证对比度
+            logoView?.setImageResource(R.drawable.logo_drawer)
+            logoView?.background =
+                androidx.core.content.ContextCompat.getDrawable(this, R.drawable.bg_drawer_logo)
+        }
+
+        // ⚠️ 绝不能给这一格设 imageTintList。
+        // 内置 Logo 是全彩插画（白圆底 + 线稿角色 + 彩色眼睛），
+        // 单色 tint 会把它压成纯色剪影（曾经因此「侧边栏 logo 显示不出来」）；
+        // 用户头像更不该被染色。
+        logoView?.imageTintList = null
+
+        // ---- 名称：允许自定义，留空则回退默认应用名 ----
+        headerView.findViewById<android.widget.TextView>(R.id.drawer_app_name)?.apply {
+            text = preferenceManager.getDrawerCustomName() ?: getString(R.string.app_name)
+            setTextColor(onPrimary)
+        }
+
+        // 换图入口的图标是单色矢量图标，可以安全染色
         pickButton?.imageTintList = android.content.res.ColorStateList.valueOf(onPrimary)
+
+        // 左右抽屉共用同一张顶图，这里同步应用到右侧筛选抽屉
+        applyRightDrawerHeaderImage(useImage)
+    }
+
+    /**
+     * 右侧筛选抽屉的顶图。
+     *
+     * 与左侧共用同一个偏好键 —— 用户设的是「一张侧滑栏顶图」，
+     * 没有理由要求他设两遍。设了图时隐藏原本的图标，避免图形叠加。
+     */
+    private fun applyRightDrawerHeaderImage(useImage: Boolean) {
+        val container = findViewById<ViewGroup>(R.id.right_drawer_header) ?: return
+        val headerImage = container.findViewById<android.widget.ImageView>(R.id.right_drawer_image)
+        val headerIcon = container.findViewById<android.widget.ImageView>(R.id.header_icon)
+
+        val imageUri = preferenceManager.getDrawerHeaderImageUri()
+
+        if (useImage && !imageUri.isNullOrBlank()) {
+            headerImage?.visibility = View.VISIBLE
+            headerImage?.load(imageUri) { crossfade(true) }
+            headerIcon?.visibility = View.GONE
+        } else {
+            headerImage?.visibility = View.GONE
+            headerImage?.setImageDrawable(null)
+            headerIcon?.visibility = View.VISIBLE
+        }
     }
 
     private fun checkAccessibilityAndPopup() {
         val prefs = preferenceManager
         val isPopupEnabled = prefs.isPopupReminderEnabled()
         val isServiceRunning = com.errorsiayusulif.zakocountdown.utils.AccessibilityStatusHelper.isAccessibilityServiceEnabled(this)
+
+        // ---- 权限被撤销时的自愈 ----
+        //
+        // 开屏提醒的开关是「用户意图」，而无障碍服务是「能力」。
+        // 用户可能在别处（系统设置 / 清理工具 / 换机恢复）把权限收走，
+        // 此时开关还停留在「已开启」，但它已经不可能生效了 ——
+        // 界面显示与实际行为不一致，是最让人困惑的一种失效。
+        //
+        // 所以这里把它**落回关闭**并明确告知，而不是留一个骗人的开关。
+        // 放在 MainActivity.onResume 而不是 Application.onCreate：
+        // 权限变更往往发生在应用处于后台时，回到前台才是一次可靠的检查时机。
+        if (isPopupEnabled && !isServiceRunning) {
+            prefs.setPopupReminderEnabled(false)
+            // 允许下次（用户重新授权并再次开启后）能重新提示一次
+            prefs.setHasPromptedAccessibility(false)
+
+            if (!isChangingConfigurations && !isFinishing && !isDestroyed) {
+                android.widget.Toast.makeText(
+                    this,
+                    R.string.popup_reminder_disabled_no_accessibility,
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
+            }
+            return
+        }
 
         if (!isPopupEnabled || isServiceRunning) return
         if (prefs.hasPromptedAccessibility()) return
@@ -445,7 +592,9 @@ class MainActivity : LocalizedActivity() {
             else -> {
                 binding.rightDrawerContainer.setBackgroundColor(colorSurface)
                 findViewById<View>(R.id.right_drawer_header)?.setBackgroundColor(colorPrimary)
-                setRightHeaderContentColor(colorOnPrimary)
+                // 文字压在 colorPrimary 底上，必须用 onPrimary 才读得清；
+                // 但**图标不能跟着一起白**（见方法内注释）。
+                setRightHeaderContentColor(colorOnPrimary, iconColor = colorOnSurface)
             }
         }
         binding.recyclerViewAgenda.layoutManager = LinearLayoutManager(this)
@@ -454,12 +603,23 @@ class MainActivity : LocalizedActivity() {
         findViewById<View>(R.id.btn_add_book)?.setOnClickListener { showAddBookDialog() }
     }
 
-    private fun setRightHeaderContentColor(color: Int) {
+    /**
+     * 给右侧抽屉头部的前景上色。
+     *
+     * @param color     文字颜色。旧主题下头部底色是 colorPrimary，所以传 onPrimary。
+     * @param iconColor 图标颜色。**默认跟随 [color]**，但旧主题下要单独传 colorOnSurface：
+     *
+     *   原先图标和文字共用一个颜色，于是 MD1 下那个日程本图标被强制成纯白 ——
+     *   白图标压在彩色头部上虽然看得见，但它**不随深浅色模式变化**，
+     *   与界面其它图标的规则不一致（其它地方都走 colorOnSurface）。
+     *   现在图标单独取 colorOnSurface，浅色模式深色、深色模式浅色。
+     */
+    private fun setRightHeaderContentColor(color: Int, iconColor: Int = color) {
         val container = findViewById<ViewGroup>(R.id.right_drawer_header) ?: return
         for (i in 0 until container.childCount) {
             val v = container.getChildAt(i)
             if (v is TextView) v.setTextColor(color)
-            if (v is ImageView) v.imageTintList = ColorStateList.valueOf(color)
+            if (v is ImageView) v.imageTintList = ColorStateList.valueOf(iconColor)
         }
     }
 
@@ -559,6 +719,14 @@ class MainActivity : LocalizedActivity() {
     companion object {
         /** 侧滑栏顶部图像的私有沙盒文件名（与设置页共用同一个缓存文件）。 */
         const val DRAWER_HEADER_CACHE_FILE = "drawer_header_cache.png"
+
+        /**
+         * 侧滑栏**头像**的私有沙盒文件名。
+         *
+         * 与背景图分开存：两者是独立的自定义项，
+         * 共用一个文件会导致「换头像把背景也覆盖掉」。
+         */
+        const val DRAWER_AVATAR_CACHE_FILE = "drawer_avatar_cache.png"
     }
 
     /*override fun onBackPressed() {

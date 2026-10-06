@@ -11,7 +11,7 @@
         app:key="nav_to_language"
         app:title="@string/settings_language"
         app:summary="@string/settings_language_summary"
-        app:icon="@drawable/ic_info"/>
+        app:icon="@drawable/ic_language"/>
 
     <Preference
         app:key="nav_to_notifications"

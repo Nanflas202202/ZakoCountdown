@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    防沉迷总设置。
+
+    只放「总开关 + 进入应用列表」两件事 —— 具体规则（关键词、配额）在下一级页面里编辑，
+    避免把三层设置挤在一个屏幕上。
+-->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory app:title="@string/focus_title">
+
+        <SwitchPreferenceCompat
+            app:key="focus_enabled"
+            app:title="@string/focus_master_switch"
+            app:summary="@string/focus_master_switch_summary"
+            app:defaultValue="false" />
+
+        <Preference
+            app:key="focus_manage_apps"
+            app:title="@string/focus_manage_apps"
+            app:summary="@string/focus_manage_apps_summary_empty" />
+
+    </PreferenceCategory>
+
+    <!--
+        诊断入口已移至「调试台」（开发者选项 → 调试）。
+        原因：只有排查问题时才用得上，对普通用户是噪声。
+    -->
+
+</PreferenceScreen>

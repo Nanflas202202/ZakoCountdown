@@ -10,12 +10,21 @@ enum class AppVersion(val versionName: String, val internalCode: Int, val eyfFor
     V_0_8_11("V0.8.11-nightly", 811, 1.0f),
     V_0_9_0("V0.9.0", 900, 2.0f),
 
-    /** 当前开发版。悬浮导航 / MD3 Expressive / 侧滑栏自定义图像等从这一版开始存在。 */
-    V_0_9_1("V0.9.1-debug", 901, 2.0f);
+    /** v0.9.1：自动隐藏导航栏、EYF 升级代号、侧滑栏顶图（初版）。 */
+    V_0_9_1("V0.9.1-debug", 901, 2.0f),
+
+    /**
+     * 当前开发版 v0.9.2。
+     *
+     * 相对 v0.9.1 新增：分享卡片多尺寸输出、导入主题的收藏与切换（ThemeArchive）、
+     * MTB 主题包（.zip）导入、底部导航栏滚动自动隐藏，
+     * 以及侧滑栏顶图升级为「左右共用 + 可替换 Logo」。
+     */
+    V_0_9_2("V0.9.2-debug", 902, 2.0f);
 
     companion object {
         /** 导出时的默认目标版本 = 当前最新版本。 */
-        val CURRENT: AppVersion = V_0_9_1
+        val CURRENT: AppVersion = V_0_9_2
 
         fun fromVersionName(name: String): AppVersion {
             return values().find { it.versionName == name } ?: CURRENT

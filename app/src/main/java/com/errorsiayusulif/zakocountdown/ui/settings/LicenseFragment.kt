@@ -28,6 +28,9 @@ class LicenseFragment : Fragment() {
                     R.id.button_license_zh -> loadLicense(R.raw.license_mpl_zh)
                     R.id.button_license_en -> loadLicense(R.raw.license_mpl_en)
                     R.id.button_license_eys -> loadLicense(R.raw.eula)
+                    // 第三方代码归属（MIT）已移出本页 ——
+                    // 它现在在「关于 → 详细信息 → 依赖库」里以独立一行呈现，
+                    // 点开即为 MIT 全文。
                 }
             }
         }

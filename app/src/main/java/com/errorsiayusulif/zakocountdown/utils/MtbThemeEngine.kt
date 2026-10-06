@@ -272,20 +272,72 @@ object MtbThemeEngine {
                 // MD1 的 Toolbar 样式显式设置了 colorPrimary 背景；只有在没有背景时才兜底，
                 // 否则会把旧版主题的彩色标题栏刷成纯 Surface，丢掉设计差异。
                 if (v.background == null) v.setBackgroundColor(surface)
-                v.setTitleTextColor(onSurface)
-                v.setSubtitleTextColor(onSurfaceVariant)
-                v.navigationIcon?.setTint(onSurface)
+
+                // 前景色按**背景实际颜色**决定，而不是无条件用 onSurface。
+                //
+                // 原因：MD1 的标题栏是「始终染成 colorPrimary」的（见
+                // Widget.ZakoCountdown.Toolbar.MD1），它自己在样式里写了白色文字。
+                // 但这里原来无条件 setTitleTextColor(onSurface)，
+                // 浅色主题下 onSurface 是深色 → 深色文字压在 colorPrimary 深色底上，
+                // 标题几乎看不见。
+                //
+                // 现在先取出背景的实际颜色，再据此选前景：
+                // 深底用白、浅底用 onSurface。彩色标题栏与 Surface 标题栏都正确。
+                val backgroundIsDark = isToolbarBackgroundDark(v, surface)
+                val titleColor = if (backgroundIsDark) Color.WHITE else onSurface
+                val subtitleColor = if (backgroundIsDark) {
+                    ColorUtils.setAlphaComponent(Color.WHITE, 200)
+                } else {
+                    onSurfaceVariant
+                }
+
+                v.setTitleTextColor(titleColor)
+                v.setSubtitleTextColor(subtitleColor)
+                v.navigationIcon?.setTint(titleColor)
+                // 溢出菜单图标同属前景，一起走
+                v.overflowIcon?.setTint(titleColor)
             }
 
+            // ------------------------------------------------------------------
+            // 【核心修复】FAB 不再无条件刷成 primaryContainer。
+            //
+            // 旧代码强行 backgroundTint = primaryContainer；而 MD1/MD2 下
+            // primaryContainer 继承自 Material 默认（浅紫 #EADDFF），
+            // 于是「右下角添加日程」这类按钮在两套旧主题下永远是紫色，
+            // 完全无视配色文件与 XML 里的 app:backgroundTint。
+            // （这个现象实际被反馈过：「按钮没有被配色文件覆盖，仍为默认紫色」。）
+            //
+            // 现在的规则与 MaterialButton 分支一致：
+            //   · XML/样式已显式着色 → 尊重它，只保证图标有对比度；
+            //   · 没着色 → 才用 primaryContainer 兜底（MD3 的默认观感不变）。
+            // ------------------------------------------------------------------
             is FloatingActionButton -> {
-                v.backgroundTintList = ColorStateList.valueOf(primaryContainer)
-                v.imageTintList = ColorStateList.valueOf(onPrimaryContainer)
+                val tint = v.backgroundTintList
+                if (tint == null) {
+                    v.backgroundTintList = ColorStateList.valueOf(primaryContainer)
+                    v.imageTintList = ColorStateList.valueOf(onPrimaryContainer)
+                } else {
+                    // 浅色容器（如 primaryContainer）→ 深色图标；深色容器（如 primary）→ 浅色图标
+                    val fg = contrastForegroundFor(
+                        tint.defaultColor, primary, onPrimary, onSurface
+                    )
+                    v.imageTintList = ColorStateList.valueOf(fg)
+                }
             }
 
             is ExtendedFloatingActionButton -> {
-                v.backgroundTintList = ColorStateList.valueOf(primaryContainer)
-                v.setTextColor(onPrimaryContainer)
-                v.iconTint = ColorStateList.valueOf(onPrimaryContainer)
+                val tint = v.backgroundTintList
+                if (tint == null) {
+                    v.backgroundTintList = ColorStateList.valueOf(primaryContainer)
+                    v.setTextColor(onPrimaryContainer)
+                    v.iconTint = ColorStateList.valueOf(onPrimaryContainer)
+                } else {
+                    val fg = contrastForegroundFor(
+                        tint.defaultColor, primary, onPrimary, onSurface
+                    )
+                    v.setTextColor(fg)
+                    v.iconTint = ColorStateList.valueOf(fg)
+                }
             }
 
             // ------------------------------------------------------------------
@@ -296,14 +348,29 @@ object MtbThemeEngine {
             // 现在只保证「已经明确着色」的按钮有可读的前景色。
             // ------------------------------------------------------------------
             is MaterialButton -> {
-                val tint = v.backgroundTintList
-                if (tint == null) {
-                    // 真正的透明/文字按钮：用当前主题的 Primary 保证可见
-                    v.setTextColor(primary)
-                    v.iconTint = ColorStateList.valueOf(primary)
-                } else {
-                    // 有底色：根据底色亮度自动选择黑或白前景，任何主题下都有对比度
-                    v.setTextColor(contrastForegroundFor(tint.defaultColor, primary, onPrimary, onSurface))
+                // 只做一件真正必要的事：**当前前景色在实底上读不清时才兜底**。
+                //
+                // 为什么不能靠猜按钮类型：
+                //   · `MaterialButton` **永远**有 backgroundTintList（基类构造时就
+                //     赋了 `mtrl_btn_bg_color_selector`），所以「tint == null」
+                //     永远不成立，无法用来识别描边/文字按钮；
+                //   · `strokeWidth` 在染色时机也不一定已就绪。
+                //   两者都会让判断落到「有实底」那一支，把前景算成白字，
+                //   覆盖掉样式里本来正确的 `?attr/colorPrimary`
+                //   （现象：MD1/MD2 下「清除」是白字、MD3 正常 —— 实际被反馈过）。
+                //
+                // 现在直接用**对比度**判断，它同时满足两端：
+                //   · 描边按钮：浅色表面上写 colorPrimary，对比度本来就够 → 不碰；
+                //   · 填充按钮：底色被主题改成深色后，若还留着深色文字则对比不足
+                //     → 才按底色亮度兜底。
+                // 这样不需要识别控件类型，也就没有「猜错」的余地。
+                val surfaceLum = ColorUtils.calculateLuminance(surface)
+                val fgLum = ColorUtils.calculateLuminance(v.currentTextColor)
+                val readable = kotlin.math.abs(fgLum - surfaceLum) > 0.3f
+
+                if (!readable) {
+                    val bg = v.backgroundTintList?.defaultColor ?: Color.TRANSPARENT
+                    v.setTextColor(contrastForegroundFor(bg, primary, onPrimary, onSurface))
                     v.iconTint = ColorStateList.valueOf(v.currentTextColor)
                 }
             }
@@ -397,5 +464,27 @@ object MtbThemeEngine {
             // 深色底 → 用浅色前景
             if (ColorUtils.calculateLuminance(onPrimary) > 0.5) onPrimary else Color.WHITE
         }
+    }
+
+    /**
+     * 判断 Toolbar 的背景是不是深色，用于决定标题/图标用白还是用 onSurface。
+     *
+     * MD1 的标题栏被样式写成 `?attr/colorPrimary` 实色背景，
+     * 取出来的是**已解析**的颜色值，直接算亮度即可。
+     *
+     * 取不到颜色时（渐变、图片、或自定义 Drawable）就按「浅色」处理 ——
+     * 本工程里那种情况只出现在 Surface 系的标题栏上，
+     * 用 onSurface 是安全且正确的选择。
+     */
+    private fun isToolbarBackgroundDark(toolbar: Toolbar, fallbackSurface: Int): Boolean {
+        val color = try {
+            when (val bg = toolbar.background) {
+                is android.graphics.drawable.ColorDrawable -> bg.color
+                else -> fallbackSurface
+            }
+        } catch (t: Throwable) {
+            fallbackSurface
+        }
+        return ColorUtils.calculateLuminance(color) < 0.5
     }
 }

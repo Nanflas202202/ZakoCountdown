@@ -24,7 +24,9 @@ import androidx.preference.SeekBarPreference
 import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.R
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
+import com.errorsiayusulif.zakocountdown.data.ThemeArchive
 import com.errorsiayusulif.zakocountdown.databinding.ItemColorSwatchBinding
+import com.errorsiayusulif.zakocountdown.utils.DarkModeHelper
 import com.errorsiayusulif.zakocountdown.utils.MtbThemeEngine
 import com.errorsiayusulif.zakocountdown.utils.MtbThemeHelper
 import com.errorsiayusulif.zakocountdown.utils.NavModeHelper
@@ -86,6 +88,61 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
         }
     }
 
+    /**
+     * 侧滑栏**头像**选择器（圆形）。
+     *
+     * 与 [pickDrawerHeaderLauncher] 分开：后者是头部**背景图**，铺满整块；
+     * 本项是原来放 Logo 的那一格，落圆形头像。两者同时存在、互不覆盖。
+     */
+    private val drawerAvatarPicker = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
+        uri?.let { sourceUri ->
+            try {
+                val context = requireContext()
+                val inputStream = context.contentResolver.openInputStream(sourceUri)
+                if (inputStream != null) {
+                    // 独立缓存文件：与背景图共用一个文件会互相覆盖
+                    val file = File(context.filesDir, "drawer_avatar_cache.png")
+                    FileOutputStream(file).use { output -> inputStream.use { input -> input.copyTo(output) } }
+                    appPreferenceManager.saveDrawerAvatarUri(Uri.fromFile(file).toString())
+                    Toast.makeText(context, R.string.personalization_drawer_avatar_set, Toast.LENGTH_SHORT).show()
+                    activity?.recreate()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(requireContext(), getString(R.string.common_failed, e.message ?: ""), Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    /** 编辑头像下方的自定义名称；留空或点「恢复默认」即用回应用名。 */
+    private fun showDrawerNameDialog() {
+        val context = requireContext()
+        val input = android.widget.EditText(context).apply {
+            hint = getString(R.string.personalization_drawer_name_hint)
+            setText(appPreferenceManager.getDrawerCustomName() ?: "")
+            setSelection(text.length)
+        }
+        val container = android.widget.FrameLayout(context).apply {
+            val pad = (20 * resources.displayMetrics.density).toInt()
+            setPadding(pad, pad / 2, pad, 0)
+            addView(input)
+        }
+
+        com.google.android.material.dialog.MaterialAlertDialogBuilder(context)
+            .setTitle(R.string.personalization_drawer_name)
+            .setView(container)
+            .setPositiveButton(R.string.common_save) { _, _ ->
+                val name = input.text?.toString()?.trim().orEmpty()
+                appPreferenceManager.saveDrawerCustomName(name.ifBlank { null })
+                activity?.recreate()
+            }
+            .setNeutralButton(R.string.personalization_drawer_name_reset) { _, _ ->
+                appPreferenceManager.saveDrawerCustomName(null)
+                activity?.recreate()
+            }
+            .setNegativeButton(R.string.common_cancel, null)
+            .show()
+    }
+
     private val importMtbJsonLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         uri?.let {
             lifecycleScope.launch {
@@ -114,6 +171,19 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
         // 手动检查并修复所有可能的 ListPreference，防止 XML 配置丢失导致崩溃
         safeCheckListPreference(PreferenceKeys.THEME_MODE, R.array.theme_entries, R.array.theme_values)
         safeCheckListPreference(PreferenceKeys.SCRIM_COLOR_MODE, R.array.scrim_color_entries, R.array.scrim_color_values)
+        safeCheckListPreference(PreferenceKeys.DARK_MODE, R.array.dark_mode_entries, R.array.dark_mode_values)
+
+        // 深色模式：改完立刻生效。
+        // AppCompatDelegate 会自己重建当前 Activity，所以用户当场就能看到效果，
+        // 不像「主题/强调色」那样需要退出重进页面。
+        findPreference<ListPreference>(PreferenceKeys.DARK_MODE)?.setOnPreferenceChangeListener { _, newValue ->
+            val mode = newValue as? String ?: DarkModeHelper.MODE_SYSTEM
+            // 先把值写进去再应用：重建 Activity 时会重新走一遍
+            // onCreatePreferences，那时读到的必须是新值。
+            appPreferenceManager.setDarkMode(mode)
+            DarkModeHelper.onPreferenceChanged(requireContext(), mode)
+            true
+        }
 
         setupPreferenceListeners()
     }
@@ -135,6 +205,10 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
 
         // MTB 染色挂载
         MtbThemeEngine.applyToPreferenceFragment(this)
+
+        // 「导入动态主题」「已保存的主题」的显隐取决于当前强调色，
+        // 首帧就要算一次，否则会短暂露出这两项。
+        updateMtbEntriesVisibility()
     }
 
     override fun onResume() {
@@ -215,11 +289,30 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
             val color = newValue as String
             appPreferenceManager.saveAccentColor(color)
 
-            // 如果选了非 MTB 颜色，关闭 MTB 引擎标志位
             if (color != PreferenceManager.ACCENT_CUSTOM_MTB) {
+                // 选了内置色 → 关掉 MTB 引擎标志位
                 requireContext().getSharedPreferences("zako_prefs", Context.MODE_PRIVATE)
                     .edit().putBoolean(MtbThemeHelper.PREF_IS_MTB_ENABLED, false).apply()
+            } else {
+                // 选了「使用导入的主题」但还没有导入过任何主题
+                // → 直接把用户带到导入入口，而不是让他看到一个没有生效的选项。
+                val hasImported = hasImportedTheme()
+                if (!hasImported) {
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.personalization_import_needed,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    // 延后一拍再启动选择器：此刻仍在 onPreferenceChange 回调里，
+                    // 马上拉起系统文件选择界面会和列表的刷新挤在一起。
+                    view?.post {
+                        importMtbJsonLauncher.launch(arrayOf("application/json", "application/zip", "*/*"))
+                    }
+                }
             }
+
+            // 「导入动态主题」「已保存的主题」两项只在选中该强调色时出现
+            updateMtbEntriesVisibility()
             activity?.recreate()
             true
         }
@@ -232,6 +325,17 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
         findPreference<Preference>("saved_themes")?.setOnPreferenceClickListener {
             // 二级页面展示全部已保存主题（列表形式，含色块 / 名称 / 导入时间）
             findNavController().navigate(R.id.action_personalizationFragment_to_savedThemesFragment)
+            true
+        }
+
+        // ---- 侧滑栏头像 / 名称（与上面的头部背景图互相独立）----
+        findPreference<Preference>("drawer_avatar_pick")?.setOnPreferenceClickListener {
+            drawerAvatarPicker.launch(arrayOf("image/*"))
+            true
+        }
+
+        findPreference<Preference>("drawer_name_edit")?.setOnPreferenceClickListener {
+            showDrawerNameDialog()
             true
         }
 
@@ -321,6 +425,12 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
         if (isMtbEnabled) {
             entriesList.add(getString(R.string.theme_custom_mtb))
             valuesList.add(PreferenceManager.ACCENT_CUSTOM_MTB)
+        } else {
+            // 还没导入过主题时，仍然展示这一项 —— 它现在是**入口**而不只是状态显示：
+            // 选中它会提示并直接把用户带去导入。原先只在 isMtbEnabled 时才出现，
+            // 导致「要先导入才能选、但没有任何地方说明这一点」的死循环。
+            entriesList.add(accentName(3, R.string.personalization_use_imported_theme))
+            valuesList.add(PreferenceManager.ACCENT_CUSTOM_MTB)
         }
 
         Log.d("ZakoDebug", "Rebuilding accent_color array. Size: ${entriesList.size}")
@@ -349,6 +459,35 @@ class PersonalizationFragment : ZakoPreferenceFragment() {
         }
 
         accentPref.summary = accentPref.entry
+
+        // 强调色列表重建后，两项 MTB 入口的可见性要跟着重算
+        updateMtbEntriesVisibility()
+    }
+
+    /** 是否已经导入过至少一套主题（有存档或有历史存档）。 */
+    private fun hasImportedTheme(): Boolean {
+        val prefs = requireContext().getSharedPreferences("zako_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean(MtbThemeHelper.PREF_IS_MTB_ENABLED, false)) return true
+        // 也认「曾经导入过」：ThemeArchive 里有存档说明用过这个方法
+        return try {
+            ThemeArchive.load(requireContext()).isNotEmpty()
+        } catch (t: Throwable) {
+            false
+        }
+    }
+
+    /**
+     * 「导入动态主题」与「已保存的主题」只在强调色选中**使用导入的主题**时显示。
+     *
+     * 理由：这两项与内置强调色是互斥的关系 —— 编辑内置主题时它们没有意义，
+     * 常驻在页面上反而让人以为「导入」和「选颜色」是两件独立的事。
+     */
+    private fun updateMtbEntriesVisibility() {
+        val selected = appPreferenceManager.getAccentColor()
+        val visible = selected == PreferenceManager.ACCENT_CUSTOM_MTB
+
+        findPreference<Preference>("import_mtb_theme")?.isVisible = visible
+        findPreference<Preference>("saved_themes")?.isVisible = visible
     }
 
     private fun updatePaletteVisibility(mode: String) {

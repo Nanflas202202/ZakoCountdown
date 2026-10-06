@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 夜间：略灰的白。纯白在暗色界面里过于刺眼，但仍要保持浅色才能衬出深色线稿。 -->
+    <color name="zako_logo_backdrop">#E8E8EC</color>
+</resources>

@@ -43,14 +43,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- 3. 前景内容 -->
-    <ImageView
+    <!--
+        3. 前景内容
+        Logo 用 ShapeableImageView 并套圆形外观：
+        这个位置允许用户自定义头像，圆形是头像的通用约定，
+        方形图直接贴上去会显得像「没裁好的图」。
+        shapeAppearanceOverlay + CircleCropTransformation 双保险 ——
+        前者负责控件外形裁剪，后者负责把非正方形原图先裁成正方形再缩放，
+        否则长方形头像会被压扁成椭圆。
+    -->
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/drawer_logo"
         android:layout_width="72dp"
         android:layout_height="72dp"
         android:layout_marginStart="16dp"
         android:layout_marginBottom="8dp"
-        android:scaleType="centerInside"
+        android:scaleType="centerCrop"
+        app:shapeAppearanceOverlay="@style/ShapeAppearance.Zako.Circle"
         app:layout_constraintBottom_toTopOf="@id/drawer_app_name"
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@drawable/logo_drawer" />

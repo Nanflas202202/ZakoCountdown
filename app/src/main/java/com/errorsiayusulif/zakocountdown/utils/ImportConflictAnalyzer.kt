@@ -8,6 +8,18 @@ import com.errorsiayusulif.zakocountdown.data.*
 
 object ImportConflictAnalyzer {
 
+    /**
+     * 永远不会出现在导入预览里的设置键。
+     *
+     * 与 [com.errorsiayusulif.zakocountdown.ui.settings.BackupRestoreFragment] 导出侧的
+     * 排除名单是**同一件事的两端**：导出时不写出去，导入时也不显示。
+     * 之所以两处都要写：旧备份包里可能已经带着这些键了，
+     * 只在导出侧排除挡不住老包。
+     */
+    private val HIDDEN_SETTING_KEYS = setOf(
+        PreferenceKeys.DEV_MODE_ENTRY_ENABLED
+    )
+
     suspend fun analyze(
         context: Context,
         repository: EventRepository,
@@ -67,6 +79,14 @@ object ImportConflictAnalyzer {
 
             nodes.add(SelectableNode(NodeType.HEADER, "hdr_settings", context.getString(R.string.backup_header_settings), isChecked = true))
             for ((key, value) in eyfData.settings) {
+                // 开发者选项相关的键**一律不列出来**（导入侧同样不显示）。
+                //
+                // 导出侧已经排除了它们，但**旧备份包**里可能仍然带着 ——
+                // 所以这里必须再挡一次，否则老包一导入就又冒出来了。
+                // DEV_MODE_ENTRY_ENABLED 是「是否允许进入开发者选项」的设备级开关，
+                // 跨设备还原没有意义，还会直接把对方的开发者入口打开。
+                if (key in HIDDEN_SETTING_KEYS) continue
+
                 // 如果是新版本的专有设置，也可以在这里做检测（假设低版本遇到高版本设置）
                 // 但通常低版本的 SharedPreferences 遇到未知的 Key 会直接忽略，不会造成崩溃，所以这里直接列出。
                 nodes.add(

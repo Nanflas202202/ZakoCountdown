@@ -11,6 +11,22 @@
             app:entryValues="@array/theme_values"
             app:defaultValue="M3" />
 
+        <!--
+            深色模式。
+            默认仍为「跟随系统」，把选择权交给用户而不是强制。
+            改动会写进 zako_prefs:dark_mode，由
+            ZakoCountdownApplication.onCreate 通过
+            AppCompatDelegate.setDefaultNightMode 生效。
+        -->
+        <ListPreference
+            app:key="dark_mode"
+            app:title="@string/personalization_dark_mode"
+            app:summary="@string/personalization_dark_mode_summary"
+            app:entries="@array/dark_mode_entries"
+            app:entryValues="@array/dark_mode_values"
+            app:useSimpleSummaryProvider="true"
+            app:defaultValue="system" />
+
         <ListPreference
             app:key="accent_color"
             app:title="@string/personalization_accent_color"
@@ -86,6 +102,22 @@
             app:key="drawer_header_clear"
             app:title="@string/personalization_drawer_header_clear"
             app:summary="@string/personalization_drawer_header_clear_summary" />
+
+        <!--
+            头像与名称：与上面的「头部背景图」是两件独立的事。
+            背景图铺满整块，头像（圆形）落在原来 Logo 的位置，
+            下方文字可自定义。
+            头像这一项刻意**不加副标题** —— 标题「自定义头像」已经把
+            要做什么说清楚了，再补一句「点击选择图片」只是重复。
+        -->
+        <Preference
+            app:key="drawer_avatar_pick"
+            app:title="@string/personalization_drawer_avatar" />
+
+        <Preference
+            app:key="drawer_name_edit"
+            app:title="@string/personalization_drawer_name"
+            app:summary="@string/personalization_drawer_name_summary" />
     </PreferenceCategory>
 
     <!-- v0.9.1 新增：布局与导航（这里也能改，方便大屏用户不用再进高级功能） -->

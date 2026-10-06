@@ -42,4 +42,12 @@
     <color name="m3_on_background">#1C1B1F</color>
     <color name="m3_surface">#FFFBFE</color>
     <color name="m3_on_surface">#1C1B1F</color>
+
+    <!--
+        侧边栏 Logo 的圆形底衬。
+        logo_drawer.png 是白底插画，直接贴在 colorPrimary 头部上时，
+        浅色主题下边界会糊掉。给一层浅色圆底既统一了观感，也保证了对比度。
+        不跟主题 tint —— 它是「相框」不是图标，必须保持浅色才能衬出深色线稿。
+    -->
+    <color name="zako_logo_backdrop">#FFFFFF</color>
 </resources>

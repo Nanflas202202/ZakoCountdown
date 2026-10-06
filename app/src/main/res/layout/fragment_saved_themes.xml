@@ -13,10 +13,16 @@
     android:background="?attr/colorSurface"
     tools:context=".ui.settings.SavedThemesFragment">
 
+    <!--
+        列表容器铺 ?attr/colorSurfaceContainer 作为整块底色，
+        与设置页列表、受管制应用列表用同一个主题角色 —— 三处观感一致，
+        深浅色 / 各套主题自动跟随。行本身透明，整块看起来是连续的一整片。
+    -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/themes_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="?attr/colorSurfaceContainer"
         android:clipToPadding="false"
         android:paddingTop="8dp"
         android:paddingBottom="24dp"

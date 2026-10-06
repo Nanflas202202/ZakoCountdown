@@ -146,6 +146,39 @@
         <action
             android:id="@+id/action_advancedSettingsFragment_to_appSelectorFragment"
             app:destination="@id/appSelectorFragment" />
+        <action
+            android:id="@+id/action_advancedSettingsFragment_to_focusGuardFragment"
+            app:destination="@id/focusGuardFragment" />
+    </fragment>
+
+    <!-- 防沉迷总设置（高级功能 → 防沉迷） -->
+    <fragment
+        android:id="@+id/focusGuardFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.FocusGuardFragment"
+        android:label="@string/focus_title">
+        <action
+            android:id="@+id/action_focusGuardFragment_to_focusAppListFragment"
+            app:destination="@id/focusAppListFragment" />
+    </fragment>
+
+    <!-- 受管制应用列表 -->
+    <fragment
+        android:id="@+id/focusAppListFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.FocusAppListFragment"
+        android:label="@string/focus_manage_apps">
+        <action
+            android:id="@+id/action_focusAppListFragment_to_focusRuleDetailFragment"
+            app:destination="@id/focusRuleDetailFragment" />
+    </fragment>
+
+    <!-- 单条规则详情（关键词 / 整应用遮挡 / 配额） -->
+    <fragment
+        android:id="@+id/focusRuleDetailFragment"
+        android:name="com.errorsiayusulif.zakocountdown.ui.settings.FocusRuleDetailFragment"
+        android:label="@string/focus_title">
+        <argument
+            android:name="packageName"
+            app:argType="string" />
     </fragment>
 
     <fragment

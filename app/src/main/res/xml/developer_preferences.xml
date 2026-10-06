@@ -62,6 +62,22 @@
             app:key="clear_all_preferences"
             app:title="@string/dev_clear_preferences"
             app:summary="@string/dev_clear_preferences_summary" />
+
+        <!--
+            防沉迷诊断。
+            原先挂在「高级设置 → 防沉迷 → 诊断」下。
+            它只有在排查问题时才有用，对普通用户是噪声，
+            所以收进调试台 —— 需要看的时候能找到，平时不占主流程。
+        -->
+        <Preference
+            app:key="focus_view_log"
+            app:title="@string/focus_view_log"
+            app:summary="@string/focus_view_log_summary" />
+
+        <Preference
+            app:key="focus_dump_config"
+            app:title="@string/focus_dump_config"
+            app:summary="@string/focus_dump_config_summary" />
     </PreferenceCategory>
 
     <!--

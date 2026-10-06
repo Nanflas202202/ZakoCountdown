@@ -120,6 +120,15 @@
         </service>
         <service android:name=".services.PopupViewService" />
 
+        <!--
+            防沉迷遮挡浮层。
+            它创建的是 TYPE_ACCESSIBILITY_OVERLAY 窗口 —— 这种类型只有无障碍服务
+            进程才能添加，所以本服务不声明任何权限、也不需要 SYSTEM_ALERT_WINDOW。
+        -->
+        <service
+            android:name=".services.FocusOverlayService"
+            android:exported="false" />
+
         <!-- Receivers -->
         <receiver
             android:name=".receiver.SecretCodeReceiver"

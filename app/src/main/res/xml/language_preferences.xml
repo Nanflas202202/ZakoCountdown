@@ -12,14 +12,20 @@
             app:summary="@string/settings_language_summary"
             app:entries="@array/language_entries"
             app:entryValues="@array/language_values"
+            app:icon="@drawable/ic_language"
             app:useSimpleSummaryProvider="true"
             app:defaultValue="system" />
 
-        <Preference
+        <!--
+            重启提示。
+            用 SmallTextPreference 把字号压小：这条是「知道了就行」的补充说明，
+            跟上面的选项同样大小会抢注意力、读起来像第二个可选项。
+            （为什么不用 app:layout + 普通 Preference：见该类注释。）
+        -->
+        <com.errorsiayusulif.zakocountdown.ui.settings.SmallTextPreference
             app:key="language_restart_hint"
             app:title="@string/language_restart_hint"
-            app:summary="@string/language_restart_hint_summary"
-            app:selectable="false" />
+            app:summary="@string/language_restart_hint_summary" />
 
     </PreferenceCategory>
 

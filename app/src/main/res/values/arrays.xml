@@ -40,12 +40,14 @@
         <item>Follow wallpaper (Monet)</item>
         <item>Vibrant pink</item>
         <item>Sky blue</item>
+        <item>Use imported theme</item>
     </string-array>
 
     <string-array name="color_values" translatable="false">
         <item>MONET</item>
         <item>PINK</item>
         <item>BLUE</item>
+        <item>CUSTOM_MTB</item>
     </string-array>
 
     <!-- Popup mode -->
@@ -156,5 +158,16 @@
         <item>system</item>
         <item>en</item>
         <item>zh-CN</item>
+    </string-array>
+    <string-array name="dark_mode_entries">
+        <item>Follow system</item>
+        <item>Always light</item>
+        <item>Always dark</item>
+    </string-array>
+
+    <string-array name="dark_mode_values" translatable="false">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
     </string-array>
 </resources>

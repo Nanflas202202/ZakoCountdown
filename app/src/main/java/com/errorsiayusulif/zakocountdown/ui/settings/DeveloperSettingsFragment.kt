@@ -59,6 +59,19 @@ class DeveloperSettingsFragment : ZakoPreferenceFragment() {
             true
         }
 
+        // --- 防沉迷诊断 ---
+        // 从「高级设置 → 防沉迷 → 诊断」搬到这里：只有排查问题才用得上，
+        // 对普通用户是噪声。报告组装逻辑在 FocusDiagnostics 里，与本页解耦。
+        findPreference<Preference>("focus_view_log")?.setOnPreferenceClickListener {
+            FocusDiagnostics.showLogDialog(this)
+            true
+        }
+
+        findPreference<Preference>("focus_dump_config")?.setOnPreferenceClickListener {
+            FocusDiagnostics.dumpConfigAndShow(this, "用户在调试台手动触发")
+            true
+        }
+
         // --- 【修复】清除所有本地设置并重启应用 ---
         findPreference<Preference>("clear_all_preferences")?.setOnPreferenceClickListener {
             com.google.android.material.dialog.MaterialAlertDialogBuilder(requireContext())

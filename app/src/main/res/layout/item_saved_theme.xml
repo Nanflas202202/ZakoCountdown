@@ -4,83 +4,77 @@
 
     布局顺序按需求：**最右边是主题色**，左侧是名称 + 导入时间。
 
-    用 MaterialCardView 而不是通栏行，是为了让每套主题看起来是独立的一张卡 ——
-    主题列表不像设置项那样有连续性，卡片化更符合「素材库」的感觉。
+    样式与设置页条目保持一致（通栏平铺行，不是独立卡片）：
+    原先用 MaterialCardView 做成「素材库卡片」，但那样与设置页的
+    「整块列表一个底色」对不上，同一个应用里出现两种列表语言。
+    现在整块底色统一由列表容器提供，行本身透明、以 1dp 透明分隔区分。
 -->
-<com.google.android.material.card.MaterialCardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginHorizontal="16dp"
-    android:layout_marginVertical="4dp"
+    android:background="?attr/selectableItemBackground"
     android:clickable="true"
     android:focusable="true"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="2dp"
-    app:strokeWidth="1dp">
+    android:gravity="center_vertical"
+    android:minHeight="72dp"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
 
+    <!-- 名称 + 导入时间 -->
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <!-- 名称 + 导入时间 -->
-        <LinearLayout
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/theme_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="?attr/textAppearanceTitleMedium"
-                tools:text="material-theme (1)" />
-
-            <TextView
-                android:id="@+id/theme_time"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?android:attr/textColorSecondary"
-                tools:text="2026-10-05 18:44" />
-
-        </LinearLayout>
-
-        <!-- 当前使用中的标记 -->
         <TextView
-            android:id="@+id/theme_active_badge"
-            android:layout_width="wrap_content"
+            android:id="@+id/theme_name"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_theme_active_badge"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="2dp"
-            android:text="@string/personalization_saved_theme_active"
-            android:textAppearance="?attr/textAppearanceLabelSmall"
-            android:textColor="?attr/colorOnPrimaryContainer"
-            android:visibility="gone"
-            tools:visibility="visible" />
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            tools:text="material-theme (1)" />
 
-        <!-- ★ 主题色色块，放在最右边 -->
-        <View
-            android:id="@+id/theme_color"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_marginStart="12dp"
-            android:background="@drawable/bg_theme_color_swatch"
-            tools:background="#415F91" />
+        <TextView
+            android:id="@+id/theme_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="2026-10-05 18:44" />
 
     </LinearLayout>
 
-</com.google.android.material.card.MaterialCardView>
+    <!-- 当前使用中的标记 -->
+    <TextView
+        android:id="@+id/theme_active_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/bg_theme_active_badge"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="2dp"
+        android:text="@string/personalization_saved_theme_active"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="?attr/colorOnPrimaryContainer"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+    <!-- ★ 主题色色块，放在最右边 -->
+    <View
+        android:id="@+id/theme_color"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_theme_color_swatch"
+        tools:background="#415F91" />
+
+</LinearLayout>

@@ -82,6 +82,33 @@
                 <Button android:id="@+id/btn_layout_3" style="?attr/materialButtonOutlinedStyle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="@string/share_layout_poster"/>
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
+            <!--
+                输出尺寸。用 Chip 而不是 ToggleGroup：尺寸有 5 个，
+                按钮组在小屏上会被挤到换行/截断，Chip 支持横向滚动。
+            -->
+            <TextView
+                android:text="@string/share_card_size"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"/>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:scrollbars="none">
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/chip_group_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:singleLine="true"
+                    app:singleSelection="true"
+                    app:selectionRequired="true" />
+
+            </HorizontalScrollView>
+
             <!-- 整体背景 -->
             <TextView
                 android:text="@string/share_overall_background"

@@ -19,6 +19,7 @@
         <item>跟随壁纸 (Monet)</item>
         <item>活力粉</item>
         <item>天空蓝</item>
+        <item>使用导入的主题</item>
     </string-array>
 
     <!-- 弹窗模式 -->
@@ -78,5 +79,16 @@
         <item>跟随系统</item>
         <item>English</item>
         <item>简体中文</item>
+    </string-array>
+    <string-array name="dark_mode_entries">
+        <item>跟随系统</item>
+        <item>始终浅色</item>
+        <item>始终深色</item>
+    </string-array>
+
+    <string-array name="dark_mode_values" translatable="false">
+        <item>system</item>
+        <item>light</item>
+        <item>dark</item>
     </string-array>
 </resources>

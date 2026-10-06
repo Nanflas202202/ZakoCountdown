@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    单条防沉迷规则的详情设置。
+
+    这些控件是**动态构建**的（见 FocusRuleDetailFragment）：
+    关键词是文本、整应用遮挡是开关、两个配额是列表，
+    值都需要从 FocusGuardStore 的 JSON 里读，用 Preference 的 XML 声明会
+    绕很大一圈（自定义 PreferenceDataStore），动态构建反而更直白。
+-->
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android" />

@@ -36,13 +36,14 @@ val versionGson = "2.10.1"
 // 而 upgradeCode 只由我们自己维护，永远是单调递增的整型，
 // 且**只出现在开发者选项里**，不会暴露在关于页、设置页或备份包中。
 //
-// 维护约定：每次准备发布时手工 +1。
-//   0.9.0 → 900001
-//   0.9.1 → 901001   ← 当前
-//   0.9.2 → 902001
+// 维护约定：每次准备发布时手工改成一个更大的值。
+// 当前采用「构建日期」式的取值（YYYYMMDD），比纯序号更容易回溯：
+//   0.9.1 → 20261025   ← 上一版
+//   0.9.2 → 20261026   ← 当前
+// 只要保证严格单调递增即可；换成 902001 这样的序号式也没问题。
 // ============================================================
-val upgradeCode = 20261025
-val upgradeCodeLabel = "0.9.1-debug"
+val upgradeCode = 20261026
+val upgradeCodeLabel = "0.9.2-debug"
 
 android {
     namespace = "com.errorsiayusulif.zakocountdown"
@@ -53,7 +54,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "0.9.1-debug"
+        versionName = "0.9.2-debug 2026国庆特别版"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("long", "BUILD_TIME", "${System.currentTimeMillis()}L")

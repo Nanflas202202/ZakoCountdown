@@ -27,10 +27,35 @@ object PreferenceKeys {
     const val MTB_THEME_ENABLED = "mtb_theme_enabled"
 
     /**
-     * 当前生效的「导入主题」名称。
+     * 深色模式：`system` / `light` / `dark`。
+     *
+     * 刻意**不放进导出清单**：它属于设备级的显示偏好，
+     * 跟着备份还原到另一台设备上会让人困惑（「我明明选的是浅色」）。
+     * 主题与强调色属于「审美选择」，跟人走；深浅色更像「当下环境的光照」，
+     * 跟设备走更合理。
+     */
+    const val DARK_MODE = "dark_mode"
+
+    /**
+     * 已保存的导入主题名称。
      * 「已保存的主题」列表靠它标出哪一套正在使用。
      */
     const val MTB_THEME_NAME = "mtb_theme_name"
+
+    // ==================== 侧滑栏头部 ====================
+    /**
+     * 自定义**头像**（圆形）。
+     *
+     * 与 [DRAWER_HEADER_IMAGE_URI] 是两件独立的事，刻意分开：
+     *   · DRAWER_HEADER_IMAGE_URI → 头部**背景图**，铺满整块
+     *   · DRAWER_AVATAR_URI       → 头像，圆形，落在原来的 Logo 位置
+     * 之前只有背景图，用户想换「那个圆形图标」时找不到入口 ——
+     * 两者语义不同，混用一个键会导致「换头像把背景也换了」。
+     */
+    const val DRAWER_AVATAR_URI = "drawer_avatar_uri"
+
+    /** 头像下方显示的**自定义名称**。空 = 用默认应用名。 */
+    const val DRAWER_CUSTOM_NAME = "drawer_custom_name"
     const val MD1_THEME_ENABLED = "md1_theme_enabled"
     const val LEGACY_THEME_IN_COMPACT = "legacy_theme_unlock_in_compact"
 
@@ -44,6 +69,14 @@ object PreferenceKeys {
      */
     private const val THEME_M3E_DISABLED = "M3E"
     private const val THEME_M3_FALLBACK = "M3"
+
+    // ==================== 分享 ====================
+    /**
+     * 分享卡片的输出尺寸预设。
+     * 取值见 `com.errorsiayusulif.zakocountdown.ui.share.ShareCardSize`；
+     * 未设置时使用竖版默认值。
+     */
+    const val SHARE_CARD_SIZE = "share_card_size"
 
     // ==================== 布局与导航 ====================
     /**
@@ -99,6 +132,16 @@ object PreferenceKeys {
     const val DEFAULT_BOOK_COVER_IMPORTANT = "default_book_cover_important"
     const val DEFAULT_BOOK_ALPHA_ALL = "default_book_alpha_all"
     const val DEFAULT_BOOK_ALPHA_IMPORTANT = "default_book_alpha_important"
+
+    /**
+     * 默认日程本（全部 / 重点）的主题色。
+     *
+     * 普通日程本的颜色存在数据库里，而这两个「虚拟本」没有数据库记录，
+     * 所以单独存偏好。此前颜色是硬编码的（全部=深灰、重点=红），
+     * 用户无法更改，也没有设置入口。
+     */
+    const val DEFAULT_BOOK_COLOR_ALL = "default_book_color_all"
+    const val DEFAULT_BOOK_COLOR_IMPORTANT = "default_book_color_important"
     const val CARD_ALPHA_UNLOCKED = "card_alpha_unlocked"
 
     // ==================== 弹窗提醒 ====================

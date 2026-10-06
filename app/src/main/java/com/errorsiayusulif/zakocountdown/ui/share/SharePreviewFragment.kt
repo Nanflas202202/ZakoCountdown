@@ -69,6 +69,29 @@ class SharePreviewFragment : Fragment() {
     private var currentAlpha: Int = 100
     private var hasUserAdjustedAlpha = false
 
+    /**
+     * 当前输出尺寸。模板 XML 里根节点写死了 1080×1920，所以真实尺寸
+     * 由 [applyCardSize] 在代码里覆盖，预览与导出共用它，保证所见即所得。
+     */
+    private var cardSize: ShareCardSize = ShareCardSize.DEFAULT
+
+    /**
+     * 把模板根节点的固定 1080×1920 改成当前预设尺寸。
+     *
+     * 只改高度是安全的（模板内部全是 px 绝对尺寸，宽度是设计基准不能动）。
+     * 预览与导出两条路径都会调用它，避免出现「预览是方的、导出是竖的」。
+     */
+    private fun applyCardSize(view: View) {
+        val lp = view.layoutParams
+        if (lp != null) {
+            lp.width = cardSize.widthPx
+            lp.height = cardSize.heightPx
+            view.layoutParams = lp
+        } else {
+            view.layoutParams = ViewGroup.LayoutParams(cardSize.widthPx, cardSize.heightPx)
+        }
+    }
+
     companion object {
         const val MODE_SIMPLE = 0
         const val MODE_DETAILED = 1
@@ -163,7 +186,38 @@ class SharePreviewFragment : Fragment() {
     // (setupUI, updatePreview, saveImageToGallery 等方法)
     // 为了节省空间，此处省略未变动的方法实现，请使用上一次提供的 SharePreviewFragment.kt 中的其余部分。
 
+    /**
+     * 构建输出尺寸的 Chip 列表，并恢复上次选择。
+     *
+     * 「上次选择」持久化在 [com.errorsiayusulif.zakocountdown.data.PreferenceKeys.SHARE_CARD_SIZE]，
+     * 因为分享尺寸是稳定的个人偏好（比如一直用方形发朋友圈），
+     * 每次进来都要重选一遍很烦。
+     */
+    private fun setupSizeChips() {
+        val saved = ShareCardSize.fromKey(preferenceManager.getShareCardSize())
+        cardSize = saved
+        binding.chipGroupSize.removeAllViews()
+
+        ShareCardSize.entries.forEach { size ->
+            val chip = com.google.android.material.chip.Chip(requireContext()).apply {
+                id = View.generateViewId()
+                text = getString(size.labelResId)
+                isCheckable = true
+                isChecked = size == saved
+                tag = size
+                setOnClickListener {
+                    cardSize = size
+                    preferenceManager.saveShareCardSize(size.key)
+                    updatePreview()
+                }
+            }
+            binding.chipGroupSize.addView(chip)
+        }
+    }
+
     private fun setupUI() {
+        setupSizeChips()
+
         binding.toggleLayout.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
                 selectedLayoutId = when (checkedId) {
@@ -280,15 +334,24 @@ class SharePreviewFragment : Fragment() {
         // 这里的 inflater 已经是 wrapped context，所以直接使用即可
         val templateView = LayoutInflater.from(binding.root.context).inflate(selectedLayoutId, binding.previewContainer, false)
         binding.previewContainer.addView(templateView)
+        // 先按当前尺寸覆盖模板里写死的 1080×1920，再取数据 / 属性，
+        // 这样预览的宽高比与最终导出完全一致
+        applyCardSize(templateView)
         updatePreviewViewData(templateView)
         updatePreviewViewProperties(templateView)
         templateView.post {
-            val parentWidth = (binding.previewContainer.parent as View).width.toFloat()
-            if (parentWidth > 0) {
-                val scale = (parentWidth * 0.85f) / 1080f
-                binding.previewContainer.scaleX = scale
-                binding.previewContainer.scaleY = scale
-            }
+            val parent = binding.previewContainer.parent as View
+            val availW = parent.width.toFloat()
+            val availH = parent.height.toFloat()
+            if (availW <= 0f || availH <= 0f) return@post
+
+            // 预览缩放：按「宽高两个方向都能放下」取较小比例。
+            // 只按宽度算的话，横向尺寸（如 16:9）会竖向溢出被裁掉。
+            val scaleW = (availW * 0.85f) / cardSize.widthPx
+            val scaleH = (availH * 0.90f) / cardSize.heightPx
+            val scale = minOf(scaleW, scaleH)
+            binding.previewContainer.scaleX = scale
+            binding.previewContainer.scaleY = scale
         }
     }
 
@@ -385,21 +448,28 @@ class SharePreviewFragment : Fragment() {
                 val shareView = withContext(Dispatchers.Main) {
                     LayoutInflater.from(context).inflate(selectedLayoutId, null, false)
                 }
+                // 模板根节点在 XML 里写死了 1080×1920，这里按当前尺寸预设覆盖掉，
+                // 否则选择方形 / 横向尺寸时导出的仍是竖图。
+                // 内容块是 wrap_content，改高度不会破坏内部比例（宽度保持 1080 不变）。
                 withContext(Dispatchers.Main) {
+                    applyCardSize(shareView)
                     updatePreviewViewData(shareView)
                     updatePreviewViewProperties(shareView)
                     if (selectedBackgroundUri != null) {
                         val loader = ImageLoader(context)
                         val request = ImageRequest.Builder(context).data(Uri.parse(selectedBackgroundUri))
-                            .size(1080, 1920).allowHardware(false).build()
+                            .size(cardSize.widthPx, cardSize.heightPx).allowHardware(false).build()
                         val result = loader.execute(request)
                         if (result is SuccessResult) shareView.findViewById<ImageView>(R.id.iv_background)?.setImageDrawable(result.drawable)
                     }
                 }
                 val bitmap = withContext(Dispatchers.Main) {
-                    shareView.measure(MeasureSpec.makeMeasureSpec(1080, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(1920, MeasureSpec.EXACTLY))
-                    shareView.layout(0, 0, 1080, 1920)
-                    val bmp = Bitmap.createBitmap(1080, 1920, Bitmap.Config.ARGB_8888)
+                    shareView.measure(
+                        MeasureSpec.makeMeasureSpec(cardSize.widthPx, MeasureSpec.EXACTLY),
+                        MeasureSpec.makeMeasureSpec(cardSize.heightPx, MeasureSpec.EXACTLY)
+                    )
+                    shareView.layout(0, 0, cardSize.widthPx, cardSize.heightPx)
+                    val bmp = Bitmap.createBitmap(cardSize.widthPx, cardSize.heightPx, Bitmap.Config.ARGB_8888)
                     shareView.draw(Canvas(bmp))
                     bmp
                 }

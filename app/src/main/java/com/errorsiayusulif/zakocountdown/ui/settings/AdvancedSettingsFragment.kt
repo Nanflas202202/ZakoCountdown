@@ -70,6 +70,35 @@ class AdvancedSettingsFragment : ZakoPreferenceFragment() {
             ).show()
             true
         }
+
+        // 防沉迷入口：进入二级页面
+        findPreference<Preference>("focus_guard_entry")?.setOnPreferenceClickListener {
+            findNavController().navigate(R.id.action_advancedSettingsFragment_to_focusGuardFragment)
+            true
+        }
+
+        // ==========================================
+        // 6. 开屏弹窗提醒：必须有无障碍权限才能启用
+        // ==========================================
+        // 开屏提醒依赖无障碍服务监听「切换到了哪个应用」。
+        // 未授权时打开这个开关**不会报错，只是永远不会触发** ——
+        // 这种「静默无效」比直接拒绝更难排查，所以在启用这一步就拦下来，
+        // 并直接把用户送去授权页。
+        findPreference<androidx.preference.SwitchPreferenceCompat>(PreferenceKeys.POPUP_REMINDER_ENABLED)
+            ?.setOnPreferenceChangeListener { _, newValue ->
+                val wantOn = newValue as Boolean
+                if (wantOn && !AccessibilityStatusHelper.isAccessibilityServiceEnabled(requireContext())) {
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.perm_accessibility_required_for_feature,
+                        Toast.LENGTH_LONG
+                    ).show()
+                    findNavController().navigate(R.id.action_global_permissionsFragment)
+                    return@setOnPreferenceChangeListener false
+                }
+                true
+            }
+
         // 导航方式一变，「自动隐藏导航栏」是否出现要立刻跟着变，
         // 所以在这里挂监听（onResume 只在回到页面时触发，切选项不会触发）。
         findPreference<ListPreference>(PreferenceKeys.APP_LAYOUT_MODE)?.setOnPreferenceChangeListener { _, _ ->
@@ -83,6 +112,41 @@ class AdvancedSettingsFragment : ZakoPreferenceFragment() {
         super.onResume()
         updateAccessibilityStatus()
         updateNavModePreferenceState()
+        refreshPopupReminderState()
+    }
+
+    /**
+     * 开屏弹窗提醒开关的状态要与无障碍权限保持一致。
+     *
+     * 失去权限时 [MainActivity] 会把偏好写回 `false`（见 checkAccessibilityAndPopup），
+     * 但设置页自身的控件状态不会自动跟着变 —— 回到这一页时必须重新读一次，
+     * 否则会看到「开关还是打开的」，与实际行为不符。
+     *
+     * 同时把开关本身置灰：没有权限时它确实开不了，
+     * 让人一眼看出来比点了再被弹回更好。
+     */
+    private fun refreshPopupReminderState() {
+        val pref = findPreference<androidx.preference.SwitchPreferenceCompat>(
+            PreferenceKeys.POPUP_REMINDER_ENABLED
+        ) ?: return
+
+        val accessibilityOn = AccessibilityStatusHelper.isAccessibilityServiceEnabled(requireContext())
+        val manager = PreferenceManager(requireContext())
+
+        pref.isEnabled = accessibilityOn
+
+        if (!accessibilityOn) {
+            // 兜底：若因某种原因（例如权限刚被撤销、MainActivity 还没走到）
+            // 偏好仍是 true，这里也落回 false，保证存储与界面一致。
+            if (manager.isPopupReminderEnabled()) {
+                manager.setPopupReminderEnabled(false)
+            }
+            pref.isChecked = false
+            pref.summary = getString(R.string.popup_reminder_needs_accessibility)
+        } else {
+            pref.isChecked = manager.isPopupReminderEnabled()
+            pref.summary = getString(R.string.adv_enable_popup_summary)
+        }
     }
 
     /**

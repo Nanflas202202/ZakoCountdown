@@ -46,41 +46,9 @@ class AddEditAgendaBookFragment : Fragment() {
     private var editingBook: AgendaBook? = null
 
     // --- Material Design 3 扩展色板 ---
-    private val baseMaterialColors = listOf(
-        // MD3 Primary / Secondary Tones
-        "#6750A4", // Purple 40 (M3 Default)
-        "#9C27B0", // Purple
-        "#E91E63", // Pink
-        "#B58392", // M3 Pink-ish
-        "#B3261E", // M3 Error/Red
-        "#F44336", // Red
-        "#9C4146", // M3 Brick Red
-        "#7D5260", // M3 Rose
-
-        // Warm Tones
-        "#9A4058", // M3 Maroon
-        "#FF9800", // Orange
-        "#FFB300", // Amber
-        "#E65100", // Deep Orange
-        "#825500", // M3 Gold/Olive
-
-        // Cool Tones
-        "#0061A4", // M3 Blue
-        "#2196F3", // Blue
-        "#03A9F4", // Light Blue
-        "#006493", // M3 Deep Blue
-        "#386A20", // M3 Green
-        "#4CAF50", // Green
-        "#006D42", // M3 Teal-Green
-        "#009688", // Teal
-        "#006064", // Deep Teal
-
-        // Neutral / Earthy Tones
-        "#795548", // Brown
-        "#605D62", // M3 Neutral
-        "#424242", // Grey
-        "#000000"  // Black
-    )
+    // 已抽到 AgendaBookColors 共享：默认本（全部/重点）的设置对话框要用同一套，
+    // 两处各写一份迟早漂移。
+    private val baseMaterialColors = AGENDA_BOOK_COLORS
 
     private val displayColors = mutableListOf<String>()
 

@@ -73,6 +73,18 @@ class SavedThemesFragment : Fragment() {
         adapter = ThemeAdapter()
         binding.themesList.layoutManager = LinearLayoutManager(requireContext())
         binding.themesList.adapter = adapter
+
+        // 与设置页、受管制应用列表统一的「隐藏分隔线」：1dp 透明，只作呼吸用
+        binding.themesList.addItemDecoration(
+            androidx.recyclerview.widget.DividerItemDecoration(
+                requireContext(),
+                LinearLayoutManager.VERTICAL
+            ).apply {
+                setDrawable(
+                    android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT)
+                )
+            }
+        )
     }
 
     override fun onResume() {

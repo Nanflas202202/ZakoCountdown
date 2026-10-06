@@ -92,19 +92,37 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal">
-                        <Button
+                        <!--
+                            ⚠️ 必须是 MaterialButton，不能是 AppCompat 的 <Button>。
+                            `?attr/materialButtonStyle` / `?attr/materialButtonOutlinedStyle`
+                            是给 MaterialButton 读的属性 —— AppCompat Button 完全不认，
+                            于是按系统默认按钮渲染（白底白字），
+                            主题引擎的 `is MaterialButton` 分支也轮不到它，
+                            结果就是「清除」字样永远是白的、不跟主题色。
+                        -->
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_select_cover"
                             style="?attr/materialButtonStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:text="@string/common_pick_image" />
-                        <Button
+                            android:text="@string/common_pick_image"
+                            android:textColor="?attr/colorOnPrimary" />
+
+                        <!--
+                            描边按钮的前景色显式用 colorPrimary。
+                            父样式 Widget.MaterialComponents.Button.OutlinedButton 会带一层
+                            「填充按钮前景」，不覆盖的话旧主题下会变成白字 ——
+                            与「随主题色变化」的预期不符。
+                        -->
+                        <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_remove_cover"
                             style="?attr/materialButtonOutlinedStyle"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="@string/common_clear" />
+                            android:text="@string/common_clear"
+                            android:textColor="?attr/colorPrimary"
+                            app:iconTint="?attr/colorPrimary" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -134,12 +152,16 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
+    <!-- 保存按钮：显式着色以兼容 MD1/MD2（默认强调色在旧主题下可能不可见） -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_save_book"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="24dp"
-        android:src="@drawable/ic_save" />
+        android:contentDescription="@string/event_save"
+        android:src="@drawable/ic_save"
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="?attr/colorOnPrimary" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

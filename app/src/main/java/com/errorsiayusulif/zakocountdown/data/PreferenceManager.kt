@@ -79,6 +79,14 @@ class PreferenceManager(context: Context) {
         prefs.edit().putBoolean(PreferenceKeys.AUTO_HIDE_NAV_BAR, enabled).apply()
     }
 
+    /** 分享卡片的输出尺寸预设键名；未设置时返回空串（由 ShareCardSize 落回默认）。 */
+    fun getShareCardSize(): String =
+        prefs.getString(PreferenceKeys.SHARE_CARD_SIZE, "").orEmpty()
+
+    fun saveShareCardSize(key: String) {
+        prefs.edit().putString(PreferenceKeys.SHARE_CARD_SIZE, key).apply()
+    }
+
     fun saveImportantApps(selectedApps: Set<String>) {
         prefs.edit().putStringSet(PreferenceKeys.POPUP_TARGET_APPS, selectedApps).apply()
     }
@@ -159,6 +167,20 @@ class PreferenceManager(context: Context) {
 
     fun isPopupReminderEnabled(): Boolean {
         return prefs.getBoolean(PreferenceKeys.POPUP_REMINDER_ENABLED, true)
+    }
+
+    /**
+     * 深色模式：`system` / `light` / `dark`（见 [com.errorsiayusulif.zakocountdown.utils.DarkModeHelper]）。
+     *
+     * 缺省返回 `system`，即保持原有「跟随系统」的行为 ——
+     * 老用户升级后观感不变。
+     */
+    fun getDarkMode(): String {
+        return prefs.getString(PreferenceKeys.DARK_MODE, "system") ?: "system"
+    }
+
+    fun setDarkMode(mode: String) {
+        prefs.edit().putString(PreferenceKeys.DARK_MODE, mode).apply()
     }
 
     fun saveWidgetImageUri(appWidgetId: Int, uriString: String?) {
@@ -324,6 +346,28 @@ class PreferenceManager(context: Context) {
     fun isDrawerHeaderImageEnabled(): Boolean {
         return prefs.getBoolean(PreferenceKeys.DRAWER_HEADER_IMAGE_ENABLED, true)
     }
+
+    // ------------------------------------------------------------------
+    // 侧滑栏**头像**与**名称**（与上面的头部背景图互相独立）
+    // ------------------------------------------------------------------
+
+    fun saveDrawerAvatarUri(uriString: String?) {
+        prefs.edit().putString(PreferenceKeys.DRAWER_AVATAR_URI, uriString).apply()
+    }
+
+    fun getDrawerAvatarUri(): String? {
+        return prefs.getString(PreferenceKeys.DRAWER_AVATAR_URI, null)
+    }
+
+    /** 保存自定义名称。传空字符串表示「用回默认应用名」。 */
+    fun saveDrawerCustomName(name: String?) {
+        prefs.edit().putString(PreferenceKeys.DRAWER_CUSTOM_NAME, name).apply()
+    }
+
+    /** 自定义名称；未设置或为空时返回 null，调用方据此回退到默认应用名。 */
+    fun getDrawerCustomName(): String? {
+        return prefs.getString(PreferenceKeys.DRAWER_CUSTOM_NAME, null)?.takeIf { it.isNotBlank() }
+    }
     // 在 PreferenceManager 中添加
     fun saveDefaultBookCover(isImportantBook: Boolean, uriString: String?) {
         val key = if (isImportantBook) PreferenceKeys.DEFAULT_BOOK_COVER_IMPORTANT else PreferenceKeys.DEFAULT_BOOK_COVER_ALL
@@ -353,6 +397,30 @@ class PreferenceManager(context: Context) {
     fun getDefaultBookAlpha(isImportantBook: Boolean): Float {
         val key = if (isImportantBook) PreferenceKeys.DEFAULT_BOOK_ALPHA_IMPORTANT else PreferenceKeys.DEFAULT_BOOK_ALPHA_ALL
         return prefs.getFloat(key, 1.0f) // 默认不透明
+    }
+
+    /**
+     * 默认日程本（全部 / 重点）的主题色。
+     *
+     * @param fallback 未设置过时返回的颜色 —— 由调用方给出，
+     *                 这样「全部=深灰、重点=红」这两个原硬编码值仍然是初始观感。
+     */
+    fun getDefaultBookColor(isImportantBook: Boolean, fallback: Int): Int {
+        val key = if (isImportantBook) {
+            PreferenceKeys.DEFAULT_BOOK_COLOR_IMPORTANT
+        } else {
+            PreferenceKeys.DEFAULT_BOOK_COLOR_ALL
+        }
+        return prefs.getInt(key, fallback)
+    }
+
+    fun saveDefaultBookColor(isImportantBook: Boolean, color: Int) {
+        val key = if (isImportantBook) {
+            PreferenceKeys.DEFAULT_BOOK_COLOR_IMPORTANT
+        } else {
+            PreferenceKeys.DEFAULT_BOOK_COLOR_ALL
+        }
+        prefs.edit().putInt(key, color).apply()
     }
 
 // ==========================================

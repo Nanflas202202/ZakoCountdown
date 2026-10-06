@@ -1,0 +1,63 @@
+ZakoCountdown — 第三方代码归属说明
+==================================
+
+本应用包含改编自以下开源项目的代码。
+
+
+anti-addiction（防沉迷提醒）
+---------------------------
+
+项目    ：anti-addiction
+作者    ：wd
+基准版本：v3.2.4（本次移植所依据的版本）
+许可证  ：MIT License
+版权    ：Copyright (c) 2025 wd
+
+改编内容
+~~~~~~~~
+
+本应用的「防沉迷」功能，是基于 anti-addiction 的悬浮遮罩机制所做的
+Kotlin 重新实现，改编了以下设计与逻辑：
+
+  · 响应「前台应用变化」的判定流程
+  · 关键词匹配方向（当页面节点的文本被某个已配置关键词包含时，判定为命中）
+  · 按应用区分的配额模型（每日免答题次数、临时「放开」时段）
+  · 可配置的遮罩上下让位，使屏幕顶部与底部保持可用，
+    从而不影响搜索与导航
+
+以下部分**刻意没有**移植过来：
+
+  · 全部联网功能（设备信息上报、服务端下发配置）。
+    本应用的防沉迷完全离线，配置只保存在本机。
+  · MMKV 存储依赖（改用 SharedPreferences + Gson）
+  · 多档配额与冷却阶梯（收敛为两个参数：每日次数、每次解锁分钟数）
+
+
+许可全文
+~~~~~~~~
+
+MIT License
+
+Copyright (c) 2025 wd
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+说明：MIT 许可证要求「上述版权声明与许可声明须包含在本软件的所有副本或
+实质部分中」，因此上面保留了 MIT 许可的英文原文，未作翻译改动。

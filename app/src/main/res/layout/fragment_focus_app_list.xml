@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    受管制应用列表页。
+
+    列表在代码里动态构建（见 FocusAppListFragment）：
+    每条规则需要「应用图标 + 名称 + 关键词摘要」三要素，
+    Preference 体系拿不到应用图标，所以用普通 RecyclerView 更直接。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface"
+    tools:context=".ui.settings.FocusAppListFragment">
+
+    <!--
+        列表容器铺 ?attr/colorSurfaceContainer 作为整块底色，
+        与设置页列表用同一个主题角色 —— 两边观感因此天然一致，
+        深浅色 / 各套主题都会自动跟随，不需要各写一份颜色。
+        行本身透明，整块看起来是连续的一整片。
+    -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/focus_app_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?attr/colorSurfaceContainer"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="96dp"
+        android:scrollbars="vertical" />
+
+    <!-- 空状态 -->
+    <LinearLayout
+        android:id="@+id/focus_empty_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="32dp"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/focus_manage_apps_summary_empty"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:textColor="?android:attr/textColorSecondary" />
+
+    </LinearLayout>
+
+    <!-- 添加应用：悬浮按钮，不占用列表空间 -->
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_add_app"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="@string/focus_add_app"
+        app:icon="@drawable/ic_add" />
+
+</FrameLayout>

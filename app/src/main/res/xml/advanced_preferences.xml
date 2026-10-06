@@ -115,4 +115,15 @@
             app:summary="@string/adv_auto_update_summary"
             app:defaultValue="true" />
     </PreferenceCategory>
+
+    <!--
+        防沉迷：二级页面（高级设置 → 防沉迷 → 受管制应用 → 单条规则）
+        具体的总开关与规则都在那边，这里只放一个入口。
+    -->
+    <PreferenceCategory app:title="@string/focus_title">
+        <Preference
+            app:key="focus_guard_entry"
+            app:title="@string/focus_title"
+            app:summary="@string/focus_summary" />
+    </PreferenceCategory>
 </PreferenceScreen>

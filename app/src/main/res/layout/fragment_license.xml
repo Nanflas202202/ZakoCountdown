@@ -44,6 +44,14 @@
                 android:layout_height="wrap_content"
                 android:text="@string/license_studio_agreement" />
 
+            <!--
+                第三方代码归属（MIT）标签已移除。
+                它现在在「关于 → 详细信息 → 依赖库」里以独立一行的形式呈现
+                （anti-addiction / v3.2.4），点开即为 MIT 全文 ——
+                放在依赖库里比单独占一个标签更符合「这里是许可证清单」的语境，
+                也避免同一份内容在两处重复维护。
+            -->
+
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
     </HorizontalScrollView>

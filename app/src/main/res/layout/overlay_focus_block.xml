@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    防沉迷遮挡浮层。
+
+    设计取向：不是「弹个框让你点掉」，而是一整块**认真挡住内容**的面板 ——
+    参考 anti-addiction 的思路，克制的是「无意识刷推荐流」，所以遮挡要彻底，
+    但出口必须清楚：随时能离开，或做一道题换一段安静时间。
+
+    结构说明（两次踩坑后的最终形态）：
+
+    1. 答题界面**内联**在这里，不另开 AlertDialog。
+       浮层用的是 TYPE_ACCESSIBILITY_OVERLAY，这种窗口的输入/焦点语义与普通
+       应用窗口不同，从它里面再弹 Dialog 容易踩 token / BadTokenException。
+
+    2. 两页用一个 FrameLayout 里**两个显式容器切换可见性**，不用 ViewFlipper。
+       ViewFlipper 会连带重建子视图的可见性与布局，在独立浮层窗口里
+       出现过「点按钮后整个浮层消失」的现象，换成直接控制 visibility 后行为确定。
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/focus_overlay_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?attr/colorSurface">
+
+    <!-- ============ 遮挡提示页 ============ -->
+    <ScrollView
+        android:id="@+id/page_block"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="32dp"
+            android:paddingTop="48dp"
+            android:paddingBottom="48dp">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_focus_shield"
+                app:tint="?attr/colorPrimary" />
+
+            <!--
+                防沉迷提示的字号刻意比常规 Material 规格大一档：
+                这块浮层的用途是「拦住无意识刷信息流」，需要在扫一眼的瞬间
+                就传达清楚「这里被挡住了、你可以去做别的」。
+                HeadlineSmall → HeadlineMedium，BodyLarge → TitleMedium。
+            -->
+            <TextView
+                android:id="@+id/tv_focus_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/focus_overlay_title"
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_focus_message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="14dp"
+                android:lineSpacingExtra="6dp"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                tools:text="「哔哩哔哩」的推荐内容已被遮挡。" />
+
+            <TextView
+                android:id="@+id/tv_focus_quota"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="18dp"
+                android:textAppearance="?attr/textAppearanceTitleSmall"
+                android:textColor="?attr/colorPrimary"
+                tools:text="今天还剩 2 次免答题" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_focus_challenge"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="@string/focus_overlay_challenge" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_focus_pass"
+                style="?attr/materialButtonOutlinedStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/focus_overlay_pass" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_focus_leave"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/focus_overlay_leave" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <!-- ============ 答题页（默认隐藏） ============ -->
+    <ScrollView
+        android:id="@+id/page_challenge"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="32dp"
+            android:paddingTop="48dp"
+            android:paddingBottom="48dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/focus_challenge_title"
+                android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_challenge_question"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:textAppearance="?attr/textAppearanceDisplayMedium"
+                android:textColor="?attr/colorPrimary"
+                tools:text="47 + 82 = ?" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/til_challenge_answer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:hint="@string/focus_challenge_input_hint">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/et_challenge_answer"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="numberSigned" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_challenge_submit"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/focus_challenge_submit" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_challenge_back"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/common_cancel" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</FrameLayout>

@@ -1,6 +1,28 @@
+<!--
+    无障碍服务配置。
+
+    accessibilityEventTypes：
+      · typeWindowStateChanged  —— 跨应用切换检测（开屏弹窗提醒 + 防沉迷的入口判定）
+      · typeWindowContentChanged —— 页面内容变化。防沉迷的关键词匹配**必须**依赖它：
+        信息流应用的内容是异步加载的，「窗口状态变化」发生时节点树往往还是空的，
+        只看 window state 会完全匹配不到关键词。
+
+    加上 content changed 会明显增加事件量，所以 FocusGuardEngine 在
+    「总开关关闭」或「该应用不在规则表内」时会在第一步就 return，
+    只有真正受管的应用才会走到节点树扫描。
+
+    canRetrieveWindowContent 必须为 true —— 关键词匹配要读节点文本。
+
+    accessibilityFlags 里的 flagRetrieveInteractiveWindows：
+      用来判断某个事件窗口是不是**输入法窗口**（AccessibilityWindowInfo.TYPE_INPUT_METHOD）。
+      这一步不能省：软键盘是独立窗口、有自己的包名，如果不识别它，
+      弹出键盘会被当成「切换到了别的应用」，导致防沉迷浮层在点输入框时被撤下。
+      拿不到窗口列表时会退回「查系统已启用输入法列表」的包名判断，不会硬失效。
+-->
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityEventTypes="typeWindowStateChanged|typeWindowContentChanged"
     android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagRetrieveInteractiveWindows"
     android:canRetrieveWindowContent="true"
     android:notificationTimeout="100"
     android:description="@string/accessibility_service_description"

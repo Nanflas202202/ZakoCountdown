@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    「小字」偏好项布局（配合 SmallTextPreference 使用）。
+
+    用途：补充说明类条目（例如「切换语言后需要重启」）。
+    这类文字是**参考信息**，与可选项同样大小会抢注意力、看着像第二个选项，
+    所以单独压小字号。
+
+    要点：
+      · ID 故意**不用** android.R.id.title / android.R.id.summary ——
+        MtbThemeEngine 会按这两个 ID 把文字强制拉回正文级别的 onSurface，
+        那样小字的层级就没了。这里用自有 ID，由 SmallTextPreference 自己绑定。
+      · 颜色取 colorOnSurfaceVariant（比正文低一级），深浅色自动跟随；
+      · 不设 minHeight，让条目高度跟着小字号收紧，
+        否则会沿用默认的 48dp+ 高度，看着像空了一大块。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="?android:attr/listPreferredItemPaddingStart"
+    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
+    android:paddingTop="4dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/pref_small_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="切换语言后需要重启应用" />
+
+    <TextView
+        android:id="@+id/pref_small_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:alpha="0.8"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        tools:text="部分界面文案会在重启后才会更新" />
+
+</LinearLayout>

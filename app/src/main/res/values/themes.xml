@@ -308,6 +308,18 @@
     </style>
 
     <!--
+        正圆。用在侧滑栏的自定义头像上。
+
+        cornerSize 用 50%（而不是 9999dp 之类的绝对值）：
+        50% 是相对于控件尺寸计算的，所以头像放大缩小时始终是正圆，
+        换任何尺寸的 ImageView 都不用改这里。
+    -->
+    <style name="ShapeAppearance.Zako.Circle" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <!--
         Expressive 骨架。
 
         刻意**不**覆盖 shapeAppearanceCorner* 与 motionSpring*：
@@ -371,12 +383,17 @@
         <item name="android:clickable">true</item>
         <item name="android:focusable">true</item>
     </style>
+    <!--
+        右侧筛选抽屉的顶栏。
+        layout_height 用固定值而不是 wrap_content：顶栏现在是一个 FrameLayout，
+        里面有一层 match_parent 的自定义顶图。若高度是 wrap_content，
+        这层图就失去了可参照的高度、会被压成 0（表现就是「设了图却看不到」）。
+    -->
     <style name="Widget.Zako.RightHeader" parent="">
         <item name="android:layout_width">match_parent</item>
-        <item name="android:layout_height">wrap_content</item>
-        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_height">72dp</item>
         <item name="android:gravity">center_vertical</item>
-        <item name="android:padding">16dp</item>
+        <item name="android:paddingHorizontal">16dp</item>
     </style>
     <style name="Widget.Zako.RightDrawer.M3" parent="Widget.Zako.RightDrawer">
         <item name="android:background">@drawable/bg_drawer_right_m3</item>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    受管制应用列表项：图标 + 应用名 + 关键词摘要。
+
+    样式与设置页的条目保持一致（「通栏平铺行」而不是独立卡片）：
+      · 不用 MaterialCardView —— 每行一张卡会变成一堆零散小卡，
+        和设置列表那种「整块列表一个底色」的观感对不上；
+      · 整块底色由列表容器（fragment_focus_app_list 的 RecyclerView）统一提供，
+        行本身透明，这样任意数量的行看起来是连续的一整片；
+      · 行与行之间靠 1dp 的透明分隔（见列表里的 divider 设置）区分，
+        和设置页「隐藏分隔线」的做法一致。
+
+    高度 72dp + 左右 16dp 内边距：与设置项的行高、标题缩进对齐。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="72dp"
+    android:orientation="horizontal"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="12dp"
+    android:paddingBottom="12dp">
+
+    <ImageView
+        android:id="@+id/iv_app_icon"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tv_app_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textAppearance="?attr/textAppearanceTitleMedium"
+            tools:text="哔哩哔哩" />
+
+        <TextView
+            android:id="@+id/tv_rule_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:maxLines="2"
+            android:textAppearance="?attr/textAppearanceBodySmall"
+            android:textColor="?attr/colorOnSurfaceVariant"
+            tools:text="关键词：推荐 · 每日 2 次 · 每次 2 分钟" />
+
+    </LinearLayout>
+
+    <!-- 规则未生效时给个明确的视觉提示，避免用户以为配了却没挡住 -->
+    <TextView
+        android:id="@+id/tv_disabled_badge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="@string/common_disabled"
+        android:textAppearance="?attr/textAppearanceLabelSmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
+</LinearLayout>

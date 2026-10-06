@@ -32,17 +32,29 @@
         android:layout_marginTop="24dp"
         android:text="@string/event_target_date"
         android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text_input_layout_title" />
 
-    <!-- 使用动态无边框样式 -->
+    <!--
+        日期选择按钮。
+
+        颜色必须显式指定：MD1/MD2 下 borderlessButtonStyle 解析出的前景色
+        不是本应用的强调色，会出现「文字几乎看不见 / 与背景同色」的情况。
+        textColor 用 colorPrimary、背景用透明的 selectableItemBackgroundBorderless，
+        这样三套主题（MD1/MD2/MD3）下都能拿到正确的强调色。
+    -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_date_picker"
         style="?attr/borderlessButtonStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
         tools:text="2024年12月25日"
         android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="?attr/colorPrimary"
+        app:backgroundTint="@android:color/transparent"
+        app:iconTint="?attr/colorPrimary"
         android:gravity="start|center_vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -55,17 +67,22 @@
         android:layout_marginTop="16dp"
         android:text="@string/event_target_time"
         android:textAppearance="?attr/textAppearanceLabelLarge"
+        android:textColor="?attr/colorOnSurfaceVariant"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/button_date_picker" />
 
-    <!-- 使用动态无边框样式 -->
+    <!-- 时间选择按钮：同上，颜色显式覆盖以兼容 MD1/MD2 -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_time_picker"
         style="?attr/borderlessButtonStyle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
         tools:text="18:00"
         android:textAppearance="?attr/textAppearanceTitleMedium"
+        android:textColor="?attr/colorPrimary"
+        app:backgroundTint="@android:color/transparent"
+        app:iconTint="?attr/colorPrimary"
         android:gravity="start|center_vertical"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -89,13 +106,21 @@
             android:text="@string/event_book_default" />
 
     </com.google.android.material.textfield.TextInputLayout>
+    <!--
+        保存按钮。
+        MD1/MD2 下 FloatingActionButton 的默认背景取的是强调色，
+        但部分旧主题没有把 colorSecondary 映射到本应用的强调色，
+        会变成「灰底灰图标」。这里显式指定，三套主题统一。
+    -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_save_event"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        android:contentDescription="保存日程"
+        android:contentDescription="@string/event_save"
         android:src="@drawable/ic_save"
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="?attr/colorOnPrimary"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

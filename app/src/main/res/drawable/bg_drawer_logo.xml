@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    侧边栏 Logo 的底衬。
+
+    为什么需要它：logo_drawer.png 是白底插画。抽屉头部底色是 colorPrimary，
+    深浅各不相同（靛蓝 / 粉 / 蓝 / 紫……），白底图直接贴上去时
+    浅色主题下边界会糊掉。
+
+    给一个白色（或浅色）圆形底：
+      · 与插画自身的白底连成一体，不再有「方形白块」的割裂感；
+      · 任何 primary 底色上都有一致的对比度。
+
+    颜色用 @color/zako_logo_backdrop —— 日夜分别取值，
+    深色模式下用略带灰的浅色，避免纯白在暗色界面里刺眼。
+    fillColor 不跟随主题 tint：这里是「相框」而不是图标，
+    必须保持浅色才能衬出里面的深色线稿。
+-->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="oval">
+    <solid android:color="@color/zako_logo_backdrop" />
+</shape>

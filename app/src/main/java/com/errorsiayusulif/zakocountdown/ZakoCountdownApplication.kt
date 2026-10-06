@@ -7,6 +7,7 @@ import com.errorsiayusulif.zakocountdown.data.AppDatabase
 import com.errorsiayusulif.zakocountdown.data.EventRepository
 import com.errorsiayusulif.zakocountdown.data.PreferenceKeys
 import com.errorsiayusulif.zakocountdown.data.PreferenceManager
+import com.errorsiayusulif.zakocountdown.utils.DarkModeHelper
 import com.errorsiayusulif.zakocountdown.utils.LocaleHelper
 import com.errorsiayusulif.zakocountdown.utils.LogRecorder
 import com.errorsiayusulif.zakocountdown.utils.ServiceGuardian
@@ -19,6 +20,12 @@ class ZakoCountdownApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+
+        // --- 深色模式：必须最先应用，且在任何 Activity 创建之前 ---
+        // 手动切换深色靠 AppCompatDelegate 改本应用的 uiMode。
+        // 晚于首个 Activity 调用的话，会先按系统配色布局一次再重建，
+        // 表现为启动瞬间闪一下错误的颜色。放在 onCreate 最前面即可避免。
+        DarkModeHelper.apply(this)
 
         // --- v0.9.1 键名语义化：把旧键（key_xxx / enable_xxx）一次性迁移到新键，保证设置不丢 ---
         val migrated = PreferenceKeys.migrateLegacyKeys(this)

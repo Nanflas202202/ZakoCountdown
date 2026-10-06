@@ -62,15 +62,12 @@
         android:paddingBottom="88dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
-    <!-- 快捷添加按钮 -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fab_add_to_book"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="24dp"
-        android:src="@drawable/ic_add"
-        app:tint="?attr/colorOnPrimaryContainer"
-        app:backgroundTint="?attr/colorPrimaryContainer"/>
+    <!--
+        原本这里有一个「快捷添加日程」FAB，已移除。
+        原因：它同时出现在普通日程本与默认本（全部 / 重点）上，
+        而它只是跳到通用的新建页并预选本子，容易让人误以为
+        「往当前这个本子里加」。日程的添加入口在主页与日程本页右下角，
+        功能并不缺，删掉反而少一处歧义。
+    -->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
